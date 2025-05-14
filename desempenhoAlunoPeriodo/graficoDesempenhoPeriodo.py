@@ -75,28 +75,36 @@ def atualizar_grafico(aluno_id):
         return int(ano) * 10 + num
 
     df_grouped['ORD'] = df_grouped['ANO_PERIODO'].apply(ordenar_periodo)
-    df_grouped = df_grouped.sort_values('ORD')
+    df_grouped = df_grouped.sort_values('ORD').reset_index(drop=True)
 
-    # Gráfico
+    # Cálculo da base acumulada
+    df_grouped['BASE'] = df_grouped['APROVADO'].cumsum().shift(fill_value=0)
+
     fig = go.Figure()
+
+    # Barras de aprovado começam a partir da base acumulada
     fig.add_trace(go.Bar(
         x=df_grouped['ANO_PERIODO'],
         y=df_grouped['APROVADO'],
+        base=df_grouped['BASE'],
         name='Aprovado',
         marker_color='green'
     ))
+
+    # Barras de reprovado empilhadas em cima do aprovado no mesmo período
     fig.add_trace(go.Bar(
         x=df_grouped['ANO_PERIODO'],
         y=df_grouped['REPROVADO'],
+        base=df_grouped['BASE'] + df_grouped['APROVADO'],
         name='Reprovado',
         marker_color='red'
     ))
 
     fig.update_layout(
-        barmode='stack',
+        barmode='overlay',  
         xaxis_title='Ano - Período',
-        yaxis_title='Carga Horária',
-        title='Desempenho por Período',
+        yaxis_title='Carga Horária Acumulada',
+        title='Desempenho por Período (Empilhado Acumulativo)',
         height=600
     )
 

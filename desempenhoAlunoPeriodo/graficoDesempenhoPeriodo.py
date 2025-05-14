@@ -60,48 +60,64 @@ def atualizar_grafico(aluno_id):
     df_aluno['APROVADO'] = df_aluno['SITUACAO'].isin(aprovados)
     df_aluno['REPROVADO'] = df_aluno['SITUACAO'].isin(reprovados)
     df_aluno['CARGA HORARIA'] = df_aluno['TOTAL CARGA HORARIA']
+    df_aluno['DISC_CARGA'] = df_aluno['NOME ATIV CURRIC'] + ' (' + df_aluno['CARGA HORARIA'].astype(str) + 'h)'
 
-    # Agrupa por ANO_PERIODO
-    df_grouped = df_aluno.groupby('ANO_PERIODO').agg({
-        'CARGA HORARIA': 'sum',
-        'APROVADO': lambda x: df_aluno.loc[x.index, 'CARGA HORARIA'][x].sum(),
-        'REPROVADO': lambda x: df_aluno.loc[x.index, 'CARGA HORARIA'][x].sum()
-    }).reset_index()
-
-    # Ordena cronologicamente
+    # Ordenar os dados
     def ordenar_periodo(periodo_str):
         ano, per = periodo_str.split(' - ')
         num = 1 if '1' in per else 2
         return int(ano) * 10 + num
 
-    df_grouped['ORD'] = df_grouped['ANO_PERIODO'].apply(ordenar_periodo)
-    df_grouped = df_grouped.sort_values('ORD').reset_index(drop=True)
+    df_aluno['ORD'] = df_aluno['ANO_PERIODO'].apply(ordenar_periodo)
 
-    # Cálculo da base acumulada
-    df_grouped['BASE'] = df_grouped['APROVADO'].cumsum().shift(fill_value=0)
+    # Agrupar por período
+    grupos = df_aluno.groupby('ANO_PERIODO')
+    lista_periodos = []
+    lista_aprovado = []
+    lista_reprovado = []
+    lista_hover = []
 
+    for nome, grupo in sorted(grupos, key=lambda x: ordenar_periodo(x[0])):
+        aprovados_periodo = grupo[grupo['APROVADO']]
+        reprovados_periodo = grupo[grupo['REPROVADO']]
+
+        lista_periodos.append(nome)
+        lista_aprovado.append(aprovados_periodo['CARGA HORARIA'].sum())
+        lista_reprovado.append(reprovados_periodo['CARGA HORARIA'].sum())
+
+        if not aprovados_periodo.empty:
+            texto = "<br>".join(aprovados_periodo['DISC_CARGA'])
+        else:
+            texto = "Nenhuma disciplina aprovada"
+        lista_hover.append(texto)
+
+    # Calcular base acumulada
+    base_aprovado = np.cumsum([0] + lista_aprovado[:-1])
+
+    # Gráfico
     fig = go.Figure()
 
-    # Barras de aprovado começam a partir da base acumulada
     fig.add_trace(go.Bar(
-        x=df_grouped['ANO_PERIODO'],
-        y=df_grouped['APROVADO'],
-        base=df_grouped['BASE'],
+        x=lista_periodos,
+        y=lista_aprovado,
+        base=base_aprovado,
         name='Aprovado',
-        marker_color='green'
+        marker_color='green',
+        hoverinfo='text',
+        hovertext=lista_hover
     ))
 
-    # Barras de reprovado empilhadas em cima do aprovado no mesmo período
     fig.add_trace(go.Bar(
-        x=df_grouped['ANO_PERIODO'],
-        y=df_grouped['REPROVADO'],
-        base=df_grouped['BASE'] + df_grouped['APROVADO'],
+        x=lista_periodos,
+        y=lista_reprovado,
+        base=base_aprovado + np.array(lista_aprovado),
         name='Reprovado',
-        marker_color='red'
+        marker_color='red',
+        hoverinfo='skip'
     ))
 
     fig.update_layout(
-        barmode='overlay',  
+        barmode='overlay',
         xaxis_title='Ano - Período',
         yaxis_title='Carga Horária Acumulada',
         title='Desempenho por Período (Empilhado Acumulativo)',
@@ -109,6 +125,7 @@ def atualizar_grafico(aluno_id):
     )
 
     return fig
+
 
 if __name__ == '__main__':
     app.run(debug=True)

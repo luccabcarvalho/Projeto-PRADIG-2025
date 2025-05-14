@@ -62,7 +62,6 @@ def atualizar_grafico(aluno_id):
     df_aluno['CARGA HORARIA'] = df_aluno['TOTAL CARGA HORARIA']
     df_aluno['DISC_CARGA'] = df_aluno['NOME ATIV CURRIC'] + ' (' + df_aluno['CARGA HORARIA'].astype(str) + 'h)'
 
-    # Ordenar os dados
     def ordenar_periodo(periodo_str):
         ano, per = periodo_str.split(' - ')
         num = 1 if '1' in per else 2
@@ -70,31 +69,34 @@ def atualizar_grafico(aluno_id):
 
     df_aluno['ORD'] = df_aluno['ANO_PERIODO'].apply(ordenar_periodo)
 
-    # Agrupar por período
     grupos = df_aluno.groupby('ANO_PERIODO')
     lista_periodos = []
     lista_aprovado = []
     lista_reprovado = []
     lista_hover = []
 
+    carga_acumulada = 0
     for nome, grupo in sorted(grupos, key=lambda x: ordenar_periodo(x[0])):
         aprovados_periodo = grupo[grupo['APROVADO']]
         reprovados_periodo = grupo[grupo['REPROVADO']]
 
+        carga_aprovada = aprovados_periodo['CARGA HORARIA'].sum()
+        carga_reprovada = reprovados_periodo['CARGA HORARIA'].sum()
+
         lista_periodos.append(nome)
-        lista_aprovado.append(aprovados_periodo['CARGA HORARIA'].sum())
-        lista_reprovado.append(reprovados_periodo['CARGA HORARIA'].sum())
+        lista_aprovado.append(carga_aprovada)
+        lista_reprovado.append(carga_reprovada)
+
+        carga_acumulada += carga_aprovada
 
         if not aprovados_periodo.empty:
-            texto = "<br>".join(aprovados_periodo['DISC_CARGA'])
-        else:
-            texto = "Nenhuma disciplina aprovada"
+            texto = "<br>".join(aprovados_periodo['DISC_CARGA']) + f"<br><b>Total acumulado: {carga_acumulada}h</b>"
+        if aprovados_periodo.empty:
+            texto = f"Nenhuma disciplina aprovada<br><b>Total acumulado: {carga_acumulada}h</b>"
         lista_hover.append(texto)
 
-    # Calcular base acumulada
     base_aprovado = np.cumsum([0] + lista_aprovado[:-1])
 
-    # Gráfico
     fig = go.Figure()
 
     fig.add_trace(go.Bar(

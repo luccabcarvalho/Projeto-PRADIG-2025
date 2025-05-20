@@ -89,10 +89,13 @@ def atualizar_grafico(aluno_id):
 
         carga_acumulada += carga_aprovada
 
-        if not aprovados_periodo.empty:
-            texto = "<br>".join(aprovados_periodo['DISC_CARGA']) + f"<br><b>Total acumulado: {carga_acumulada}h</b>"
-        if aprovados_periodo.empty:
-            texto = f"Nenhuma disciplina aprovada<br><b>Total acumulado: {carga_acumulada}h</b>"
+        texto_aprovado = "<br>".join(aprovados_periodo['DISC_CARGA']) if not aprovados_periodo.empty else "Nenhuma disciplina aprovada"
+        texto_reprovado = "<br>".join(reprovados_periodo['DISC_CARGA']) if not reprovados_periodo.empty else "Nenhuma disciplina reprovada"
+
+        texto = (
+            f"<b>APROVADO</b><br>{texto_aprovado}<br><b>Total acumulado: {carga_acumulada}h</b><br><br>"
+            f"<b>REPROVADO</b><br>{texto_reprovado}"
+        )
         lista_hover.append(texto)
 
     base_aprovado = np.cumsum([0] + lista_aprovado[:-1])
@@ -115,7 +118,8 @@ def atualizar_grafico(aluno_id):
         base=base_aprovado + np.array(lista_aprovado),
         name='Reprovado',
         marker_color='red',
-        hoverinfo='skip'
+        hoverinfo='text',
+        hovertext=lista_hover
     ))
 
     fig.update_layout(

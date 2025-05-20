@@ -4,8 +4,8 @@ import plotly.graph_objects as go
 from dash import Dash, html, dcc, Input, Output
 
 # Leitura dos dados
-caminho_hist = r'e:\Teste Plots\Semana 3 - Heat Maps\HistoricoEscolarSimplificado.csv'
-caminho_alunos = r'e:\Teste Plots\Semana 3 - Heat Maps\alunosPorCurso.csv'
+caminho_hist = r'docs\HistoricoEscolarSimplificado.csv'
+caminho_alunos = r'docs\alunosPorCurso.csv'
 
 df = pd.read_csv(caminho_hist)
 df_alunos = pd.read_csv(caminho_alunos)

@@ -88,8 +88,7 @@ def atualizar_grafico(id_aluno):
 
     barras = []
 
-    # Plotar barras de aprovados primeiro, acumulando base
-    for status in status_aprovados.keys():
+    for status in status_reprovados.keys():
         cor = cores_status[status]
         dados_status = dados_aluno[dados_aluno['STATUS'] == status]
         if dados_status.empty:
@@ -112,10 +111,8 @@ def atualizar_grafico(id_aluno):
             hovertext=hover
         )
         barras.append(barra)
-
-
-    # Plotar barras de reprovados acima da base acumulada de aprovados
-    for status in status_reprovados.keys():
+    
+    for status in status_aprovados.keys():
         cor = cores_status[status]
         dados_status = dados_aluno[dados_aluno['STATUS'] == status]
         if dados_status.empty:

@@ -140,6 +140,21 @@ def atualizar_grafico(id_aluno):
             hovertext=hover
         )
         barras.append(barra)
+    
+    num_versao = df_alunos.loc[df_alunos['ID PESSOA'] == id_aluno, 'NUM VERSAO'].values
+    if len(num_versao) > 0 and num_versao[0] == '2023/2':
+        carga_referencia = 3000
+    else:
+        carga_referencia = 3240
+
+    linha_referencia = go.Scatter(
+        x=periodos,
+        y=[carga_referencia] * len(periodos),
+        mode='lines',
+        name='Ritmo de Integralização de Referência',
+        line=dict(color='rgba(100,100,100,0.3)') 
+    )
+    barras.append(linha_referencia)
 
     fig = go.Figure(barras)
     fig.update_layout(

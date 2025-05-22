@@ -77,8 +77,16 @@ def atualizar_grafico(id_aluno):
     for status, idx in status_reprovados.items():
         cores_status[status] = cores_reprovados[idx]
 
+    carga_aprovada_acumulada = (
+        dados_aluno[dados_aluno['STATUS'].isin(status_aprovados.keys())]
+        .groupby('ANO_PERIODO')['CARGA']
+        .sum()
+        .reindex(periodos, fill_value=0)
+        .cumsum()
+        .shift(fill_value=0)
+    )
+
     barras = []
-    base_aprovada = pd.Series(0, index=periodos)
 
     # Plotar barras de aprovados primeiro, acumulando base
     for status in status_aprovados.keys():
@@ -97,7 +105,7 @@ def atualizar_grafico(id_aluno):
         barra = go.Bar(
             x=periodos,
             y=y,
-            base=base_aprovada,
+            base=carga_aprovada_acumulada.tolist(),
             name=status,
             marker_color=cor,
             hoverinfo='text',
@@ -105,7 +113,6 @@ def atualizar_grafico(id_aluno):
         )
         barras.append(barra)
 
-        base_aprovada += y
 
     # Plotar barras de reprovados acima da base acumulada de aprovados
     for status in status_reprovados.keys():
@@ -124,7 +131,7 @@ def atualizar_grafico(id_aluno):
         barra = go.Bar(
             x=periodos,
             y=y,
-            base=base_aprovada,
+            base=carga_aprovada_acumulada.tolist(),
             name=status,
             marker_color=cor,
             hoverinfo='text',

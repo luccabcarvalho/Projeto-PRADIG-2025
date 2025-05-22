@@ -44,7 +44,10 @@ app.layout = html.Div([
     dcc.Dropdown(
         id='aluno-dropdown',
         options=[
-            {'label': nome, 'value': id_pessoa}
+            {
+                'label': f"{id_pessoa} - {nome}",
+                'value': id_pessoa
+            }
             for nome, id_pessoa in zip(df_alunos['NOME PESSOA'], df_alunos['ID PESSOA'])
         ],
         placeholder="Selecione um aluno",

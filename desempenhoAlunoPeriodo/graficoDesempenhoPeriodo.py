@@ -5,9 +5,11 @@ from dash import Dash, html, dcc, Input, Output
 # Leitura dos dados
 CAMINHO_HISTORICO = r'docs\HistoricoEscolarSimplificado.csv'
 CAMINHO_ALUNOS = r'docs\alunosPorCurso.csv'
+CAMINHO_CURRICULO = r'docs\curriculo20232.csv'
 
 df_historico = pd.read_csv(CAMINHO_HISTORICO)
 df_alunos = pd.read_csv(CAMINHO_ALUNOS)
+df_curriculo = pd.read_csv(CAMINHO_CURRICULO)
 
 # Mapas de status e cores
 status_aprovados = {
@@ -62,8 +64,11 @@ def atualizar_grafico(id_aluno):
     dados_aluno = df_historico[df_historico['ID PESSOA'] == id_aluno].copy()
     dados_aluno['STATUS'] = dados_aluno['DESCR SITUACAO'].str.strip()
     dados_aluno['CARGA'] = dados_aluno['TOTAL CARGA HORARIA']
-    dados_aluno['DISCIPLINA'] = dados_aluno['NOME ATIV CURRIC'] + ' (' + dados_aluno['CARGA'].astype(str) + 'h)'
-
+    dados_aluno['DISCIPLINA'] = (
+            dados_aluno['COD ATIV CURRIC'].astype(str) + ' - ' +
+            dados_aluno['NOME ATIV CURRIC'] + ' (' +
+            dados_aluno['CARGA'].astype(str) + 'h)'
+        )
     def ordenar_periodo(periodo):
         ano, per = periodo.split(' - ')
         return int(ano) * 10 + (1 if '1' in per else 2)

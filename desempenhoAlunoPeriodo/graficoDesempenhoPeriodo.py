@@ -1,46 +1,55 @@
 import pandas as pd
-import numpy as np
 import plotly.graph_objects as go
 from dash import Dash, html, dcc, Input, Output
 
 # Leitura dos dados
-caminho_hist = r'docs\HistoricoEscolarSimplificado.csv'
-caminho_alunos = r'docs\alunosPorCurso.csv'
+CAMINHO_HISTORICO = r'docs\HistoricoEscolarSimplificado.csv'
+CAMINHO_ALUNOS = r'docs\alunosPorCurso.csv'
+CAMINHO_CURRICULO = r'docs\curriculo20232.csv'
 
-df = pd.read_csv(caminho_hist)
-df_alunos = pd.read_csv(caminho_alunos)
+df_historico = pd.read_csv(CAMINHO_HISTORICO)
+df_alunos = pd.read_csv(CAMINHO_ALUNOS)
+df_curriculo = pd.read_csv(CAMINHO_CURRICULO)
 
-# Status
-aprovados = {
-    'APV - Aprovado', 'APV- Aprovado', 'APV - Aprovado sem nota',
-    'ADI - Aproveitamento', 'ADI - Dispensa com nota',
-    'DIS - Dispensa sem nota', 'ADI - Aproveitamento de créditos da disciplina',
+# Mapas de status e cores
+status_aprovados = {
+    'APV - Aprovado': 0,
+    'APV- Aprovado': 0,
+    'APV - Aprovado sem nota': 1,
+    'ADI - Aproveitamento': 2,
+    'ADI - Aproveitamento de créditos da disciplina': 2,
+    'ADI - Dispensa com nota': 3,
+    'DIS - Dispensa sem nota': 4
 }
-reprovados = {
-    'REP - Reprovado por nota/conceito',
-    'REF - Reprovado por falta',
-    'ASC - Reprovado sem nota',
-    'TRA - Trancamento de disciplina'
+status_reprovados = {
+    'REP - Reprovado por nota/conceito': 0,
+    'REF - Reprovado por falta': 1,
+    'ASC - Reprovado sem nota': 2,
+    'TRA - Trancamento de disciplina': 2
 }
+cores_aprovados = ['#006400', '#228B22', '#32CD32', '#7CFC00', '#ADFF2F']
+cores_reprovados = ['#8B0000', '#CD5C5C', '#FFA07A']
 
-# Processamento dos dados
-
-df['PERIODO_ORD'] = df['PERIODO'].str.extract(r'(\d)')[0].astype(float)
-df = df.sort_values(['ID ALUNO', 'COD ATIV CURRIC', 'ANO', 'PERIODO_ORD'])
-
+# Pré-processamento
+df_historico['PERIODO_NUM'] = df_historico['PERIODO'].str.extract(r'(\d)')[0].astype(float)
+df_historico = df_historico.sort_values(['ID ALUNO', 'COD ATIV CURRIC', 'ANO', 'PERIODO_NUM'])
 df_alunos = df_alunos.sort_values('PERIODO INGRESSO')
+df_historico['ANO_PERIODO'] = df_historico['ANO'].astype(str) + ' - ' + df_historico['PERIODO']
 
-# Criar coluna ANO_PERIODO
-df['ANO_PERIODO'] = df['ANO'].astype(str) + ' - ' + df['PERIODO']
-
-# App
+# App Dash
 app = Dash(__name__)
 
 app.layout = html.Div([
     html.H2("Desempenho Acadêmico por Aluno"),
     dcc.Dropdown(
         id='aluno-dropdown',
-        options=[{'label': nome, 'value': aid} for nome, aid in zip(df_alunos['NOME PESSOA'], df_alunos['ID PESSOA'])],
+        options=[
+            {
+                'label': f"{id_pessoa} - {nome}",
+                'value': id_pessoa
+            }
+            for nome, id_pessoa in zip(df_alunos['NOME PESSOA'], df_alunos['ID PESSOA'])
+        ],
         placeholder="Selecione um aluno",
         style={'width': '60%'}
     ),
@@ -51,87 +60,114 @@ app.layout = html.Div([
     Output('grafico-desempenho', 'figure'),
     Input('aluno-dropdown', 'value')
 )
-def atualizar_grafico(aluno_id):
-    if aluno_id is None:
+def atualizar_grafico(id_aluno):
+    if id_aluno is None:
         return go.Figure()
 
-    df_aluno = df[df['ID PESSOA'] == aluno_id].copy()
-    df_aluno['SITUACAO'] = df_aluno['DESCR SITUACAO'].str.strip()
-    df_aluno['APROVADO'] = df_aluno['SITUACAO'].isin(aprovados)
-    df_aluno['REPROVADO'] = df_aluno['SITUACAO'].isin(reprovados)
-    df_aluno['CARGA HORARIA'] = df_aluno['TOTAL CARGA HORARIA']
-    df_aluno['DISC_CARGA'] = df_aluno['NOME ATIV CURRIC'] + ' (' + df_aluno['CARGA HORARIA'].astype(str) + 'h)'
-
-    def ordenar_periodo(periodo_str):
-        ano, per = periodo_str.split(' - ')
-        num = 1 if '1' in per else 2
-        return int(ano) * 10 + num
-
-    df_aluno['ORD'] = df_aluno['ANO_PERIODO'].apply(ordenar_periodo)
-
-    grupos = df_aluno.groupby('ANO_PERIODO')
-    lista_periodos = []
-    lista_aprovado = []
-    lista_reprovado = []
-    lista_hover = []
-
-    carga_acumulada = 0
-    for nome, grupo in sorted(grupos, key=lambda x: ordenar_periodo(x[0])):
-        aprovados_periodo = grupo[grupo['APROVADO']]
-        reprovados_periodo = grupo[grupo['REPROVADO']]
-
-        carga_aprovada = aprovados_periodo['CARGA HORARIA'].sum()
-        carga_reprovada = reprovados_periodo['CARGA HORARIA'].sum()
-
-        lista_periodos.append(nome)
-        lista_aprovado.append(carga_aprovada)
-        lista_reprovado.append(carga_reprovada)
-
-        carga_acumulada += carga_aprovada
-
-        texto_aprovado = "<br>".join(aprovados_periodo['DISC_CARGA']) if not aprovados_periodo.empty else "Nenhuma disciplina aprovada"
-        texto_reprovado = "<br>".join(reprovados_periodo['DISC_CARGA']) if not reprovados_periodo.empty else "Nenhuma disciplina reprovada"
-
-        texto = (
-            f"<b>APROVADO</b><br>{texto_aprovado}<br><b>Total acumulado: {carga_acumulada}h</b><br><br>"
-            f"<b>REPROVADO</b><br>{texto_reprovado}"
+    dados_aluno = df_historico[df_historico['ID PESSOA'] == id_aluno].copy()
+    dados_aluno['STATUS'] = dados_aluno['DESCR SITUACAO'].str.strip()
+    dados_aluno['CARGA'] = dados_aluno['TOTAL CARGA HORARIA']
+    dados_aluno['DISCIPLINA'] = (
+            dados_aluno['COD ATIV CURRIC'].astype(str) + ' - ' +
+            dados_aluno['NOME ATIV CURRIC'] + ' (' +
+            dados_aluno['CARGA'].astype(str) + 'h)'
         )
-        lista_hover.append(texto)
+    def ordenar_periodo(periodo):
+        ano, per = periodo.split(' - ')
+        return int(ano) * 10 + (1 if '1' in per else 2)
 
-    base_aprovado = np.cumsum([0] + lista_aprovado[:-1])
+    dados_aluno['ORDEM'] = dados_aluno['ANO_PERIODO'].apply(ordenar_periodo)
+    periodos = sorted(dados_aluno['ANO_PERIODO'].unique(), key=ordenar_periodo)
 
-    fig = go.Figure()
+    cores_status = {}
+    for status, idx in status_aprovados.items():
+        cores_status[status] = cores_aprovados[idx]
+    for status, idx in status_reprovados.items():
+        cores_status[status] = cores_reprovados[idx]
 
-    fig.add_trace(go.Bar(
-        x=lista_periodos,
-        y=lista_aprovado,
-        base=base_aprovado,
-        name='Aprovado',
-        marker_color='green',
-        hoverinfo='text',
-        hovertext=lista_hover
-    ))
-
-    fig.add_trace(go.Bar(
-        x=lista_periodos,
-        y=lista_reprovado,
-        base=base_aprovado + np.array(lista_aprovado),
-        name='Reprovado',
-        marker_color='red',
-        hoverinfo='text',
-        hovertext=lista_hover
-    ))
-
-    fig.update_layout(
-        barmode='overlay',
-        xaxis_title='Ano - Período',
-        yaxis_title='Carga Horária Acumulada',
-        title='Desempenho por Período (Empilhado Acumulativo)',
-        height=600
+    carga_aprovada_acumulada = (
+        dados_aluno[dados_aluno['STATUS'].isin(status_aprovados.keys())]
+        .groupby('ANO_PERIODO')['CARGA']
+        .sum()
+        .reindex(periodos, fill_value=0)
+        .cumsum()
+        .shift(fill_value=0)
     )
 
-    return fig
+    barras = []
 
+    for status in status_reprovados.keys():
+        cor = cores_status[status]
+        dados_status = dados_aluno[dados_aluno['STATUS'] == status]
+        if dados_status.empty:
+            continue
+
+        y = dados_status.groupby('ANO_PERIODO')['CARGA'].sum().reindex(periodos, fill_value=0)
+        hover = dados_status.groupby('ANO_PERIODO').apply(
+            lambda grupo: "<br>".join(
+                f"{linha['DISCIPLINA']}<br>Status: {linha['STATUS']}" for _, linha in grupo.iterrows()
+            )
+        ).reindex(periodos, fill_value="Nenhuma disciplina").tolist()
+
+        barra = go.Bar(
+            x=periodos,
+            y=y,
+            base=carga_aprovada_acumulada.tolist(),
+            name=status,
+            marker_color=cor,
+            hoverinfo='text',
+            hovertext=hover
+        )
+        barras.append(barra)
+    
+    for status in status_aprovados.keys():
+        cor = cores_status[status]
+        dados_status = dados_aluno[dados_aluno['STATUS'] == status]
+        if dados_status.empty:
+            continue
+
+        y = dados_status.groupby('ANO_PERIODO')['CARGA'].sum().reindex(periodos, fill_value=0)
+        hover = dados_status.groupby('ANO_PERIODO').apply(
+            lambda grupo: "<br>".join(
+                f"{linha['DISCIPLINA']}<br>Status: {linha['STATUS']}" for _, linha in grupo.iterrows()
+            )
+        ).reindex(periodos, fill_value="Nenhuma disciplina").tolist()
+
+        barra = go.Bar(
+            x=periodos,
+            y=y,
+            base=carga_aprovada_acumulada.tolist(),
+            name=status,
+            marker_color=cor,
+            hoverinfo='text',
+            hovertext=hover
+        )
+        barras.append(barra)
+    
+    num_versao = df_alunos.loc[df_alunos['ID PESSOA'] == id_aluno, 'NUM VERSAO'].values
+    if len(num_versao) > 0 and num_versao[0] == '2023/2':
+        carga_referencia = 3000
+    else:
+        carga_referencia = 3240
+
+    linha_referencia = go.Scatter(
+        x=periodos,
+        y=[carga_referencia] * len(periodos),
+        mode='lines',
+        name='Ritmo de Integralização de Referência',
+        line=dict(color='rgba(100,100,100,0.3)') 
+    )
+    barras.append(linha_referencia)
+
+    fig = go.Figure(barras)
+    fig.update_layout(
+        barmode='stack',
+        xaxis_title='Ano - Período',
+        yaxis_title='Carga Horária',
+        title='Desempenho por Período com Acúmulo de Aprovados',
+        height=600
+    )
+    return fig
 
 if __name__ == '__main__':
     app.run(debug=True)

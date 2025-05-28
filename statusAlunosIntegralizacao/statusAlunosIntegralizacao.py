@@ -31,7 +31,10 @@ for nome, tam, cor in blocos:
 n_periodos = len(colunas)
 
 # Para cada aluno, obter todos os períodos cursados (ex: '19/2º', '20/1º', ...)
-df_hist['PERIODO_LABEL'] = df_hist['ANO'].astype(str) + '/' + df_hist['PERIODO'].astype(str)
+df_hist['PERIODO_LABEL'] = (
+    df_hist['ANO'].astype(str).str[-2:] + '/' +
+    df_hist['PERIODO'].astype(str).str.replace('. semestre', '', regex=False).str.strip()
+)
 aluno_periodos = {aluno: [] for aluno in alunos}
 mapa_nome_id = dict(zip(df_alunos['NOME PESSOA'], df_alunos['ID PESSOA']))
 
@@ -57,7 +60,7 @@ for aluno in alunos:
 
 # Geração do heatmap
 fig = go.Figure(data=go.Heatmap(
-    z=[[i for i in range(n_periodos)] for _ in range(len(alunos))],  # dummy, só para colorir
+    z=[[i for i in range(n_periodos)] for _ in range(len(alunos))],  
     x=[f'{colunas[i]} {i+1}' for i in range(n_periodos)],
     y=alunos,
     text=matriz,
@@ -108,7 +111,7 @@ fig.update_layout(
 app = Dash(__name__)
 app.layout = html.Div([
     html.H2("Status de Integralização dos Alunos por Período"),
-    dcc.Graph(figure=fig, style={'width': '100vw', 'height': '90vh', 'overflowY': 'scroll'})
+    dcc.Graph(figure=fig, style={'width': '300vw', 'height': '90vh', 'overflowY': 'scroll'})
 ])
 
 if __name__ == '__main__':

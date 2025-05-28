@@ -26,7 +26,7 @@ blocos = [
 colunas = []
 cores = []
 for nome, tam, cor in blocos:
-    colunas += [nome] * tam
+    colunas += [nome] + [""] * (tam - 1)  
     cores += [cor] * tam
 n_periodos = len(colunas)
 

@@ -93,13 +93,15 @@ fig.update_layout(
         tickvals=list(range(n_periodos)),
         ticktext=[f'{colunas[i]}' for i in range(n_periodos)],
         tickangle=45,
-        side='top'
+        side='top',
+        range=[-0.5, 25.5]
     ),
     yaxis=dict(
         automargin=True,
         tickfont=dict(size=12),
         scaleanchor="x",
-        scaleratio=1
+        scaleratio=1,
+        range=[-0.5, 14.5]
     ),
     autosize=False,
     width=1800,
@@ -116,3 +118,7 @@ app.layout = html.Div([
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+
+    

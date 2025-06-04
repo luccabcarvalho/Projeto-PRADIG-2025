@@ -3,8 +3,8 @@ import numpy as np
 import plotly.graph_objects as go
 from dash import Dash, html, dcc
 
-df = pd.read_csv(r'e:\Teste Plots\Semana 3 - Heat Maps\HistoricoEscolarSimplificado.csv')
-df_alunos = pd.read_csv(r'e:\Teste Plots\Semana 3 - Heat Maps\alunosPorCurso.csv')
+df = pd.read_csv(r'docs/HistoricoEscolarSimplificado.csv')
+df_alunos = pd.read_csv(r'docs/alunosPorCurso.csv')
 
 df_alunos.columns = df_alunos.columns.str.strip()
 

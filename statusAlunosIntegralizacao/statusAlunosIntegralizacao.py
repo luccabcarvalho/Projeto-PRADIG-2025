@@ -17,16 +17,16 @@ blocos = [
     ('Exigir plano de integralização', 2, '#f6b26b'),
     ('Prorrogação Máxima', 2, '#f9cb9c'),
     ('Situação Irregular', 2, '#e06666'),
-    ('Mobilidade', 1, '#93c47d'),
-    ('Períodos Excepcionais', 3, '#ffe599'),
-    ('Atividades Calendário Emergencial', 2, '#ffd966'),
-    ('Trancamentos Totais (regulares)', 2, '#b7b7b7'),
-    ('Trancamentos Totais (especiais)', 2, '#cccccc'),
+    # ('Mobilidade', 1, '#93c47d'),
+    # ('Períodos Excepcionais', 3, '#ffe599'),
+    # ('Atividades Calendário Emergencial', 2, '#ffd966'),
+    # ('Trancamentos Totais (regulares)', 2, '#b7b7b7'),
+    # ('Trancamentos Totais (especiais)', 2, '#cccccc'),
 ]
 colunas = []
 cores = []
 for nome, tam, cor in blocos:
-    colunas += [nome] + [""] * (tam - 1)  
+    colunas += [nome] + [""] * (tam - 1)
     cores += [cor] * tam
 n_periodos = len(colunas)
 
@@ -48,25 +48,41 @@ for _, row in df_hist.iterrows():
 
 # Preencher matriz: cada célula recebe o período cursado (ou vazio)
 matriz = []
+tooltip_matriz = []
 for aluno in alunos:
     periodos = aluno_periodos[aluno]
     linha = []
-    for i in range(n_periodos):
-        if i < len(periodos):
+    tooltips = []
+    if len(periodos) <= n_periodos:
+        for i in range(n_periodos):
+            if i < len(periodos):
+                linha.append(periodos[i])
+                tooltips.append(periodos[i])
+            else:
+                linha.append('')
+                tooltips.append('')
+    else:
+        # Preenche até a penúltima célula normalmente
+        for i in range(n_periodos - 1):
             linha.append(periodos[i])
-        else:
-            linha.append('')
+            tooltips.append(periodos[i])
+        # Última célula recebe '+', tooltip com períodos excedentes
+        linha.append('+')
+        excedentes = periodos[n_periodos - 1:]
+        tooltips.append('Períodos excedentes: ' + ', '.join(excedentes))
     matriz.append(linha)
+    tooltip_matriz.append(tooltips)
 
 # Geração do heatmap
 fig = go.Figure(data=go.Heatmap(
-    z=[[i for i in range(n_periodos)] for _ in range(len(alunos))],  
+    z=[[i for i in range(n_periodos)] for _ in range(len(alunos))],
     x=[f'{colunas[i]} {i+1}' for i in range(n_periodos)],
     y=alunos,
     text=matriz,
-    hoverinfo='text',
+    customdata=tooltip_matriz,
+    hovertemplate='%{customdata}',  # Mantém o tooltip correto
     texttemplate='%{text}',
-    colorscale=[ [i/(n_periodos-1), cor] for i, cor in enumerate(cores) ],
+    colorscale=[[i/(n_periodos-1), cor] for i, cor in enumerate(cores)],
     showscale=False
 ))
 
@@ -83,7 +99,6 @@ for i, cor in enumerate(cores):
 fig.update_traces(
     showscale=False,
     textfont=dict(size=13, color='black'),
-    hovertemplate='%{text}',
 )
 
 fig.update_layout(
@@ -120,5 +135,3 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
-
-    

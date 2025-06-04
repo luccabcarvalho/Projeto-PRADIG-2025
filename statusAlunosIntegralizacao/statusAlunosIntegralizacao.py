@@ -10,7 +10,6 @@ df_hist = pd.read_csv(r'docs/HistoricoEscolarSimplificado.csv')
 df_alunos = df_alunos.sort_values('PERIODO INGRESSO')
 alunos = df_alunos['NOME PESSOA'].tolist()
 
-# Definição dos blocos de períodos (igual à imagem)
 blocos = [
     ('Prazo Previsto', 8, '#6fa8dc'),
     ('Prazo Máximo', 2, '#9fc5e8'),
@@ -23,6 +22,18 @@ blocos = [
     # ('Trancamentos Totais (regulares)', 2, '#b7b7b7'),
     # ('Trancamentos Totais (especiais)', 2, '#cccccc'),
 ]
+
+status_aprovados = {
+    'APV - Aprovado', 'APV- Aprovado', 'APV - Aprovado sem nota',
+    'ADI - Aproveitamento', 'ADI - Aproveitamento de créditos da disciplina',
+    'ADI - Dispensa com nota', 'DIS - Dispensa sem nota'
+}
+status_reprovados = {
+    'REP - Reprovado por nota/conceito', 'REF - Reprovado por falta',
+    'ASC - Reprovado sem nota', 'TRA - Trancamento de disciplina'
+}
+status_matriculado = {'ASC - Matrícula'}
+
 colunas = []
 cores = []
 for nome, tam, cor in blocos:
@@ -30,7 +41,6 @@ for nome, tam, cor in blocos:
     cores += [cor] * tam
 n_periodos = len(colunas)
 
-# Para cada aluno, obter todos os períodos cursados (ex: '19/2º', '20/1º', ...)
 df_hist['PERIODO_LABEL'] = (
     df_hist['ANO'].astype(str).str[-2:] + '/' +
     df_hist['PERIODO'].astype(str).str.replace('. semestre', '', regex=False).str.strip()
@@ -46,7 +56,45 @@ for _, row in df_hist.iterrows():
         if periodo not in aluno_periodos[aluno]:
             aluno_periodos[aluno].append(periodo)
 
-# Preencher matriz: cada célula recebe o período cursado (ou vazio)
+def tooltip_periodo(aluno_nome, periodo):
+    # Seleciona o id do aluno
+    id_pessoa = mapa_nome_id.get(aluno_nome)
+    if not id_pessoa:
+        return periodo
+
+    # Filtra o histórico do aluno para o período
+    dados = df_hist[(df_hist['ID PESSOA'] == id_pessoa) & (df_hist['PERIODO_LABEL'] == periodo)]
+    if dados.empty:
+        return periodo
+
+    # Agrupa disciplinas por status
+    aprovadas = []
+    reprovadas = []
+    matriculadas = []
+    outros = []
+    for _, row in dados.iterrows():
+        status = str(row['DESCR SITUACAO']).strip()
+        disciplina = f"{row['COD ATIV CURRIC']} - {row['NOME ATIV CURRIC']} ({row['TOTAL CARGA HORARIA']}h)"
+        if status in status_aprovados:
+            aprovadas.append(disciplina)
+        elif status in status_reprovados:
+            reprovadas.append(disciplina)
+        elif status in status_matriculado:
+            matriculadas.append(disciplina)
+        else:
+            outros.append(f"{disciplina} [{status}]")
+
+    tooltip = f"<b>Aluno:</b> {aluno_nome}<br><b>Período:</b> {periodo}<br>"
+    if aprovadas:
+        tooltip += "<b>Aprovadas:</b><br>" + "<br>".join(aprovadas) + "<br>"
+    if reprovadas:
+        tooltip += "<b>Reprovadas:</b><br>" + "<br>".join(reprovadas) + "<br>"
+    if matriculadas:
+        tooltip += "<b>Matriculadas:</b><br>" + "<br>".join(matriculadas) + "<br>"
+    if outros:
+        tooltip += "<b>Outros:</b><br>" + "<br>".join(outros) + "<br>"
+    return tooltip
+
 matriz = []
 tooltip_matriz = []
 for aluno in alunos:
@@ -57,16 +105,14 @@ for aluno in alunos:
         for i in range(n_periodos):
             if i < len(periodos):
                 linha.append(periodos[i])
-                tooltips.append(periodos[i])
+                tooltips.append(tooltip_periodo(aluno, periodos[i]))
             else:
                 linha.append('')
                 tooltips.append('')
     else:
-        # Preenche até a penúltima célula normalmente
         for i in range(n_periodos - 1):
             linha.append(periodos[i])
-            tooltips.append(periodos[i])
-        # Última célula recebe '+', tooltip com períodos excedentes
+            tooltips.append(tooltip_periodo(aluno, periodos[i]))
         linha.append('+')
         excedentes = periodos[n_periodos - 1:]
         tooltips.append('Períodos excedentes: ' + ', '.join(excedentes))
@@ -80,13 +126,12 @@ fig = go.Figure(data=go.Heatmap(
     y=alunos,
     text=matriz,
     customdata=tooltip_matriz,
-    hovertemplate='%{customdata}',  # Mantém o tooltip correto
+    hovertemplate='%{customdata}',  
     texttemplate='%{text}',
     colorscale=[[i/(n_periodos-1), cor] for i, cor in enumerate(cores)],
     showscale=False
 ))
 
-# Ajuste visual para células quadradas e cores de fundo por bloco
 for i, cor in enumerate(cores):
     fig.add_shape(
         type="rect",

@@ -8,42 +8,35 @@ df_alunos = pd.read_csv(r'docs/alunosPorCurso.csv')
 
 df_alunos.columns = df_alunos.columns.str.strip()
 
-df_alunos = df_alunos.sort_values('PERIODO INGRESSO')
+matricula_id_col = 'MATR ALUNO'  
 
-df['PERIODO_ORD'] = df['PERIODO'].str.extract(r'(\d)')[0].astype(float)
-
-df = df.sort_values(['ID ALUNO', 'COD ATIV CURRIC', 'ANO', 'PERIODO_ORD'], ascending=[True, True, True, True])
+df = df.sort_values([matricula_id_col, 'COD ATIV CURRIC', 'ANO', 'PERIODO'], ascending=[True, True, True, True])
 
 disciplinas = sorted(df['COD ATIV CURRIC'].unique())
 disciplinas_dict = dict(zip(df['COD ATIV CURRIC'], df['NOME ATIV CURRIC']))
 
 mapa_disciplinas = {cod: j for j, cod in enumerate(disciplinas)}
-mapa_alunos = {aid: i for i, aid in enumerate(df_alunos['ID PESSOA'])}
+matriculas = df[matricula_id_col].unique()
+mapa_matriculas = {mid: i for i, mid in enumerate(matriculas)}
 
-n_alunos = len(df_alunos)
+n_matriculas = len(matriculas)
 n_disciplinas = len(disciplinas)
-matriz = [[[] for _ in range(n_disciplinas)] for _ in range(n_alunos)]
+matriz = [[[] for _ in range(n_disciplinas)] for _ in range(n_matriculas)]
 
 for _, row in df.iterrows():
-    i = mapa_alunos[row['ID PESSOA']]
+    i = mapa_matriculas[row[matricula_id_col]]
     j = mapa_disciplinas[row['COD ATIV CURRIC']]
     matriz[i][j].append(row['DESCR SITUACAO'])
 
 df_matriz = pd.DataFrame(
     [[', '.join(attempts) if attempts else '' for attempts in linha] for linha in matriz],
-    index=df_alunos['NOME PESSOA'].tolist(),
+    index=matriculas,
     columns=[disciplinas_dict[cod] for cod in disciplinas]
 )
 
-with open('matriz_status.txt', 'w', encoding='utf-8') as f:
-    for _, row in df_matriz.iterrows():
-        f.write('\t'.join(str(cell) if cell else '-' for cell in row) + '\n')
-
-df_matriz.to_csv('matriz.csv', encoding='utf-8', sep=';', index=True)
-
-
-
-df_matriz = pd.read_csv('matriz.csv', sep=';', index_col=0, low_memory=False)
+if 'NOME PESSOA' in df.columns:
+    nomes_por_matricula = df.drop_duplicates(matricula_id_col).set_index(matricula_id_col)['NOME PESSOA']
+    df_matriz.index = [f"{mid} - {nomes_por_matricula.get(mid, '')}" for mid in df_matriz.index]
 
 aprovados = {
     'APV - Aprovado', 'APV- Aprovado', 'APV - Aprovado sem nota',
@@ -64,9 +57,9 @@ def classificar_status(cell):
     status_list = [s.strip() for s in cell.split(',') if s.strip()]
     if any(s in aprovados for s in status_list):
         return 1
-    elif all(s in matriculado for s in status_list):
+    if any(s in matriculado for s in status_list):
         return 0
-    elif all(s in reprovados for s in status_list):
+    if any(s in reprovados for s in status_list):
         return -1
     else:
         return 0  
@@ -116,7 +109,6 @@ def construir_tooltip(nome_aluno, disciplina, status_str):
 
 df_numerico = df_matriz.map(classificar_status)
 
-
 hover_text = df_matriz.apply(
     lambda row: [
         construir_tooltip(row.name, df_matriz.columns[j], row.iloc[j])
@@ -144,16 +136,14 @@ fig = go.Figure(data=go.Heatmap(
 ))
 
 fig.update_layout(
-        title='Desempenho Acadêmico por Aluno e Disciplina',
-        xaxis=dict(title='Disciplinas', tickangle=45, tickfont=dict(size=9)),
-        yaxis=dict(title='Alunos', tickfont=dict(size=9)),
-        autosize=True,
-        margin=dict(l=50, r=50, t=80, b=100),
-        height=1200,
-    )
+    title='Desempenho Acadêmico por Matrícula e Disciplina',
+    xaxis=dict(title='Disciplinas', tickangle=45, tickfont=dict(size=9)),
+    yaxis=dict(title='Matrículas', tickfont=dict(size=9)),
+    autosize=True,
+    margin=dict(l=50, r=50, t=80, b=100),
+    height=1200,
+)
 
-
-# Cria o app
 app = Dash(__name__)
 
 app.layout = html.Div([

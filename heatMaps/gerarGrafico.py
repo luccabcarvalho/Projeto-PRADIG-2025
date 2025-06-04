@@ -69,19 +69,49 @@ def classificar_status(cell):
     elif all(s in reprovados for s in status_list):
         return -1
     else:
-        return 0  # estado misto, indefinido → amarelo por padrão
+        return 0  
 
 def construir_tooltip(nome_aluno, disciplina, status_str):
     if pd.isna(status_str) or not status_str.strip():
-        return f'Aluno: {nome_aluno}<br>Disciplina: {disciplina}<br>Status: Nenhum'
+        return (
+            f"<b>Aluno:</b> {nome_aluno}<br>"
+            f"<b>Disciplina:</b> {disciplina}<br>"
+            f"<b>Status:</b> Nenhum"
+        )
     status_list = [s.strip() for s in status_str.split(',') if s.strip()]
+    status_formatado = ""
+    for s in status_list:
+        partes = s.split('em')
+        status_base = partes[0].strip()
+        data = partes[1].strip() if len(partes) > 1 else None
+
+        if status_base in aprovados:
+            if data:
+                status_formatado += f"Aprovado em <b>{data}</b><br>"
+            else:
+                status_formatado += "Aprovado<br>"
+        elif status_base in reprovados:
+            motivo = status_base.split('-')[1].strip() if '-' in status_base else status_base
+            if data:
+                status_formatado += f"Reprovado por <b>{motivo}</b> em <b>{data}</b><br>"
+            else:
+                status_formatado += f"Reprovado por <b>{motivo}</b><br>"
+        elif status_base in matriculado:
+            if data:
+                status_formatado += f"Matriculado em <b>{data}</b><br>"
+            else:
+                status_formatado += "Matriculado<br>"
+        else:
+            if data:
+                status_formatado += f"{status_base} em <b>{data}</b><br>"
+            else:
+                status_formatado += f"{status_base}<br>"
     status_final = status_list[-1] if status_list else 'Indefinido'
-    status_formatado = '<br>'.join(status_list)
     return (
         f"<b>Aluno:</b> {nome_aluno}<br>"
         f"<b>Disciplina:</b> {disciplina}<br>"
-        f"<b>Status:</b><br>{status_formatado}<br>"
-        f"<b>Status Final:</b> {status_final}"
+        f"<b>Histórico:</b><br>{status_formatado}"
+        f"<b>Status Final:</b> <i>{status_final}</i>"
     )
 
 df_numerico = df_matriz.map(classificar_status)

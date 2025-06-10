@@ -8,7 +8,7 @@ df_alunos = pd.read_csv(r'docs/alunosPorCurso.csv')
 df_hist = pd.read_csv(r'docs/HistoricoEscolarSimplificado.csv')
 
 df_alunos = df_alunos.sort_values('PERIODO INGRESSO')
-alunos = df_alunos['NOME PESSOA'].tolist()
+alunos = df_hist['MATR ALUNO'].unique().tolist()
 
 blocos = [
     ('Prazo Previsto', 8, '#6fa8dc'),
@@ -45,29 +45,20 @@ df_hist['PERIODO_LABEL'] = (
     df_hist['ANO'].astype(str).str[-2:] + '/' +
     df_hist['PERIODO'].astype(str).str.replace('. semestre', '', regex=False).str.strip()
 )
-aluno_periodos = {aluno: [] for aluno in alunos}
-mapa_nome_id = dict(zip(df_alunos['NOME PESSOA'], df_alunos['ID PESSOA']))
 
-for _, row in df_hist.iterrows():
-    nome = df_alunos.loc[df_alunos['ID PESSOA'] == row['ID PESSOA'], 'NOME PESSOA']
-    if not nome.empty:
-        aluno = nome.values[0]
-        periodo = row['PERIODO_LABEL']
-        if periodo not in aluno_periodos[aluno]:
-            aluno_periodos[aluno].append(periodo)
+mapa_matricula_nome = dict(zip(df_hist['MATR ALUNO'], df_hist['NOME PESSOA']))
 
-def tooltip_periodo(aluno_nome, periodo):
-    # Seleciona o id do aluno
-    id_pessoa = mapa_nome_id.get(aluno_nome)
-    if not id_pessoa:
-        return periodo
+aluno_periodos = {}
+for matricula, grupo in df_hist.groupby('MATR ALUNO'):
+    periodos = grupo['PERIODO_LABEL'].drop_duplicates().tolist()
+    aluno_periodos[matricula] = periodos
 
-    # Filtra o histórico do aluno para o período
-    dados = df_hist[(df_hist['ID PESSOA'] == id_pessoa) & (df_hist['PERIODO_LABEL'] == periodo)]
+def tooltip_periodo(matricula, periodo):
+    aluno_nome = mapa_matricula_nome.get(matricula, str(matricula))
+    dados = df_hist[(df_hist['MATR ALUNO'] == matricula) & (df_hist['PERIODO_LABEL'] == periodo)]
     if dados.empty:
         return periodo
 
-    # Agrupa disciplinas por status
     aprovadas = []
     reprovadas = []
     matriculadas = []
@@ -97,25 +88,18 @@ def tooltip_periodo(aluno_nome, periodo):
 
 matriz = []
 tooltip_matriz = []
-for aluno in alunos:
-    periodos = aluno_periodos[aluno]
-    linha = []
-    tooltips = []
-    if len(periodos) <= n_periodos:
-        for i in range(n_periodos):
-            if i < len(periodos):
-                linha.append(periodos[i])
-                tooltips.append(tooltip_periodo(aluno, periodos[i]))
-            else:
-                linha.append('')
-                tooltips.append('')
-    else:
-        for i in range(n_periodos - 1):
-            linha.append(periodos[i])
-            tooltips.append(tooltip_periodo(aluno, periodos[i]))
-        linha.append('+')
+for matricula in alunos:
+    periodos = aluno_periodos.get(matricula, [])
+    linha = [''] * n_periodos
+    tooltips = [''] * n_periodos
+    limite = min(len(periodos), n_periodos)
+    for i in range(limite):
+        linha[i] = periodos[i]
+        tooltips[i] = tooltip_periodo(matricula, periodos[i])
+    if len(periodos) > n_periodos:
+        linha[-1] = '+'
         excedentes = periodos[n_periodos - 1:]
-        tooltips.append('Períodos excedentes: ' + ', '.join(excedentes))
+        tooltips[-1] = 'Períodos excedentes: ' + ', '.join(excedentes)
     matriz.append(linha)
     tooltip_matriz.append(tooltips)
 
@@ -123,7 +107,7 @@ for aluno in alunos:
 fig = go.Figure(data=go.Heatmap(
     z=[[i for i in range(n_periodos)] for _ in range(len(alunos))],
     x=[f'{colunas[i]} {i+1}' for i in range(n_periodos)],
-    y=alunos,
+    y=[f"{matricula} - {mapa_matricula_nome.get(matricula, '')}" for matricula in alunos],
     text=matriz,
     customdata=tooltip_matriz,
     hovertemplate='%{customdata}',  
@@ -178,5 +162,3 @@ app.layout = html.Div([
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-

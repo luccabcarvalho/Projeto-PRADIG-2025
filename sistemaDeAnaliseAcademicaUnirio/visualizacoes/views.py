@@ -51,8 +51,6 @@ def status_integralizacao(request):
         periodos = grupo['PERIODO_LABEL'].drop_duplicates().tolist()
         aluno_periodos[matricula] = periodos
 
-    print(f"teste1")
-
     def tooltip_periodo(matricula, periodo):
         aluno_nome = mapa_matricula_nome.get(matricula, str(matricula))
         dados = df_hist[(df_hist['MATR ALUNO'] == matricula) & (df_hist['PERIODO_LABEL'] == periodo)]
@@ -86,8 +84,6 @@ def status_integralizacao(request):
             tooltip += "<b>Outros:</b><br>" + "<br>".join(outros) + "<br>"
         return tooltip
 
-    print(f"teste2")
-
     matriz = []
     tooltip_matriz = []
     for matricula in alunos:
@@ -116,8 +112,6 @@ def status_integralizacao(request):
         colorscale=[[i/(n_periodos-1), cor] for i, cor in enumerate(cores)],
         showscale=False
     ))
-
-    print(f"teste3")
 
     for i, cor in enumerate(cores):
         fig.add_shape(

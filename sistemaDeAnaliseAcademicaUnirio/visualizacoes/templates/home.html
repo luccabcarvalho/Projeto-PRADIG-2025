@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Home - Sistema de Análise Acadêmica</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 80px; }
+        .btn {
+            display: inline-block;
+            margin: 20px;
+            padding: 20px 40px;
+            font-size: 1.2em;
+            background: #1976d2;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #1565c0; }
+    </style>
+</head>
+<body>
+    <h1>Sistema de Análise Acadêmica</h1>
+    <a href="{% url 'desempenho_aluno_periodo' %}" class="btn">Desempenho Acadêmico por Aluno</a>
+    <a href="{% url 'heatmap_desempenho' %}" class="btn">Heatmap de Desempenho Acadêmico</a>
+    <a href="{% url 'status_integralizacao' %}" class="btn">Status de Integralização</a>
+</body>
+</html>

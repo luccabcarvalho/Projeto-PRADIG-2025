@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from django.shortcuts import render
+from django.urls import reverse
 import os
 
 def status_integralizacao(request):
@@ -434,3 +435,6 @@ def heatmap_desempenho(request):
 
     plot_div = fig.to_html(full_html=False)
     return render(request, 'heatmap_desempenho.html', {'plot_div': plot_div})
+
+def home(request):
+    return render(request, 'home.html')

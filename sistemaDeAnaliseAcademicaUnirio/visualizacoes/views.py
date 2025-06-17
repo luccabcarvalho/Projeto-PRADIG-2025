@@ -5,6 +5,12 @@ from django.shortcuts import render
 import os
 
 def status_integralizacao(request):
+    import pandas as pd
+    import numpy as np
+    import plotly.graph_objects as go
+    import os
+    from django.shortcuts import render
+
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     data_dir = os.path.join(BASE_DIR, 'visualizacoes', 'data')
     df_alunos = pd.read_csv(os.path.join(data_dir, 'alunosPorCurso.csv'))
@@ -43,36 +49,37 @@ def status_integralizacao(request):
         df_hist['ANO'].astype(str).str[-2:] + '/' +
         df_hist['PERIODO'].astype(str).str.replace('. semestre', '', regex=False).str.strip()
     )
+    df_hist = df_hist[df_hist['PERIODO_LABEL'].notna()]
 
     mapa_matricula_nome = dict(zip(df_hist['MATR ALUNO'], df_hist['NOME PESSOA']))
 
-    aluno_periodos = {}
-    for matricula, grupo in df_hist.groupby('MATR ALUNO'):
-        periodos = grupo['PERIODO_LABEL'].drop_duplicates().tolist()
-        aluno_periodos[matricula] = periodos
+    # Vetorizado: períodos por aluno
+    aluno_periodos_df = df_hist[['MATR ALUNO', 'PERIODO_LABEL']].drop_duplicates()
+    aluno_periodos_grouped = aluno_periodos_df.groupby('MATR ALUNO')['PERIODO_LABEL'].apply(list)
+    aluno_periodos = aluno_periodos_grouped.to_dict()
 
-    def tooltip_periodo(matricula, periodo):
-        aluno_nome = mapa_matricula_nome.get(matricula, str(matricula))
-        dados = df_hist[(df_hist['MATR ALUNO'] == matricula) & (df_hist['PERIODO_LABEL'] == periodo)]
-        if dados.empty:
-            return periodo
+    # Vetorizado: tooltips por (matricula, periodo)
+    df_hist_tooltip = df_hist.copy()
+    df_hist_tooltip['DISCIPLINA_FORMATADA'] = (
+        df_hist_tooltip['COD ATIV CURRIC'].astype(str) + ' - ' +
+        df_hist_tooltip['NOME ATIV CURRIC'] + ' (' +
+        df_hist_tooltip['TOTAL CARGA HORARIA'].astype(str) + 'h)'
+    )
+    df_hist_tooltip.set_index(['MATR ALUNO', 'PERIODO_LABEL'], inplace=True)
 
-        aprovadas = []
-        reprovadas = []
-        matriculadas = []
-        outros = []
-        for _, row in dados.iterrows():
-            status = str(row['DESCR SITUACAO']).strip()
-            disciplina = f"{row['COD ATIV CURRIC']} - {row['NOME ATIV CURRIC']} ({row['TOTAL CARGA HORARIA']}h)"
-            if status in status_aprovados:
-                aprovadas.append(disciplina)
-            elif status in status_reprovados:
-                reprovadas.append(disciplina)
-            elif status in status_matriculado:
-                matriculadas.append(disciplina)
-            else:
-                outros.append(f"{disciplina} [{status}]")
-
+    def gerar_tooltip(grupo):
+        aluno_nome = mapa_matricula_nome.get(grupo.name[0], str(grupo.name[0]))
+        periodo = grupo.name[1]
+        aprovadas = grupo.loc[grupo['DESCR SITUACAO'].isin(status_aprovados), 'DISCIPLINA_FORMATADA'].tolist()
+        reprovadas = grupo.loc[grupo['DESCR SITUACAO'].isin(status_reprovados), 'DISCIPLINA_FORMATADA'].tolist()
+        matriculadas = grupo.loc[grupo['DESCR SITUACAO'].isin(status_matriculado), 'DISCIPLINA_FORMATADA'].tolist()
+        outros = [
+            f"{row['DISCIPLINA_FORMATADA']} [{row['DESCR SITUACAO']}]"
+            for _, row in grupo.iterrows()
+            if row['DESCR SITUACAO'] not in status_aprovados
+            and row['DESCR SITUACAO'] not in status_reprovados
+            and row['DESCR SITUACAO'] not in status_matriculado
+        ]
         tooltip = f"<b>Aluno:</b> {aluno_nome}<br><b>Período:</b> {periodo}<br>"
         if aprovadas:
             tooltip += "<b>Aprovadas:</b><br>" + "<br>".join(aprovadas) + "<br>"
@@ -84,22 +91,24 @@ def status_integralizacao(request):
             tooltip += "<b>Outros:</b><br>" + "<br>".join(outros) + "<br>"
         return tooltip
 
-    matriz = []
-    tooltip_matriz = []
-    for matricula in alunos:
+    tooltips_df = df_hist_tooltip.groupby(['MATR ALUNO', 'PERIODO_LABEL']).apply(gerar_tooltip)
+
+    matriz = np.full((len(alunos), n_periodos), '', dtype=object)
+    tooltip_matriz = np.full((len(alunos), n_periodos), '', dtype=object)
+
+    for idx, matricula in enumerate(alunos):
         periodos = aluno_periodos.get(matricula, [])
-        linha = [''] * n_periodos
-        tooltips = [''] * n_periodos
         limite = min(len(periodos), n_periodos)
-        for i in range(limite):
-            linha[i] = periodos[i]
-            tooltips[i] = tooltip_periodo(matricula, periodos[i])
+        if limite > 0:
+            matriz[idx, :limite] = periodos[:limite]
+            tooltip_matriz[idx, :limite] = [
+                tooltips_df.get((matricula, periodo), periodo)
+                for periodo in periodos[:limite]
+            ]
         if len(periodos) > n_periodos:
-            linha[-1] = '+'
+            matriz[idx, -1] = '+'
             excedentes = periodos[n_periodos - 1:]
-            tooltips[-1] = 'Períodos excedentes: ' + ', '.join(excedentes)
-        matriz.append(linha)
-        tooltip_matriz.append(tooltips)
+            tooltip_matriz[idx, -1] = 'Períodos excedentes: ' + ', '.join(excedentes)
 
     fig = go.Figure(data=go.Heatmap(
         z=[[i for i in range(n_periodos)] for _ in range(len(alunos))],

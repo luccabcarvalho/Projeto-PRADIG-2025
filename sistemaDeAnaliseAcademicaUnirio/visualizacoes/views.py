@@ -240,7 +240,19 @@ def desempenho_aluno_periodo(request):
     df_alunos = df_alunos.sort_values('PERIODO INGRESSO')
     df_historico['ANO_PERIODO'] = df_historico['ANO'].astype(str) + ' - ' + df_historico['PERIODO']
 
-    id_aluno = df_alunos['ID PESSOA'].iloc[0]
+    # Corrigir aqui: pegar o ID do aluno da request ou usar o primeiro como padrão
+    id_aluno_param = request.GET.get('id_aluno')
+    if id_aluno_param:
+        try:
+            id_aluno = int(id_aluno_param)
+            # Verificar se o aluno existe nos dados
+            if id_aluno not in df_alunos['ID PESSOA'].values:
+                id_aluno = df_alunos['ID PESSOA'].iloc[0]
+        except (ValueError, TypeError):
+            id_aluno = df_alunos['ID PESSOA'].iloc[0]
+    else:
+        id_aluno = df_alunos['ID PESSOA'].iloc[0]
+
     dados_aluno = df_historico[df_historico['ID PESSOA'] == id_aluno].copy()
     dados_aluno['STATUS'] = dados_aluno['DESCR SITUACAO'].str.strip()
     dados_aluno['CARGA'] = dados_aluno['TOTAL CARGA HORARIA']
@@ -354,7 +366,7 @@ def desempenho_aluno_periodo(request):
     return render(request, 'desempenho_aluno_periodo.html', {
         'plot_div': plot_div,
         'alunos_options': alunos_options,
-        'selected_id': id_aluno,
+        'selected_id': str(id_aluno),  # Converter para string para comparação no template
     })
 
 def heatmap_desempenho(request):

@@ -121,10 +121,8 @@ def status_integralizacao(request):
         label = ano[-2:] + '/' + periodo
         periodo_label_dict[(row['ANO'], row['PERIODO'])] = label
 
-    # Mapeamento matrícula -> nome
     mapa_matricula_nome = {alunos_dict[idx]['MATR ALUNO']: alunos_dict[idx]['NOME PESSOA'] for idx in alunos_dict}
 
-    # Para cada aluno, lista de períodos ordenados
     aluno_periodos = {}
     for matr in matriz_geral:
         periodos = list(matriz_geral[matr].keys())
@@ -161,7 +159,6 @@ def status_integralizacao(request):
         tooltips = [gerar_tooltip_celula(matr, p) for p in periodos]
         aluno_labels_tooltips[matr] = (labels, tooltips)
 
-    # Preenche as matrizes em um único loop
     for idx, matr in enumerate(matriculas):
         labels, tooltips = aluno_labels_tooltips[matr]
         limite = min(len(labels), n_periodos)
@@ -207,14 +204,15 @@ def status_integralizacao(request):
             ticktext=[f'{colunas[i]}' for i in range(n_periodos)],
             tickangle=45,
             side='top',
-            range=[-0.5, n_periodos-0.5]
+            range=[-0.5, 25.5]
+
         ),
         yaxis=dict(
             automargin=True,
             tickfont=dict(size=12),
             scaleanchor="x",
             scaleratio=1,
-            range=[-0.5, len(matriculas)-0.5]
+            range=[-0.5, 14.5]
         ),
         autosize=False,
         width=1800,
@@ -240,7 +238,6 @@ def desempenho_aluno_periodo(request):
     df_alunos = df_alunos.sort_values('PERIODO INGRESSO')
     df_historico['ANO_PERIODO'] = df_historico['ANO'].astype(str) + ' - ' + df_historico['PERIODO']
 
-    # Corrigir aqui: pegar o ID do aluno da request ou usar o primeiro como padrão
     id_aluno_param = request.GET.get('id_aluno')
     if id_aluno_param:
         try:
@@ -379,15 +376,43 @@ def heatmap_desempenho(request):
     data_dir = os.path.join(BASE_DIR, 'visualizacoes', 'data')
     df = pd.read_csv(os.path.join(data_dir, 'HistoricoEscolarSimplificado.csv'))
 
+    curriculos_disponiveis = sorted(df['NUM VERSAO'].unique())
+    
+    curriculos_selecionados = request.GET.getlist('curriculos')
+    if not curriculos_selecionados:
+        curriculos_selecionados = [curriculos_disponiveis[-1]]  # Último currículo por padrão
+    
+    df_filtrado = df[df['NUM VERSAO'].isin(curriculos_selecionados)]
+    
+    if df_filtrado.empty:
+        fig = go.Figure()
+        fig.update_layout(
+            title='Nenhum dado encontrado para os currículos selecionados',
+            xaxis_title='Disciplinas',
+            yaxis_title='Matrículas',
+            height=400
+        )
+        plot_div = fig.to_html(full_html=False)
+        
+        curriculos_options = [
+            {'value': curriculo, 'label': curriculo, 'selected': curriculo in curriculos_selecionados}
+            for curriculo in curriculos_disponiveis
+        ]
+        
+        return render(request, 'heatmap_desempenho.html', {
+            'plot_div': plot_div,
+            'curriculos_options': curriculos_options,
+        })
+
     matricula_id_col = 'MATR ALUNO'
-    disciplinas_dict = dict(zip(df['COD ATIV CURRIC'], df['NOME ATIV CURRIC']))
-    matriculas = df[matricula_id_col].unique().tolist()
-    disciplinas = df['COD ATIV CURRIC'].unique().tolist()
+    disciplinas_dict = dict(zip(df_filtrado['COD ATIV CURRIC'], df_filtrado['NOME ATIV CURRIC']))
+    matriculas = df_filtrado[matricula_id_col].unique().tolist()
+    disciplinas = df_filtrado['COD ATIV CURRIC'].unique().tolist()
     mapa_matriculas = {mat: i for i, mat in enumerate(matriculas)}
     mapa_disciplinas = {disc: i for i, disc in enumerate(disciplinas)}
 
     matriz = [[[] for _ in range(len(disciplinas))] for _ in range(len(matriculas))]
-    for _, row in df.iterrows():
+    for _, row in df_filtrado.iterrows():
         i = mapa_matriculas[row[matricula_id_col]]
         j = mapa_disciplinas[row['COD ATIV CURRIC']]
         matriz[i][j].append(row['DESCR SITUACAO'])
@@ -397,9 +422,13 @@ def heatmap_desempenho(request):
         index=matriculas,
         columns=[disciplinas_dict[cod] for cod in disciplinas]
     )
-    if 'NOME PESSOA' in df.columns:
-        nomes_por_matricula = df.drop_duplicates(matricula_id_col).set_index(matricula_id_col)['NOME PESSOA']
-        df_matriz.index = [f"{mid} - {nomes_por_matricula.get(mid, '')}" for mid in df_matriz.index]
+    
+    if 'NOME PESSOA' in df_filtrado.columns:
+        aluno_info = df_filtrado.drop_duplicates(matricula_id_col).set_index(matricula_id_col)[['NOME PESSOA', 'NUM VERSAO']]
+        df_matriz.index = [
+            f"{mid} - {aluno_info.loc[mid, 'NOME PESSOA']} (Currículo: {aluno_info.loc[mid, 'NUM VERSAO']})" 
+            for mid in df_matriz.index
+        ]
 
     aprovados = {
         'APV - Aprovado', 'APV- Aprovado', 'APV - Aprovado sem nota',
@@ -498,17 +527,31 @@ def heatmap_desempenho(request):
         )
     ))
 
+    if len(curriculos_selecionados) == 1:
+        titulo_curriculos = f"Currículo: {curriculos_selecionados[0]}"
+    else:
+        titulo_curriculos = f"Currículos: {', '.join(curriculos_selecionados)}"
+
     fig.update_layout(
-        title='Desempenho Acadêmico por Matrícula e Disciplina',
+        title=f'Desempenho Acadêmico por Matrícula e Disciplina<br><sub>{titulo_curriculos}</sub>',
         xaxis=dict(title='Disciplinas', tickangle=45, tickfont=dict(size=9)),
         yaxis=dict(title='Matrículas', tickfont=dict(size=9)),
         autosize=True,
-        margin=dict(l=50, r=50, t=80, b=100),
-        height=1200,
+        margin=dict(l=50, r=50, t=100, b=100),
+        height=max(600, len(matriculas) * 20 + 200),  # Altura dinâmica baseada no número de alunos
     )
 
     plot_div = fig.to_html(full_html=False)
-    return render(request, 'heatmap_desempenho.html', {'plot_div': plot_div})
+    
+    curriculos_options = [
+        {'value': curriculo, 'label': curriculo, 'selected': curriculo in curriculos_selecionados}
+        for curriculo in curriculos_disponiveis
+    ]
+    
+    return render(request, 'heatmap_desempenho.html', {
+        'plot_div': plot_div,
+        'curriculos_options': curriculos_options,
+    })
 
 def home(request):
     return render(request, 'home.html')

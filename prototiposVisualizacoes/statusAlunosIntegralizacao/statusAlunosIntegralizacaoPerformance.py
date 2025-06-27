@@ -4,8 +4,8 @@ import plotly.graph_objects as go
 from dash import Dash, html, dcc
 
 
-df_alunos = pd.read_csv(r'prototiposVisualizacoes/docs/alunosPorCurso.csv')
-df_historico = pd.read_csv(r'prototiposVisualizacoes/docs/HistoricoEscolarSimplificado.csv')
+df_alunos = pd.read_csv(r'prototiposVisualizacoes/docs/alunosPorCursoPerformance.csv')
+df_historico = pd.read_csv(r'prototiposVisualizacoes/docs/HistoricoEscolarSimplificadoPerformance.csv')
 
 df_alunos = df_alunos.sort_values('PERIODO INGRESSO')
 alunos = df_historico['MATR ALUNO'].unique().tolist()
@@ -109,6 +109,8 @@ for _, row in df_historico.iterrows():
             'codigo': row['COD ATIV CURRIC']
         })
 
+print(matriz_geral)
+
 colunas = []
 cores = []
 for nome, tam, cor in blocos:
@@ -116,7 +118,6 @@ for nome, tam, cor in blocos:
     cores += [cor] * tam
 n_periodos = len(colunas)
 
-# Geração dos labels dos períodos para cada (ano, periodo)
 periodo_label_dict = {}
 for idx, row in periodos_unicos.iterrows():
     ano = str(row['ANO'])
@@ -124,19 +125,15 @@ for idx, row in periodos_unicos.iterrows():
     label = ano[-2:] + '/' + periodo
     periodo_label_dict[(row['ANO'], row['PERIODO'])] = label
 
-# Mapeamento matrícula -> nome
 mapa_matricula_nome = {alunos_dict[idx]['MATR ALUNO']: alunos_dict[idx]['NOME PESSOA'] for idx in alunos_dict}
 
-# Para cada aluno, lista de períodos ordenados
 aluno_periodos = {}
 for matr in matriz_geral:
     periodos = list(matriz_geral[matr].keys())
-    # Ordena por ano e período
     periodos.sort()
     labels = [periodo_label_dict.get(p, '') for p in periodos]
     aluno_periodos[matr] = labels
 
-# Função para gerar tooltip a partir da célula já montada
 def gerar_tooltip_celula(matr, periodo):
     celula = matriz_geral[matr][periodo]
     nome = celula.get('nome', str(matr))
@@ -153,10 +150,8 @@ def gerar_tooltip_celula(matr, periodo):
         tooltip += "<b>Outros:</b><br>" + "<br>".join(outros) + "<br>"
     return tooltip
 
-# Lista de matrículas na mesma ordem dos alunos
 matriculas = list(matriz_geral.keys())
 
-# Montagem das matrizes para plotly
 matriz = np.full((len(matriculas), n_periodos), '', dtype=object)
 tooltip_matriz = np.full((len(matriculas), n_periodos), '', dtype=object)
 

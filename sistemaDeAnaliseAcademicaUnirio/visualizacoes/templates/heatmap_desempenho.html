@@ -2,9 +2,73 @@
 <html>
 <head>
     <title>Heatmap de Desempenho Acadêmico</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .form-container {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .form-container h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .select-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .select-container label {
+            font-weight: bold;
+            color: #555;
+        }
+        .select-container select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+            min-width: 200px;
+        }
+        .submit-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
     <h1>Heatmap de Desempenho Acadêmico</h1>
+    
+    <div class="form-container">
+        <h3>Selecione o Currículo para Visualizar</h3>
+        <form method="get" id="curriculo-form">
+            <div class="select-container">
+                <label for="curriculo-select">Currículo:</label>
+                <select name="curriculos" id="curriculo-select" onchange="document.getElementById('curriculo-form').submit();">
+                    {% for curriculo in curriculos_options %}
+                        <option value="{{ curriculo.value }}" {% if curriculo.selected %}selected{% endif %}>
+                            {{ curriculo.label }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="submit-btn">Atualizar</button>
+            </div>
+        </form>
+    </div>
+    
     {{ plot_div|safe }}
 </body>
 </html>

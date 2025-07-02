@@ -109,135 +109,52 @@ for _, row in df_historico.iterrows():
             'codigo': row['COD ATIV CURRIC']
         })
 
-print(matriz_geral)
+matriz_integralizacao = {}
 
-colunas = []
-cores = []
-for nome, tam, cor in blocos:
-    colunas += [nome] + [""] * (tam - 1)
-    cores += [cor] * tam
-n_periodos = len(colunas)
+for matr in matriculas_validas:
+    matriz_integralizacao[matr] = {}
+    for idx, (nome_bloco, qtd_periodos, cor) in enumerate(blocos):
+        matriz_integralizacao[matr][idx] = {
+            'nome_bloco': nome_bloco,
+            'qtd_periodos': qtd_periodos,
+            'cor': cor,
+            'dados': [] 
+        }
 
-periodo_label_dict = {}
-for idx, row in periodos_unicos.iterrows():
-    ano = str(row['ANO'])
-    periodo = str(row['PERIODO']).replace('. semestre', '').strip()
-    label = ano[-2:] + '/' + periodo
-    periodo_label_dict[(row['ANO'], row['PERIODO'])] = label
-
-mapa_matricula_nome = {alunos_dict[idx]['MATR ALUNO']: alunos_dict[idx]['NOME PESSOA'] for idx in alunos_dict}
-
-aluno_periodos = {}
 for matr in matriz_geral:
-    periodos = list(matriz_geral[matr].keys())
-    periodos.sort()
-    labels = [periodo_label_dict.get(p, '') for p in periodos]
-    aluno_periodos[matr] = labels
+    periodos_ordenados = sorted(matriz_geral[matr].keys(), key=lambda x: (int(x[0]), 1 if '1' in x[1] else 2))
+    bloco_idx = 0
+    periodo_bloco = 0
+    excedente = False
+    excedente_info = []
+    for periodo in periodos_ordenados:
+        celula = matriz_geral[matr][periodo]
+        if excedente:
+            excedente_info.append((formatar_periodo(*periodo), celula))
+            continue
+        if bloco_idx >= len(blocos):
+            break
+        nome_bloco, qtd_periodos, cor = blocos[bloco_idx]
+        if nome_bloco == 'Situação Irregular' and periodo_bloco >= qtd_periodos:
+            # Sinaliza excedente
+            excedente = True
+            excedente_info.append((formatar_periodo(*periodo), celula))
+            continue
+        # Adiciona normalmente ao bloco
+        matriz_integralizacao[matr][bloco_idx]['dados'].append({
+            formatar_periodo(*periodo): celula
+        })
+        periodo_bloco += 1
+        if periodo_bloco >= blocos[bloco_idx][1]:
+            bloco_idx += 1
+            periodo_bloco = 0
+    # Se houve excedente, adiciona tudo ao último bloco com '+'
+    if excedente_info:
+        matriz_integralizacao[matr][bloco_idx]['dados'].append({
+            '+': excedente_info
+        })
 
-def gerar_tooltip_celula(matr, periodo):
-    celula = matriz_geral[matr][periodo]
-    nome = celula.get('nome', str(matr))
-    periodo_label = periodo_label_dict.get(periodo, f"{periodo[0]}/{periodo[1]}")
-    aprovadas = [f"{d['codigo']} - {d['nome']}" for d in celula.get('aprovacoes', [])]
-    reprovadas = [f"{d['codigo']} - {d['nome']}" for d in celula.get('reprovacoes', [])]
-    outros = [f"{d['codigo']} - {d['nome']} [{d['status']}]" for d in celula.get('outros', [])]
-    tooltip = f"<b>Aluno:</b> {nome}<br><b>Período:</b> {periodo_label}<br>"
-    if aprovadas:
-        tooltip += "<b>Aprovadas:</b><br>" + "<br>".join(aprovadas) + "<br>"
-    if reprovadas:
-        tooltip += "<b>Reprovadas:</b><br>" + "<br>".join(reprovadas) + "<br>"
-    if outros:
-        tooltip += "<b>Outros:</b><br>" + "<br>".join(outros) + "<br>"
-    return tooltip
-
-matriculas = list(matriz_geral.keys())
-
-matriz = np.full((len(matriculas), n_periodos), '', dtype=object)
-tooltip_matriz = np.full((len(matriculas), n_periodos), '', dtype=object)
-
-aluno_labels_tooltips = {}
-for matr in matriculas:
-    periodos = sorted(matriz_geral[matr].keys())
-    labels = [periodo_label_dict.get(p, '') for p in periodos]
-    tooltips = [gerar_tooltip_celula(matr, p) for p in periodos]
-    aluno_labels_tooltips[matr] = (labels, tooltips)
-
-for idx, matr in enumerate(matriculas):
-    labels, tooltips = aluno_labels_tooltips[matr]
-    limite = min(len(labels), n_periodos)
-    if limite > 0:
-        matriz[idx, :limite] = labels[:limite]
-        tooltip_matriz[idx, :limite] = tooltips[:limite]
-    if len(labels) > n_periodos:
-        matriz[idx, -1] = '+'
-        excedentes = labels[n_periodos - 1:]
-        tooltip_matriz[idx, -1] = 'Períodos excedentes: ' + ', '.join(excedentes)
-
-fig = go.Figure(data=go.Heatmap(
-    z=[[i for i in range(n_periodos)] for _ in range(len(matriculas))],
-    x=[f'{colunas[i]} {i+1}' for i in range(n_periodos)],
-    y=[f"{matr} - {mapa_matricula_nome.get(matr, '')}" for matr in matriculas],
-    text=matriz,
-    customdata=tooltip_matriz,
-    hovertemplate='%{customdata}',
-    texttemplate='%{text}',
-    colorscale=[[i/(n_periodos-1), cor] for i, cor in enumerate(cores)],
-    showscale=False
-))
-
-for i, cor in enumerate(cores):
-    fig.add_shape(
-        type="rect",
-        x0=i-0.5, x1=i+0.5,
-        y0=-0.5, y1=len(matriculas)-0.5,
-        fillcolor=cor, line=dict(width=0),
-        layer="below"
-    )
-
-fig.update_traces(
-    showscale=False,
-    textfont=dict(size=13, color='black'),
-)
-
-fig.update_layout(
-    title='Status de Integralização dos Alunos por Período',
-    xaxis=dict(
-        tickmode='array',
-        tickvals=list(range(n_periodos)),
-        ticktext=[f'{colunas[i]}' for i in range(n_periodos)],
-        tickangle=45,
-        side='top',
-        range=[-0.5, n_periodos-0.5]
-    ),
-    yaxis=dict(
-        automargin=True,
-        tickfont=dict(size=12),
-        scaleanchor="x",
-        scaleratio=1,
-        range=[-0.5, len(matriculas)-0.5]
-    ),
-    autosize=False,
-    width=1800,
-    height=900,
-    margin=dict(l=10, r=10, t=80, b=10),
-)
-
-# Dash app
-app = Dash(__name__)
-app.layout = html.Div([
-    html.H2("Status de Integralização dos Alunos por Período"),
-    dcc.Graph(figure=fig, style={'width': '300vw', 'height': '90vh', 'overflowY': 'scroll'})
-])
-
-if __name__ == '__main__':
-    app.run(debug=True)
-
-
-
-
-
-
-
+print(matriz_integralizacao)
 
 
 

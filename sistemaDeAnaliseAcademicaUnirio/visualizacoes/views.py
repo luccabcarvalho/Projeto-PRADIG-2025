@@ -31,6 +31,10 @@ def status_integralizacao(request):
             'PERIODO': row['PERIODO']
         }
 
+    def formatar_periodo(ano, periodo):
+        periodo = str(periodo).replace('. semestre', '')
+        return f"{str(ano)[-2:]}/{periodo}°"
+
     blocos = [
         ('Prazo Previsto', 8, '#6fa8dc'),
         ('Prazo Máximo', 2, '#9fc5e8'),
@@ -106,77 +110,44 @@ def status_integralizacao(request):
                 'codigo': row['COD ATIV CURRIC']
             })
 
+    n_periodos = sum([bloco[1] for bloco in blocos])
+    matriculas = list(matriz_geral.keys())
+    matriz_integralizacao = []
+
+    for matr in matriculas:
+        periodos_ordenados = sorted(
+            matriz_geral[matr].keys(),
+            key=lambda x: (int(x[0]), 1 if '1' in str(x[1]) else 2)
+        )
+        linha = []
+        for periodo in periodos_ordenados:
+            if len(linha) < n_periodos:
+                linha.append(formatar_periodo(*periodo))
+            else:
+                break
+        if len(periodos_ordenados) > n_periodos:
+            linha[-1] = '+'
+        while len(linha) < n_periodos:
+            linha.append('')
+        matriz_integralizacao.append(linha)
+
     colunas = []
     cores = []
     for nome, tam, cor in blocos:
         colunas += [nome] + [""] * (tam - 1)
         cores += [cor] * tam
-    n_periodos = len(colunas)
 
-    # Geração dos labels dos períodos para cada (ano, periodo)
-    periodo_label_dict = {}
-    for idx, row in periodos_unicos.iterrows():
-        ano = str(row['ANO'])
-        periodo = str(row['PERIODO']).replace('. semestre', '').strip()
-        label = ano[-2:] + '/' + periodo
-        periodo_label_dict[(row['ANO'], row['PERIODO'])] = label
-
-    mapa_matricula_nome = {alunos_dict[idx]['MATR ALUNO']: alunos_dict[idx]['NOME PESSOA'] for idx in alunos_dict}
-
-    aluno_periodos = {}
-    for matr in matriz_geral:
-        periodos = list(matriz_geral[matr].keys())
-        periodos.sort()
-        labels = [periodo_label_dict.get(p, '') for p in periodos]
-        aluno_periodos[matr] = labels
-
-    # Função para gerar tooltip a partir da célula já montada
-    def gerar_tooltip_celula(matr, periodo):
-        celula = matriz_geral[matr][periodo]
-        nome = celula.get('nome', str(matr))
-        periodo_label = periodo_label_dict.get(periodo, f"{periodo[0]}/{periodo[1]}")
-        aprovadas = [f"{d['codigo']} - {d['nome']}" for d in celula.get('aprovacoes', [])]
-        reprovadas = [f"{d['codigo']} - {d['nome']}" for d in celula.get('reprovacoes', [])]
-        outros = [f"{d['codigo']} - {d['nome']} [{d['status']}]" for d in celula.get('outros', [])]
-        tooltip = f"<b>Aluno:</b> {nome}<br><b>Período:</b> {periodo_label}<br>"
-        if aprovadas:
-            tooltip += "<b>Aprovadas:</b><br>" + "<br>".join(aprovadas) + "<br>"
-        if reprovadas:
-            tooltip += "<b>Reprovadas:</b><br>" + "<br>".join(reprovadas) + "<br>"
-        if outros:
-            tooltip += "<b>Outros:</b><br>" + "<br>".join(outros) + "<br>"
-        return tooltip
-
-    matriculas = list(matriz_geral.keys())
-  
-    matriz = np.full((len(matriculas), n_periodos), '', dtype=object)
-    tooltip_matriz = np.full((len(matriculas), n_periodos), '', dtype=object)
-
-    aluno_labels_tooltips = {}
-    for matr in matriculas:
-        periodos = sorted(matriz_geral[matr].keys())
-        labels = [periodo_label_dict.get(p, '') for p in periodos]
-        tooltips = [gerar_tooltip_celula(matr, p) for p in periodos]
-        aluno_labels_tooltips[matr] = (labels, tooltips)
-
-    for idx, matr in enumerate(matriculas):
-        labels, tooltips = aluno_labels_tooltips[matr]
-        limite = min(len(labels), n_periodos)
-        if limite > 0:
-            matriz[idx, :limite] = labels[:limite]
-            tooltip_matriz[idx, :limite] = tooltips[:limite]
-        if len(labels) > n_periodos:
-            matriz[idx, -1] = '+'
-            excedentes = labels[n_periodos - 1:]
-            tooltip_matriz[idx, -1] = 'Períodos excedentes: ' + ', '.join(excedentes)
+    nomes = [
+        next((alunos_dict[idx]['NOME PESSOA'] for idx in alunos_dict if alunos_dict[idx]['MATR ALUNO'] == matr), '')
+        for matr in matriculas
+    ]
 
     fig = go.Figure(data=go.Heatmap(
         z=[[i for i in range(n_periodos)] for _ in range(len(matriculas))],
         x=[f'{colunas[i]} {i+1}' for i in range(n_periodos)],
-        y=[f"{matr} - {mapa_matricula_nome.get(matr, '')}" for matr in matriculas],
-        text=matriz,
-        customdata=tooltip_matriz,
-        hovertemplate='%{customdata}',
+        y=[f"{matriculas[i]} - {nomes[i]}" for i in range(len(matriculas))],
+        text=matriz_integralizacao,
+        hoverinfo='text',
         texttemplate='%{text}',
         colorscale=[[i/(n_periodos-1), cor] for i, cor in enumerate(cores)],
         showscale=False
@@ -204,15 +175,14 @@ def status_integralizacao(request):
             ticktext=[f'{colunas[i]}' for i in range(n_periodos)],
             tickangle=45,
             side='top',
-            range=[-0.5, 25.5]
-
+            range=[-0.5, n_periodos-0.5]
         ),
         yaxis=dict(
             automargin=True,
             tickfont=dict(size=12),
             scaleanchor="x",
             scaleratio=1,
-            range=[-0.5, 14.5]
+            range=[-0.5, len(matriculas)-0.5]
         ),
         autosize=False,
         width=1800,

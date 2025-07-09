@@ -3,7 +3,6 @@ import numpy as np
 import plotly.graph_objects as go
 from dash import Dash, html, dcc
 
-
 df_alunos = pd.read_csv(r'prototiposVisualizacoes/docs/alunosPorCursoPerformance.csv')
 df_historico = pd.read_csv(r'prototiposVisualizacoes/docs/HistoricoEscolarSimplificadoPerformance.csv')
 
@@ -28,7 +27,8 @@ for idx, row in periodos_unicos.iterrows():
     }
 
 def formatar_periodo(ano, periodo):
-    return f"{ano}/{periodo}"
+    periodo = periodo.replace('. semestre', '')
+    return f"{str(ano)[-2:]}/{periodo}°"
 
 blocos = [
     ('Prazo Previsto', 8, '#6fa8dc'),
@@ -52,9 +52,6 @@ status_reprovados = {
     'REP - Reprovado por nota/conceito', 'REF - Reprovado por falta',
     'ASC - Reprovado sem nota', 'TRA - Trancamento de disciplina'
 }
-status_outros = {
-    
-}
 status_matriculado = {'ASC - Matrícula'}
 
 matriculas_validas = set(alunos_dict[idx]['MATR ALUNO'] for idx in alunos_dict)
@@ -71,7 +68,6 @@ for _, row in df_historico.iterrows():
         matriz_geral[matr] = {}
     if periodo not in matriz_geral[matr]:
         matriz_geral[matr][periodo] = {}
-
 
 for _, row in df_historico.iterrows():
     matr = row['MATR ALUNO']
@@ -109,57 +105,92 @@ for _, row in df_historico.iterrows():
             'codigo': row['COD ATIV CURRIC']
         })
 
-matriz_integralizacao = {}
+n_periodos = sum([bloco[1] for bloco in blocos])
+matriculas = list(matriz_geral.keys())
+matriz_integralizacao = []
 
-for matr in matriculas_validas:
-    matriz_integralizacao[matr] = {}
-    for idx, (nome_bloco, qtd_periodos, cor) in enumerate(blocos):
-        matriz_integralizacao[matr][idx] = {
-            'nome_bloco': nome_bloco,
-            'qtd_periodos': qtd_periodos,
-            'cor': cor,
-            'dados': [] 
-        }
-
-for matr in matriz_geral:
-    periodos_ordenados = sorted(matriz_geral[matr].keys(), key=lambda x: (int(x[0]), 1 if '1' in x[1] else 2))
-    bloco_idx = 0
-    periodo_bloco = 0
-    excedente = False
-    excedente_info = []
+for matr in matriculas:
+    periodos_ordenados = sorted(
+        matriz_geral[matr].keys(),
+        key=lambda x: (int(x[0]), 1 if '1' in x[1] else 2)
+    )
+    linha = []
     for periodo in periodos_ordenados:
-        celula = matriz_geral[matr][periodo]
-        if excedente:
-            excedente_info.append((formatar_periodo(*periodo), celula))
-            continue
-        if bloco_idx >= len(blocos):
+        if len(linha) < n_periodos:
+            linha.append(formatar_periodo(*periodo))
+        else:
             break
-        nome_bloco, qtd_periodos, cor = blocos[bloco_idx]
-        if nome_bloco == 'Situação Irregular' and periodo_bloco >= qtd_periodos:
-            # Sinaliza excedente
-            excedente = True
-            excedente_info.append((formatar_periodo(*periodo), celula))
-            continue
-        # Adiciona normalmente ao bloco
-        matriz_integralizacao[matr][bloco_idx]['dados'].append({
-            formatar_periodo(*periodo): celula
-        })
-        periodo_bloco += 1
-        if periodo_bloco >= blocos[bloco_idx][1]:
-            bloco_idx += 1
-            periodo_bloco = 0
-    # Se houve excedente, adiciona tudo ao último bloco com '+'
-    if excedente_info:
-        matriz_integralizacao[matr][bloco_idx]['dados'].append({
-            '+': excedente_info
-        })
+    if len(periodos_ordenados) > n_periodos:
+        linha[-1] = '+'
+    while len(linha) < n_periodos:
+        linha.append('')
+    matriz_integralizacao.append(linha)
 
-print(matriz_integralizacao)
+colunas = []
+cores = []
+for nome, tam, cor in blocos:
+    colunas += [nome] + [""] * (tam - 1)
+    cores += [cor] * tam
 
+nomes = [
+    next((alunos_dict[idx]['NOME PESSOA'] for idx in alunos_dict if alunos_dict[idx]['MATR ALUNO'] == matr), '')
+    for matr in matriculas
+]
 
+fig = go.Figure(data=go.Heatmap(
+    z=[[i for i in range(n_periodos)] for _ in range(len(matriculas))],
+    x=[f'{colunas[i]} {i+1}' for i in range(n_periodos)],
+    y=[f"{matriculas[i]} - {nomes[i]}" for i in range(len(matriculas))],
+    text=matriz_integralizacao,
+    hoverinfo='text',
+    texttemplate='%{text}',
+    colorscale=[[i/(n_periodos-1), cor] for i, cor in enumerate(cores)],
+    showscale=False
+))
 
+for i, cor in enumerate(cores):
+    fig.add_shape(
+        type="rect",
+        x0=i-0.5, x1=i+0.5,
+        y0=-0.5, y1=len(matriculas)-0.5,
+        fillcolor=cor, line=dict(width=0),
+        layer="below"
+    )
 
+fig.update_traces(
+    showscale=False,
+    textfont=dict(size=13, color='black'),
+)
 
+fig.update_layout(
+    title='Status de Integralização dos Alunos por Período',
+    xaxis=dict(
+        tickmode='array',
+        tickvals=list(range(n_periodos)),
+        ticktext=[f'{colunas[i]}' for i in range(n_periodos)],
+        tickangle=45,
+        side='top',
+        range=[-0.5, n_periodos-0.5]
+    ),
+    yaxis=dict(
+        automargin=True,
+        tickfont=dict(size=12),
+        scaleanchor="x",
+        scaleratio=1,
+        range=[-0.5, len(matriculas)-0.5]
+    ),
+    autosize=False,
+    width=1800,
+    height=900,
+    margin=dict(l=10, r=10, t=80, b=10),
+)
 
+# Dash app
+app = Dash(__name__)
+app.layout = html.Div([
+    html.H2("Status de Integralização dos Alunos por Período"),
+    dcc.Graph(figure=fig, style={'width': '300vw', 'height': '90vh', 'overflowY': 'scroll'})
+])
 
-
+if __name__ == '__main__':
+    app.run(debug=True)

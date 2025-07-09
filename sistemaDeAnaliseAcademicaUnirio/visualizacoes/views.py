@@ -4,13 +4,21 @@ import plotly.graph_objects as go
 from django.shortcuts import render
 from django.urls import reverse
 import os
+import time
 
 def status_integralizacao(request):
+    start_total = time.time()
+
+    # Bloco 1: Leitura dos dados
+    start = time.time()
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     data_dir = os.path.join(BASE_DIR, 'visualizacoes', 'data')
     df_alunos = pd.read_csv(os.path.join(data_dir, 'alunosPorCurso.csv'))
     df_historico = pd.read_csv(os.path.join(data_dir, 'HistoricoEscolarSimplificado.csv'))
+    print(f"Tempo leitura CSVs: {time.time() - start:.3f}s")
 
+    # Bloco 2: Preparação de alunos_dict
+    start = time.time()
     df_alunos = df_alunos.sort_values('PERIODO INGRESSO')
     alunos = df_historico['MATR ALUNO'].unique().tolist()
 
@@ -20,7 +28,10 @@ def status_integralizacao(request):
             'MATR ALUNO': row[0],
             'NOME PESSOA': row[1]
         }
+    print(f"Tempo alunos_dict: {time.time() - start:.3f}s")
 
+    # Bloco 3: Preparação de periodos_dict
+    start = time.time()
     periodos_unicos = df_historico[['ANO', 'PERIODO']].drop_duplicates().reset_index(drop=True)
     periodos_unicos = periodos_unicos[periodos_unicos['ANO'].astype(str).str.isnumeric()].reset_index(drop=True)
 
@@ -30,11 +41,14 @@ def status_integralizacao(request):
             'ANO': row['ANO'],
             'PERIODO': row['PERIODO']
         }
+    print(f"Tempo periodos_dict: {time.time() - start:.3f}s")
 
     def formatar_periodo(ano, periodo):
         periodo = str(periodo).replace('. semestre', '')
         return f"{str(ano)[-2:]}/{periodo}°"
 
+    # Bloco 4: Definições de blocos e status
+    start = time.time()
     blocos = [
         ('Prazo Previsto', 8, '#6fa8dc'),
         ('Prazo Máximo', 2, '#9fc5e8'),
@@ -58,7 +72,10 @@ def status_integralizacao(request):
         'ASC - Reprovado sem nota', 'TRA - Trancamento de disciplina'
     }
     status_matriculado = {'ASC - Matrícula'}
+    print(f"Tempo blocos/status: {time.time() - start:.3f}s")
 
+    # Bloco 5: Estrutura da matriz_geral
+    start = time.time()
     matriculas_validas = set(alunos_dict[idx]['MATR ALUNO'] for idx in alunos_dict)
     periodos_validos = set((periodos_dict[idx]['ANO'], periodos_dict[idx]['PERIODO']) for idx in periodos_dict)
 
@@ -73,7 +90,10 @@ def status_integralizacao(request):
             matriz_geral[matr] = {}
         if periodo not in matriz_geral[matr]:
             matriz_geral[matr][periodo] = {}
+    print(f"Tempo matriz_geral (estrutura): {time.time() - start:.3f}s")
 
+    # Bloco 6: Preenchimento da matriz_geral
+    start = time.time()
     for _, row in df_historico.iterrows():
         matr = row['MATR ALUNO']
         periodo = (row['ANO'], row['PERIODO'])
@@ -109,10 +129,14 @@ def status_integralizacao(request):
                 'status': row['DESCR SITUACAO'],
                 'codigo': row['COD ATIV CURRIC']
             })
+    print(f"Tempo matriz_geral (preenchimento): {time.time() - start:.3f}s")
 
+    # Bloco 7: Construção da matriz_integralizacao e tooltips
+    start = time.time()
     n_periodos = sum([bloco[1] for bloco in blocos])
     matriculas = list(matriz_geral.keys())
     matriz_integralizacao = []
+    tooltip_matriz = []
 
     for matr in matriculas:
         periodos_ordenados = sorted(
@@ -120,17 +144,43 @@ def status_integralizacao(request):
             key=lambda x: (int(x[0]), 1 if '1' in str(x[1]) else 2)
         )
         linha = []
+        tooltips = []
         for periodo in periodos_ordenados:
             if len(linha) < n_periodos:
                 linha.append(formatar_periodo(*periodo))
+                celula = matriz_geral[matr][periodo]
+                tooltip = f"<b>Aluno:</b> {matr} - {celula.get('nome','')}<br><b>Período:</b> {formatar_periodo(*periodo)}<br>"
+                if celula['aprovacoes']:
+                    tooltip += "<b>Aprovadas:</b><br>" + "<br>".join(
+                        f"{d['codigo']} - {d['nome']} [{d['status']}]" for d in celula['aprovacoes']
+                    ) + "<br>"
+                if celula['reprovacoes']:
+                    tooltip += "<b>Reprovadas:</b><br>" + "<br>".join(
+                        f"{d['codigo']} - {d['nome']} [{d['status']}]" for d in celula['reprovacoes']
+                    ) + "<br>"
+                if celula.get('matriculadas'):
+                    tooltip += "<b>Matriculadas:</b><br>" + "<br>".join(
+                        f"{d['codigo']} - {d['nome']} [{d['status']}]" for d in celula['matriculadas']
+                    ) + "<br>"
+                if celula['outros']:
+                    tooltip += "<b>Outros:</b><br>" + "<br>".join(
+                        f"{d['codigo']} - {d['nome']} [{d['status']}]" for d in celula['outros']
+                    ) + "<br>"
+                tooltips.append(tooltip)
             else:
                 break
         if len(periodos_ordenados) > n_periodos:
             linha[-1] = '+'
+            tooltips[-1] += "<b>Períodos excedentes</b>"
         while len(linha) < n_periodos:
             linha.append('')
+            tooltips.append('')
         matriz_integralizacao.append(linha)
+        tooltip_matriz.append(tooltips)
+    print(f"Tempo matriz_integralizacao/tooltips: {time.time() - start:.3f}s")
 
+    # Bloco 8: Construção do gráfico
+    start = time.time()
     colunas = []
     cores = []
     for nome, tam, cor in blocos:
@@ -147,7 +197,8 @@ def status_integralizacao(request):
         x=[f'{colunas[i]} {i+1}' for i in range(n_periodos)],
         y=[f"{matriculas[i]} - {nomes[i]}" for i in range(len(matriculas))],
         text=matriz_integralizacao,
-        hoverinfo='text',
+        customdata=tooltip_matriz,
+        hovertemplate='%{customdata}',
         texttemplate='%{text}',
         colorscale=[[i/(n_periodos-1), cor] for i, cor in enumerate(cores)],
         showscale=False
@@ -189,6 +240,8 @@ def status_integralizacao(request):
         height=900,
         margin=dict(l=10, r=10, t=80, b=10),
     )
+    print(f"Tempo gráfico: {time.time() - start:.3f}s")
+    print(f"Tempo total: {time.time() - start_total:.3f}s")
 
     plot_div = fig.to_html(full_html=False)
     return render(request, 'status_integralizacao.html', {'plot_div': plot_div})

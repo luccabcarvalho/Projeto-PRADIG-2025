@@ -2,10 +2,18 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from dash import Dash, html, dcc
+import time
 
-df_alunos = pd.read_csv(r'prototiposVisualizacoes/docs/alunosPorCursoPerformance.csv')
-df_historico = pd.read_csv(r'prototiposVisualizacoes/docs/HistoricoEscolarSimplificadoPerformance.csv')
+start_total = time.time()
 
+# Bloco 1: Leitura dos dados
+start = time.time()
+df_alunos = pd.read_csv(r'prototiposVisualizacoes/docs/alunosPorCurso.csv')
+df_historico = pd.read_csv(r'prototiposVisualizacoes/docs/HistoricoEscolarSimplificado.csv')
+print(f"Tempo leitura CSVs: {time.time() - start:.3f}s")
+
+# Bloco 2: Preparação de alunos_dict
+start = time.time()
 df_alunos = df_alunos.sort_values('PERIODO INGRESSO')
 alunos = df_historico['MATR ALUNO'].unique().tolist()
 
@@ -15,7 +23,11 @@ for idx, row in enumerate(df_historico[['MATR ALUNO', 'NOME PESSOA']].drop_dupli
         'MATR ALUNO': row[0],
         'NOME PESSOA': row[1]
     }
+print(f"Tempo alunos_dict: {time.time() - start:.3f}s")
 
+
+# Bloco 3: Preparação de periodos_dict
+start = time.time()
 periodos_unicos = df_historico[['ANO', 'PERIODO']].drop_duplicates().reset_index(drop=True)
 periodos_unicos = periodos_unicos[periodos_unicos['ANO'].astype(str).str.isnumeric()].reset_index(drop=True)
 
@@ -25,6 +37,7 @@ for idx, row in periodos_unicos.iterrows():
         'ANO': row['ANO'],
         'PERIODO': row['PERIODO']
     }
+print(f"Tempo periodos_dict: {time.time() - start:.3f}s")
 
 def formatar_periodo(ano, periodo):
     periodo = periodo.replace('. semestre', '')
@@ -54,22 +67,43 @@ status_reprovados = {
 }
 status_matriculado = {'ASC - Matrícula'}
 
+# Bloco 4: Construção da matriz_geral
+
 matriculas_validas = set(alunos_dict[idx]['MATR ALUNO'] for idx in alunos_dict)
 periodos_validos = set((periodos_dict[idx]['ANO'], periodos_dict[idx]['PERIODO']) for idx in periodos_dict)
 
 matriz_geral = {}
 
+total_iteracoes_estrutura = 0
+total_adicoes_matr = 0
+total_adicoes_periodo = 0
+
+start = time.time()
 for _, row in df_historico.iterrows():
+    total_iteracoes_estrutura += 1
     matr = row['MATR ALUNO']
     periodo = (row['ANO'], row['PERIODO'])
     if matr not in matriculas_validas or periodo not in periodos_validos:
         continue
     if matr not in matriz_geral:
         matriz_geral[matr] = {}
+        total_adicoes_matr += 1
     if periodo not in matriz_geral[matr]:
         matriz_geral[matr][periodo] = {}
+        total_adicoes_periodo += 1
+print(f"Tempo matriz_geral (estrutura): {time.time() - start:.3f}s")
+print(f"Iterações totais (estrutura): {total_iteracoes_estrutura}")
+print(f"Novas matrículas adicionadas: {total_adicoes_matr}")
+print(f"Novos períodos adicionados: {total_adicoes_periodo}")
+
+# Bloco 5: Preenchimento da matriz_geral
+start = time.time()
+
+total_iteracoes_preenchimento = 0
+total_celulas_criadas = 0
 
 for _, row in df_historico.iterrows():
+    total_iteracoes_preenchimento += 1
     matr = row['MATR ALUNO']
     periodo = (row['ANO'], row['PERIODO'])
     if matr not in matriculas_validas or periodo not in periodos_validos:
@@ -86,6 +120,7 @@ for _, row in df_historico.iterrows():
             'outros': []
         }
         celula = matriz_geral[matr][periodo]
+        total_celulas_criadas += 1
     if status in status_aprovados:
         celula['aprovacoes'].append({
             'nome': row['NOME ATIV CURRIC'],
@@ -104,7 +139,12 @@ for _, row in df_historico.iterrows():
             'status': row['DESCR SITUACAO'],
             'codigo': row['COD ATIV CURRIC']
         })
+print(f"Tempo matriz_geral (preenchimento): {time.time() - start:.3f}s")
+print(f"Iterações totais (preenchimento): {total_iteracoes_preenchimento}")
+print(f"Novas células criadas: {total_celulas_criadas}")
 
+# Bloco 6: Construção da matriz_integralizacao
+start = time.time()
 n_periodos = sum([bloco[1] for bloco in blocos])
 matriculas = list(matriz_geral.keys())
 matriz_integralizacao = []
@@ -125,7 +165,10 @@ for matr in matriculas:
     while len(linha) < n_periodos:
         linha.append('')
     matriz_integralizacao.append(linha)
+print(f"Tempo matriz_integralizacao: {time.time() - start:.3f}s")
 
+# Bloco 7: Construção do gráfico
+start = time.time()
 colunas = []
 cores = []
 for nome, tam, cor in blocos:
@@ -184,6 +227,10 @@ fig.update_layout(
     height=900,
     margin=dict(l=10, r=10, t=80, b=10),
 )
+
+print(f"Tempo gráfico: {time.time() - start:.3f}s")
+
+print(f"Tempo total: {time.time() - start_total:.3f}s")
 
 # Dash app
 app = Dash(__name__)

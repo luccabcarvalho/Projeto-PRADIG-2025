@@ -32,10 +32,12 @@ periodos_unicos = df_historico[['ANO', 'PERIODO']].drop_duplicates().reset_index
 periodos_unicos = periodos_unicos[periodos_unicos['ANO'].astype(str).str.isnumeric()].reset_index(drop=True)
 
 periodos_dict = {}
-for idx, row in periodos_unicos.iterrows():
+anos = periodos_unicos['ANO'].values
+periodos = periodos_unicos['PERIODO'].values
+for idx in range(len(periodos_unicos)):
     periodos_dict[idx] = {
-        'ANO': row['ANO'],
-        'PERIODO': row['PERIODO']
+        'ANO': anos[idx],
+        'PERIODO': periodos[idx]
     }
 print(f"Tempo periodos_dict: {time.time() - start:.3f}s")
 
@@ -79,10 +81,10 @@ total_adicoes_matr = 0
 total_adicoes_periodo = 0
 
 start = time.time()
-for _, row in df_historico.iterrows():
+for mt, an, pr in zip(df_historico['MATR ALUNO'], df_historico['ANO'], df_historico['PERIODO']):
     total_iteracoes_estrutura += 1
-    matr = row['MATR ALUNO']
-    periodo = (row['ANO'], row['PERIODO'])
+    matr = mt
+    periodo = (an, pr)
     if matr not in matriculas_validas or periodo not in periodos_validos:
         continue
     if matr not in matriz_geral:
@@ -98,18 +100,25 @@ print(f"Novos períodos adicionados: {total_adicoes_periodo}")
 
 # Bloco 5: Preenchimento da matriz_geral
 start = time.time()
-
 total_iteracoes_preenchimento = 0
 total_celulas_criadas = 0
 
-for _, row in df_historico.iterrows():
+matr_aluno = df_historico['MATR ALUNO'].values
+anos = df_historico['ANO'].values
+periodos = df_historico['PERIODO'].values
+nomes_pessoa = df_historico['NOME PESSOA'].values
+descr_situacao = df_historico['DESCR SITUACAO'].values
+nome_ativ_curric = df_historico['NOME ATIV CURRIC'].values
+cod_ativ_curric = df_historico['COD ATIV CURRIC'].values
+
+for i in range(len(df_historico)):
     total_iteracoes_preenchimento += 1
-    matr = row['MATR ALUNO']
-    periodo = (row['ANO'], row['PERIODO'])
+    matr = matr_aluno[i]
+    periodo = (anos[i], periodos[i])
     if matr not in matriculas_validas or periodo not in periodos_validos:
         continue
-    nome = row['NOME PESSOA']
-    status = row['DESCR SITUACAO']
+    nome = nomes_pessoa[i]
+    status = descr_situacao[i]
 
     celula = matriz_geral[matr][periodo]
     if not celula:
@@ -123,21 +132,21 @@ for _, row in df_historico.iterrows():
         total_celulas_criadas += 1
     if status in status_aprovados:
         celula['aprovacoes'].append({
-            'nome': row['NOME ATIV CURRIC'],
-            'status': row['DESCR SITUACAO'],
-            'codigo': row['COD ATIV CURRIC']
+            'nome': nome_ativ_curric[i],
+            'status': descr_situacao[i],
+            'codigo': cod_ativ_curric[i]
         })
     elif status in status_reprovados:
         celula['reprovacoes'].append({
-            'nome': row['NOME ATIV CURRIC'],
-            'status': row['DESCR SITUACAO'],
-            'codigo': row['COD ATIV CURRIC']
+            'nome': nome_ativ_curric[i],
+            'status': descr_situacao[i],
+            'codigo': cod_ativ_curric[i]
         })
     else:
         celula['outros'].append({
-            'nome': row['NOME ATIV CURRIC'],
-            'status': row['DESCR SITUACAO'],
-            'codigo': row['COD ATIV CURRIC']
+            'nome': nome_ativ_curric[i],
+            'status': descr_situacao[i],
+            'codigo': cod_ativ_curric[i]
         })
 print(f"Tempo matriz_geral (preenchimento): {time.time() - start:.3f}s")
 print(f"Iterações totais (preenchimento): {total_iteracoes_preenchimento}")

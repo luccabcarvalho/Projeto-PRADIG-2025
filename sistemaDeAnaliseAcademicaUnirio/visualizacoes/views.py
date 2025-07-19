@@ -227,14 +227,14 @@ def status_integralizacao(request):
             ticktext=[f'{colunas[i]}' for i in range(n_periodos)],
             tickangle=45,
             side='top',
-            range=[-0.5, n_periodos-0.5]
+            range=[-0.5, min(9.5, n_periodos-0.5)]  
         ),
         yaxis=dict(
             automargin=True,
             tickfont=dict(size=12),
             scaleanchor="x",
             scaleratio=1,
-            range=[-0.5, len(matriculas)-0.5]
+            range=[-0.5, min(9.5, len(matriculas)-0.5)]
         ),
         autosize=False,
         width=1800,
@@ -381,8 +381,8 @@ def desempenho_aluno_periodo(request):
     )
 
     alunos_options = [
-        {'id': str(row['ID PESSOA']), 'label': f"{row['ID PESSOA']} - {row['NOME PESSOA']}"}
-        for _, row in df_alunos.iterrows()
+        {'id': str(id_pessoa), 'label': f"{id_pessoa} - {nome_pessoa}"}
+        for id_pessoa, nome_pessoa in zip(df_alunos['ID PESSOA'], df_alunos['NOME PESSOA'])
     ]
 
     plot_div = fig.to_html(full_html=False)
@@ -438,10 +438,10 @@ def heatmap_desempenho(request):
     mapa_disciplinas = {disc: i for i, disc in enumerate(disciplinas)}
 
     matriz = [[[] for _ in range(len(disciplinas))] for _ in range(len(matriculas))]
-    for _, row in df_filtrado.iterrows():
-        i = mapa_matriculas[row[matricula_id_col]]
-        j = mapa_disciplinas[row['COD ATIV CURRIC']]
-        matriz[i][j].append(row['DESCR SITUACAO'])
+    for (matricula, cod_disc), grupo in df_filtrado.groupby([matricula_id_col, 'COD ATIV CURRIC']):
+        i = mapa_matriculas[matricula]
+        j = mapa_disciplinas[cod_disc]
+        matriz[i][j] = grupo['DESCR SITUACAO'].astype(str).tolist()
 
     df_matriz = pd.DataFrame(
         [[', '.join(attempts) if attempts else '' for attempts in linha] for linha in matriz],

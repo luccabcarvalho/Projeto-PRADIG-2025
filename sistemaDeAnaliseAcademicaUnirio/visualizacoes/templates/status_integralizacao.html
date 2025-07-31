@@ -5,6 +5,16 @@
 </head>
 <body>
     <h2>Status de Integralização dos Alunos por Período</h2>
+
+    <form method="get" id="filtros-form">
+    {% for filtro in filtros_options %}
+        <label>
+            <input type="checkbox" name="{{ filtro.name }}" value="ativos" {% if filtro.selected %}checked{% endif %} onchange="document.getElementById('filtros-form').submit();">
+            {{ filtro.label }}
+        </label>
+    {% endfor %}
+</form>
+
     {{ plot_div|safe }}
 </body>
 </html>

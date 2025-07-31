@@ -17,6 +17,13 @@ def status_integralizacao(request):
     df_historico = pd.read_csv(os.path.join(data_dir, 'HistoricoEscolarSimplificado.csv'))
     print(f"Tempo leitura CSVs: {time.time() - start:.3f}s")
 
+    # Filtros
+    filtro_ativos = request.GET.get('ativos', 'todos')
+    if filtro_ativos == 'ativos':
+        alunos_ativos = df_alunos[df_alunos['FORMA EVASAO'] == 'Sem evasão']['ID PESSOA'].unique()
+        df_historico = df_historico[df_historico['ID PESSOA'].isin(alunos_ativos)]
+        df_alunos = df_alunos[df_alunos['ID PESSOA'].isin(alunos_ativos)]
+
     # Bloco 2: Preparação de alunos_dict
     start = time.time()
     df_alunos = df_alunos.sort_values('PERIODO INGRESSO')
@@ -247,7 +254,13 @@ def status_integralizacao(request):
     print(f"Tempo total: {time.time() - start_total:.3f}s")
 
     plot_div = fig.to_html(full_html=False)
-    return render(request, 'status_integralizacao.html', {'plot_div': plot_div})
+    filtros_options = [
+        {'name': 'ativos', 'label': 'Exibir apenas alunos ativos (sem evasão)', 'selected': filtro_ativos == 'ativos'},
+    ]
+    return render(request, 'status_integralizacao.html', {
+        'plot_div': plot_div,
+        'filtros_options': filtros_options,
+    })
 
 def desempenho_aluno_periodo(request):
     import pandas as pd

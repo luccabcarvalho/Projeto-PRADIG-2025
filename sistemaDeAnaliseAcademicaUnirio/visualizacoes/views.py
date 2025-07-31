@@ -319,7 +319,6 @@ def desempenho_aluno_periodo(request):
     if matr_aluno_param:
         try:
             matr_aluno = int(matr_aluno_param)
-            # Verificar se a matrícula existe nos dados
             if matr_aluno not in df_historico['MATR ALUNO'].values:
                 matr_aluno = df_historico['MATR ALUNO'].iloc[0]
         except (ValueError, TypeError):
@@ -428,10 +427,9 @@ def desempenho_aluno_periodo(request):
         xaxis_title='Ano - Período',
         yaxis_title='Carga Horária',
         title='Desempenho por Período com Acúmulo de Aprovados',
-        height=600
+        height=800
     )
 
-    # Opções de alunos usando MATR ALUNO e NOME PESSOA do df_historico
     alunos_options = [
         {'id': str(matr_aluno), 'label': f"{matr_aluno} - {nome_pessoa}"}
         for matr_aluno, nome_pessoa in df_historico[['MATR ALUNO', 'NOME PESSOA']].drop_duplicates().values
@@ -441,7 +439,7 @@ def desempenho_aluno_periodo(request):
     return render(request, 'desempenho_aluno_periodo.html', {
         'plot_div': plot_div,
         'alunos_options': alunos_options,
-        'selected_id': str(matr_aluno),  # Converter para string para comparação no template
+        'selected_id': str(matr_aluno), 
     })
 
 def heatmap_desempenho(request):
@@ -453,15 +451,33 @@ def heatmap_desempenho(request):
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     data_dir = os.path.join(BASE_DIR, 'visualizacoes', 'data')
     df = pd.read_csv(os.path.join(data_dir, 'HistoricoEscolarSimplificado.csv'))
+    df_alunos = pd.read_csv(os.path.join(data_dir, 'alunosPorCurso.csv'))
+
+    # --- Filtros ---
+    filtro_ativos = request.GET.get('ativos', 'todos')
+    if filtro_ativos == 'ativos':
+        alunos_ativos = df_alunos[df_alunos['FORMA EVASAO'] == 'Sem evasão']['ID PESSOA'].unique()
+        df = df[df['ID PESSOA'].isin(alunos_ativos)]
+        df_alunos = df_alunos[df_alunos['ID PESSOA'].isin(alunos_ativos)]
+
+    filtro_periodo = request.GET.get('periodo_ingresso', '')
+    if filtro_periodo:
+        df_alunos = df_alunos[df_alunos['PERIODO INGRESSO'] == filtro_periodo]
+        df = df[df['ID PESSOA'].isin(df_alunos['ID PESSOA'].unique())]
 
     curriculos_disponiveis = sorted(df['NUM VERSAO'].unique())
-    
+    periodos_unicos = sorted(df_alunos['PERIODO INGRESSO'].dropna().unique())
+    periodos_options = [
+        {'value': p, 'label': p, 'selected': p == filtro_periodo}
+        for p in periodos_unicos
+    ]
+
     curriculos_selecionados = request.GET.getlist('curriculos')
     if not curriculos_selecionados:
         curriculos_selecionados = [curriculos_disponiveis[-1]]  # Último currículo por padrão
-    
+
     df_filtrado = df[df['NUM VERSAO'].isin(curriculos_selecionados)]
-    
+
     if df_filtrado.empty:
         fig = go.Figure()
         fig.update_layout(
@@ -471,15 +487,19 @@ def heatmap_desempenho(request):
             height=400
         )
         plot_div = fig.to_html(full_html=False)
-        
+
         curriculos_options = [
             {'value': curriculo, 'label': curriculo, 'selected': curriculo in curriculos_selecionados}
             for curriculo in curriculos_disponiveis
         ]
-        
+
         return render(request, 'heatmap_desempenho.html', {
             'plot_div': plot_div,
             'curriculos_options': curriculos_options,
+            'periodos_options': periodos_options,
+            'filtros_options': [
+                {'name': 'ativos', 'label': 'Exibir apenas alunos ativos (sem evasão)', 'selected': filtro_ativos == 'ativos'},
+            ],
         })
 
     matricula_id_col = 'MATR ALUNO'
@@ -500,11 +520,11 @@ def heatmap_desempenho(request):
         index=matriculas,
         columns=[disciplinas_dict[cod] for cod in disciplinas]
     )
-    
+
     if 'NOME PESSOA' in df_filtrado.columns:
         aluno_info = df_filtrado.drop_duplicates(matricula_id_col).set_index(matricula_id_col)[['NOME PESSOA', 'NUM VERSAO']]
         df_matriz.index = [
-            f"{mid} - {aluno_info.loc[mid, 'NOME PESSOA']} (Currículo: {aluno_info.loc[mid, 'NUM VERSAO']})" 
+            f"{mid} - {aluno_info.loc[mid, 'NOME PESSOA']} (Currículo: {aluno_info.loc[mid, 'NUM VERSAO']})"
             for mid in df_matriz.index
         ]
 
@@ -616,19 +636,25 @@ def heatmap_desempenho(request):
         yaxis=dict(title='Matrículas', tickfont=dict(size=9)),
         autosize=True,
         margin=dict(l=50, r=50, t=100, b=100),
-        height=max(600, len(matriculas) * 20 + 200),  # Altura dinâmica baseada no número de alunos
+        height=max(600, len(matriculas) * 20 + 200),
     )
 
     plot_div = fig.to_html(full_html=False)
-    
+
     curriculos_options = [
         {'value': curriculo, 'label': curriculo, 'selected': curriculo in curriculos_selecionados}
         for curriculo in curriculos_disponiveis
     ]
-    
+
+    filtros_options = [
+        {'name': 'ativos', 'label': 'Exibir apenas alunos ativos (sem evasão)', 'selected': filtro_ativos == 'ativos'},
+    ]
+
     return render(request, 'heatmap_desempenho.html', {
         'plot_div': plot_div,
         'curriculos_options': curriculos_options,
+        'periodos_options': periodos_options,
+        'filtros_options': filtros_options,
     })
 
 def home(request):

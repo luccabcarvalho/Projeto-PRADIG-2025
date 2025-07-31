@@ -47,28 +47,48 @@
         .submit-btn:hover {
             background-color: #0056b3;
         }
+        .filtros-container {
+            display: flex;
+            gap: 2em;
+            margin-bottom: 1em;
+            align-items: center;
+        }
+        .filtro-label {
+            font-weight: bold;
+            margin-right: 0.5em;
+        }
     </style>
 </head>
 <body>
     <h1>Heatmap de Desempenho Acadêmico</h1>
-    
-    <div class="form-container">
-        <h3>Selecione o Currículo para Visualizar</h3>
-        <form method="get" id="curriculo-form">
-            <div class="select-container">
-                <label for="curriculo-select">Currículo:</label>
-                <select name="curriculos" id="curriculo-select" onchange="document.getElementById('curriculo-form').submit();">
-                    {% for curriculo in curriculos_options %}
-                        <option value="{{ curriculo.value }}" {% if curriculo.selected %}selected{% endif %}>
-                            {{ curriculo.label }}
-                        </option>
-                    {% endfor %}
-                </select>
-                <button type="submit" class="submit-btn">Atualizar</button>
-            </div>
-        </form>
-    </div>
-    
+
+    <form method="get" id="filtros-form">
+        <div class="filtros-container">
+            {% for filtro in filtros_options %}
+                <label class="filtro-label">
+                    <input type="checkbox" name="{{ filtro.name }}" value="ativos" {% if filtro.selected %}checked{% endif %} onchange="document.getElementById('filtros-form').submit();">
+                    {{ filtro.label }}
+                </label>
+            {% endfor %}
+            <label class="filtro-label" for="periodo_ingresso">Período de Ingresso:</label>
+            <select name="periodo_ingresso" id="periodo_ingresso" onchange="document.getElementById('filtros-form').submit();">
+                <option value="">Todos</option>
+                {% for periodo in periodos_options %}
+                    <option value="{{ periodo.value }}" {% if periodo.selected %}selected{% endif %}>{{ periodo.label }}</option>
+                {% endfor %}
+            </select>
+            <label class="filtro-label" for="curriculo-select">Currículo:</label>
+            <select name="curriculos" id="curriculo-select" onchange="document.getElementById('filtros-form').submit();">
+                {% for curriculo in curriculos_options %}
+                    <option value="{{ curriculo.value }}" {% if curriculo.selected %}selected{% endif %}>
+                        {{ curriculo.label }}
+                    </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="submit-btn">Atualizar</button>
+        </div>
+    </form>
+
     {{ plot_div|safe }}
 </body>
 </html>

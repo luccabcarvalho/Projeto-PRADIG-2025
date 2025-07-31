@@ -601,7 +601,8 @@ def heatmap_desempenho(request):
 
     hover_text = df_matriz.apply(
         lambda row: [
-            construir_tooltip(row.name, df_matriz.columns[j], row.iloc[j])
+            "" if pd.isna(row.iloc[j]) or not str(row.iloc[j]).strip()
+            else construir_tooltip(row.name, df_matriz.columns[j], row.iloc[j])
             for j in range(len(row))
         ],
         axis=1
@@ -622,7 +623,8 @@ def heatmap_desempenho(request):
             title='Status',
             tickvals=[-1, 0, 1],
             ticktext=['Reprovado/Trancado', 'Matriculado', 'Aprovado']
-        )
+        ),
+        showscale=False
     ))
 
     if len(curriculos_selecionados) == 1:
@@ -637,6 +639,7 @@ def heatmap_desempenho(request):
         autosize=True,
         margin=dict(l=50, r=50, t=100, b=100),
         height=max(600, len(matriculas) * 20 + 200),
+        width=max(800, len(disciplinas) * 4 + 50),
     )
 
     plot_div = fig.to_html(full_html=False)

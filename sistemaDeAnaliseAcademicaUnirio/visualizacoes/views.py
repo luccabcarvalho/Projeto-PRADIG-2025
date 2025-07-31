@@ -133,6 +133,7 @@ def status_integralizacao(request):
     descr_situacao = df_historico['DESCR SITUACAO'].values
     nome_ativ_curric = df_historico['NOME ATIV CURRIC'].values
     cod_ativ_curric = df_historico['COD ATIV CURRIC'].values
+    nota_ativ_curric = df_historico['MEDIA FINAL'].values
 
     for i in range(len(df_historico)):
         total_iteracoes_preenchimento += 1
@@ -157,19 +158,22 @@ def status_integralizacao(request):
             celula['aprovacoes'].append({
                 'nome': nome_ativ_curric[i],
                 'status': descr_situacao[i],
-                'codigo': cod_ativ_curric[i]
+                'codigo': cod_ativ_curric[i],
+                'nota': nota_ativ_curric[i] if pd.notna(nota_ativ_curric[i]) else 'N/A'
             })
         elif status in status_reprovados:
             celula['reprovacoes'].append({
                 'nome': nome_ativ_curric[i],
                 'status': descr_situacao[i],
-                'codigo': cod_ativ_curric[i]
+                'codigo': cod_ativ_curric[i],
+                'nota': nota_ativ_curric[i] if pd.notna(nota_ativ_curric[i]) else 'N/A'
             })
         else:
             celula['outros'].append({
                 'nome': nome_ativ_curric[i],
                 'status': descr_situacao[i],
-                'codigo': cod_ativ_curric[i]
+                'codigo': cod_ativ_curric[i],
+                'nota': nota_ativ_curric[i] if pd.notna(nota_ativ_curric[i]) else 'N/A'
             })
     print(f"Tempo matriz_geral (preenchimento): {time.time() - start:.3f}s")
     print(f"Iterações totais (preenchimento): {total_iteracoes_preenchimento}")
@@ -181,22 +185,39 @@ def status_integralizacao(request):
     matriculas = list(matriz_geral.keys())
     matriz_integralizacao = []
 
+    tooltips_integralizacao = []
+
     for matr in matriculas:
         periodos_ordenados = sorted(
             matriz_geral[matr].keys(),
             key=lambda x: (int(x[0]), 1 if '1' in x[1] else 2)
         )
         linha = []
+        linha_tooltip = []
         for periodo in periodos_ordenados:
             if len(linha) < n_periodos:
-                linha.append(formatar_periodo(*periodo))
+                label = formatar_periodo(*periodo)
+                celula = matriz_geral[matr][periodo]
+                disciplinas = []
+                for disciplina in celula.get('aprovacoes', []):
+                    disciplinas.append(f"{disciplina['nome']} - {disciplina['nota']} - {disciplina['status']}")
+                for disciplina in celula.get('reprovacoes', []):
+                    disciplinas.append(f"{disciplina['nome']} - {disciplina['nota']} - {disciplina['status']}")
+                for disciplina in celula.get('outros', []):
+                    disciplinas.append(f"{disciplina['nome']} - {disciplina['nota']} - {disciplina['status']}")
+                tooltip = "<br>".join(disciplinas) if disciplinas else "Nenhuma disciplina cursada"
+                linha.append(label)
+                linha_tooltip.append(tooltip)
             else:
                 break
         if len(periodos_ordenados) > n_periodos:
             linha[-1] = '+'
+            linha_tooltip[-1] = 'Períodos excedentes'
         while len(linha) < n_periodos:
             linha.append('')
+            linha_tooltip.append('')
         matriz_integralizacao.append(linha)
+        tooltips_integralizacao.append(linha_tooltip)
     print(f"Tempo matriz_integralizacao: {time.time() - start:.3f}s")
 
     # Bloco 7: Construção do gráfico
@@ -217,6 +238,7 @@ def status_integralizacao(request):
         x=[f'{colunas[i]} {i+1}' for i in range(n_periodos)],
         y=[f"{matriculas[i]} - {nomes[i]}" for i in range(len(matriculas))],
         text=matriz_integralizacao,
+        hovertext=tooltips_integralizacao,
         hoverinfo='text',
         texttemplate='%{text}',
         colorscale=[[i/(n_periodos-1), cor] for i, cor in enumerate(cores)],

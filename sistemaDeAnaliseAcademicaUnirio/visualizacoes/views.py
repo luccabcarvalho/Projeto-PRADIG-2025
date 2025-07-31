@@ -48,7 +48,7 @@ def status_integralizacao(request):
 
     def formatar_periodo(ano, periodo):
         periodo = periodo.replace('. semestre', '')
-        return f"{str(ano)[-2:]}/{periodo}°"
+        return f"{str(ano)[-2:]}/{periodo}"
 
     blocos = [
         ('Prazo Previsto', 8, '#6fa8dc'),

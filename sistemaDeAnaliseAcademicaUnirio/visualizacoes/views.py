@@ -245,19 +245,23 @@ def status_integralizacao(request):
             ticktext=[f'{colunas[i]}' for i in range(n_periodos)],
             tickangle=45,
             side='top',
-            range=[-0.5, min(9.5, n_periodos-0.5)]  
+            range=[
+                (n_periodos / 2) - 5,  
+                (n_periodos / 2) + 5   
+            ],
         ),
         yaxis=dict(
             automargin=True,
-            tickfont=dict(size=12),
+            tickfont=dict(size=10),
             scaleanchor="x",
-            scaleratio=1,
-            range=[-0.5, min(9.5, len(matriculas)-0.5)]
+            scaleratio=1.1,
+            range=[-0.5, min(9.5, len(matriculas)-0.5)],
+            dtick=0.5,
         ),
         autosize=False,
         width=1800,
-        height=900,
-        margin=dict(l=10, r=10, t=80, b=10),
+        height=750,
+        margin=dict(l=10, r=10, t=60, b=10),
     )
 
     print(f"Tempo gráfico: {time.time() - start:.3f}s")

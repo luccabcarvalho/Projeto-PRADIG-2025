@@ -311,23 +311,23 @@ def desempenho_aluno_periodo(request):
     df_alunos = pd.read_csv(os.path.join(data_dir, 'alunosPorCurso.csv'))
 
     df_historico['PERIODO_NUM'] = df_historico['PERIODO'].str.extract(r'(\d)')[0].astype(float)
-    df_historico = df_historico.sort_values(['ID ALUNO', 'COD ATIV CURRIC', 'ANO', 'PERIODO_NUM'])
+    df_historico = df_historico.sort_values(['MATR ALUNO', 'COD ATIV CURRIC', 'ANO', 'PERIODO_NUM'])
     df_alunos = df_alunos.sort_values('PERIODO INGRESSO')
     df_historico['ANO_PERIODO'] = df_historico['ANO'].astype(str) + ' - ' + df_historico['PERIODO']
 
-    id_aluno_param = request.GET.get('id_aluno')
-    if id_aluno_param:
+    matr_aluno_param = request.GET.get('matr_aluno')
+    if matr_aluno_param:
         try:
-            id_aluno = int(id_aluno_param)
-            # Verificar se o aluno existe nos dados
-            if id_aluno not in df_alunos['ID PESSOA'].values:
-                id_aluno = df_alunos['ID PESSOA'].iloc[0]
+            matr_aluno = int(matr_aluno_param)
+            # Verificar se a matrícula existe nos dados
+            if matr_aluno not in df_historico['MATR ALUNO'].values:
+                matr_aluno = df_historico['MATR ALUNO'].iloc[0]
         except (ValueError, TypeError):
-            id_aluno = df_alunos['ID PESSOA'].iloc[0]
+            matr_aluno = df_historico['MATR ALUNO'].iloc[0]
     else:
-        id_aluno = df_alunos['ID PESSOA'].iloc[0]
+        matr_aluno = df_historico['MATR ALUNO'].iloc[0]
 
-    dados_aluno = df_historico[df_historico['ID PESSOA'] == id_aluno].copy()
+    dados_aluno = df_historico[df_historico['MATR ALUNO'] == matr_aluno].copy()
     dados_aluno['STATUS'] = dados_aluno['DESCR SITUACAO'].str.strip()
     dados_aluno['CARGA'] = dados_aluno['TOTAL CARGA HORARIA']
     dados_aluno['DISCIPLINA'] = (
@@ -431,16 +431,17 @@ def desempenho_aluno_periodo(request):
         height=600
     )
 
+    # Opções de alunos usando MATR ALUNO e NOME PESSOA do df_historico
     alunos_options = [
-        {'id': str(id_pessoa), 'label': f"{id_pessoa} - {nome_pessoa}"}
-        for id_pessoa, nome_pessoa in zip(df_alunos['ID PESSOA'], df_alunos['NOME PESSOA'])
+        {'id': str(matr_aluno), 'label': f"{matr_aluno} - {nome_pessoa}"}
+        for matr_aluno, nome_pessoa in df_historico[['MATR ALUNO', 'NOME PESSOA']].drop_duplicates().values
     ]
 
     plot_div = fig.to_html(full_html=False)
     return render(request, 'desempenho_aluno_periodo.html', {
         'plot_div': plot_div,
         'alunos_options': alunos_options,
-        'selected_id': str(id_aluno),  # Converter para string para comparação no template
+        'selected_id': str(matr_aluno),  # Converter para string para comparação no template
     })
 
 def heatmap_desempenho(request):

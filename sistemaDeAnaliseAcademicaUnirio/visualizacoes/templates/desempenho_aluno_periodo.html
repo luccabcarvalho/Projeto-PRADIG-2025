@@ -7,8 +7,8 @@
 <body>
     <h1>Desempenho do Aluno por Período</h1>
     <form method="get" id="aluno-form">
-        <label for="id_aluno">Selecione o aluno:</label>
-        <select name="id_aluno" id="id_aluno" style="width: 300px;" onchange="document.getElementById('aluno-form').submit();">
+        <label for="matr_aluno">Selecione o aluno:</label>
+        <select name="matr_aluno" id="matr_aluno" style="width: 300px;" onchange="document.getElementById('aluno-form').submit();">
             {% for aluno in alunos_options %}
                 <option value="{{ aluno.id }}" {% if aluno.id == selected_id %}selected{% endif %}>
                     {{ aluno.label }}
@@ -23,7 +23,7 @@
 
     <script>
         $(document).ready(function() {
-            $('#id_aluno').select2({
+            $('#matr_aluno').select2({
                 placeholder: "Selecione um aluno",
                 allowClear: true
             });

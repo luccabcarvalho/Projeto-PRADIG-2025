@@ -200,11 +200,17 @@ def status_integralizacao(request):
                 celula = matriz_geral[matr][periodo]
                 disciplinas = []
                 for disciplina in celula.get('aprovacoes', []):
-                    disciplinas.append(f"{disciplina['nome']} - {disciplina['nota']} - {disciplina['status']}")
+                    disciplinas.append(
+                        f"{disciplina['nome']}<br>    Nota: {disciplina['nota']}<br>    Situação: {disciplina['status']}"
+                    )
                 for disciplina in celula.get('reprovacoes', []):
-                    disciplinas.append(f"{disciplina['nome']} - {disciplina['nota']} - {disciplina['status']}")
+                    disciplinas.append(
+                        f"{disciplina['nome']}<br>    Nota: {disciplina['nota']}<br>    Situação: {disciplina['status']}"
+                    )
                 for disciplina in celula.get('outros', []):
-                    disciplinas.append(f"{disciplina['nome']} - {disciplina['nota']} - {disciplina['status']}")
+                    disciplinas.append(
+                        f"{disciplina['nome']}<br>    Nota: {disciplina['nota']}<br>    Situação: {disciplina['status']}"
+                    )
                 tooltip = "<br>".join(disciplinas) if disciplinas else "Nenhuma disciplina cursada"
                 linha.append(label)
                 linha_tooltip.append(tooltip)
@@ -559,44 +565,41 @@ def heatmap_desempenho(request):
     def construir_tooltip(nome_aluno, disciplina, status_str):
         if pd.isna(status_str) or not status_str.strip():
             return (
-                f"<b>Aluno:</b> {nome_aluno}<br>"
-                f"<b>Disciplina:</b> {disciplina}<br>"
-                f"<b>Status:</b> Nenhum"
+                f"{disciplina}<br>"
+                f"<b>Histórico:</b><br>"
+                f"    Nenhum<br>"
+                f"<b>Situação final:</b><br>"
+                f"    Indefinido"
             )
         status_list = [s.strip() for s in status_str.split(',') if s.strip()]
         status_formatado = ""
+        # Buscar períodos para cada status usando df_filtrado
+        status_periodos = []
         for s in status_list:
-            partes = s.split('em')
-            status_base = partes[0].strip()
-            data = partes[1].strip() if len(partes) > 1 else None
-
-            if status_base in aprovados:
-                if data:
-                    status_formatado += f"Aprovado em <b>{data}</b><br>"
-                else:
-                    status_formatado += "Aprovado<br>"
-            elif status_base in reprovados:
-                motivo = status_base.split('-')[1].strip() if '-' in status_base else status_base
-                if data:
-                    status_formatado += f"Reprovado por <b>{motivo}</b> em <b>{data}</b><br>"
-                else:
-                    status_formatado += f"Reprovado por <b>{motivo}</b><br>"
-            elif status_base in matriculado:
-                if data:
-                    status_formatado += f"Matriculado em <b>{data}</b><br>"
-                else:
-                    status_formatado += "Matriculado<br>"
+            # Resgata o período da disciplina para o aluno
+            filtro = (
+                (df_filtrado['NOME PESSOA'] == nome_aluno.split(' - ')[-2].strip() if ' - ' in nome_aluno else nome_aluno) &
+                (df_filtrado['NOME ATIV CURRIC'] == disciplina)
+            )
+            # Se não encontrar, tenta por matrícula
+            if not df_filtrado[filtro].empty:
+                ano = df_filtrado[filtro]['ANO'].iloc[0]
+                periodo = df_filtrado[filtro]['PERIODO'].iloc[0]
+                periodo_str = f"{ano} - {periodo}"
             else:
-                if data:
-                    status_formatado += f"{status_base} em <b>{data}</b><br>"
-                else:
-                    status_formatado += f"{status_base}<br>"
+                periodo_str = ""
+            status_periodos.append((s, periodo_str))
+
+        for s, periodo_str in status_periodos:
+            if periodo_str:
+                status_formatado += f"    {s} ({periodo_str})<br>"
+            else:
+                status_formatado += f"    {s}<br>"
         status_final = status_list[-1] if status_list else 'Indefinido'
         return (
-            f"<b>Aluno:</b> {nome_aluno}<br>"
-            f"<b>Disciplina:</b> {disciplina}<br>"
+            f"{disciplina}<br>"
             f"<b>Histórico:</b><br>{status_formatado}"
-            f"<b>Status Final:</b> <i>{status_final}</i>"
+            f"<b>Situação final:</b><br>    {status_final}"
         )
 
     hover_text = df_matriz.apply(
@@ -639,7 +642,6 @@ def heatmap_desempenho(request):
         autosize=True,
         margin=dict(l=50, r=50, t=100, b=100),
         height=max(600, len(matriculas) * 20 + 200),
-        width=max(800, len(disciplinas) * 4 + 50),
     )
 
     plot_div = fig.to_html(full_html=False)

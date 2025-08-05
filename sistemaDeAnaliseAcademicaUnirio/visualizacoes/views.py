@@ -184,7 +184,6 @@ def status_integralizacao(request):
     n_periodos = sum([bloco[1] for bloco in blocos])
     matriculas = list(matriz_geral.keys())
     matriz_integralizacao = []
-
     tooltips_integralizacao = []
 
     for matr in matriculas:
@@ -194,28 +193,26 @@ def status_integralizacao(request):
         )
         linha = []
         linha_tooltip = []
-        for periodo in periodos_ordenados:
-            if len(linha) < n_periodos:
-                label = formatar_periodo(*periodo)
-                celula = matriz_geral[matr][periodo]
-                disciplinas = []
-                for disciplina in celula.get('aprovacoes', []):
-                    disciplinas.append(
-                        f"{disciplina['nome']}<br>    Nota: {disciplina['nota']}<br>    Situação: {disciplina['status']}"
-                    )
-                for disciplina in celula.get('reprovacoes', []):
-                    disciplinas.append(
-                        f"{disciplina['nome']}<br>    Nota: {disciplina['nota']}<br>    Situação: {disciplina['status']}"
-                    )
-                for disciplina in celula.get('outros', []):
-                    disciplinas.append(
-                        f"{disciplina['nome']}<br>    Nota: {disciplina['nota']}<br>    Situação: {disciplina['status']}"
-                    )
-                tooltip = "<br>".join(disciplinas) if disciplinas else "Nenhuma disciplina cursada"
-                linha.append(label)
-                linha_tooltip.append(tooltip)
-            else:
+        for idx, periodo in enumerate(periodos_ordenados):
+            if len(linha) >= n_periodos:
                 break
+            label = formatar_periodo(*periodo)
+            celula = matriz_geral[matr][periodo]
+            todas_disciplinas = (
+                celula.get('aprovacoes', []) +
+                celula.get('reprovacoes', []) +
+                celula.get('outros', [])
+            )
+            if todas_disciplinas:
+                disciplinas_tooltip = [
+                    f"{disc['nome']}<br>    Nota: {disc['nota']}<br>    Situação: {disc['status']}"
+                    for disc in todas_disciplinas
+                ]
+                tooltip = "<br>".join(disciplinas_tooltip)
+            else:
+                tooltip = "Nenhuma disciplina cursada"
+            linha.append(label)
+            linha_tooltip.append(tooltip)
         if len(periodos_ordenados) > n_periodos:
             linha[-1] = '+'
             linha_tooltip[-1] = 'Períodos excedentes'
@@ -288,7 +285,7 @@ def status_integralizacao(request):
         ),
         autosize=False,
         width=1800,
-        height=750,
+        height=650,
         margin=dict(l=10, r=10, t=60, b=10),
     )
 

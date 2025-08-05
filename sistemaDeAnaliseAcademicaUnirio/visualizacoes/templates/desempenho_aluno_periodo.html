@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Desempenho do Aluno por Período</title>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+</head>
+<body>
+    <h1>Desempenho do Aluno por Período</h1>
+    <form method="get" id="aluno-form">
+        <label for="matr_aluno">Selecione o aluno:</label>
+        <select name="matr_aluno" id="matr_aluno" style="width: 300px;" onchange="document.getElementById('aluno-form').submit();">
+            {% for aluno in alunos_options %}
+                <option value="{{ aluno.id }}" {% if aluno.id == selected_id %}selected{% endif %}>
+                    {{ aluno.label }}
+                </option>
+            {% endfor %}
+        </select>
+    </form>
+    {{ plot_div|safe }}
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#matr_aluno').select2({
+                placeholder: "Selecione um aluno",
+                allowClear: true
+            });
+        });
+    </script>
+</body>
+</html>

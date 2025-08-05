@@ -23,10 +23,10 @@ n_matriculas = len(matriculas)
 n_disciplinas = len(disciplinas)
 matriz = [[[] for _ in range(n_disciplinas)] for _ in range(n_matriculas)]
 
-for _, row in df.iterrows():
-    i = mapa_matriculas[row[matricula_id_col]]
-    j = mapa_disciplinas[row['COD ATIV CURRIC']]
-    matriz[i][j].append(row['DESCR SITUACAO'])
+for (matricula, cod_disc), grupo in df.groupby([matricula_id_col, 'COD ATIV CURRIC']):
+    i = mapa_matriculas[matricula]
+    j = mapa_disciplinas[cod_disc]
+    matriz[i][j] = grupo['DESCR SITUACAO'].astype(str).tolist()
 
 df_matriz = pd.DataFrame(
     [[', '.join(attempts) if attempts else '' for attempts in linha] for linha in matriz],

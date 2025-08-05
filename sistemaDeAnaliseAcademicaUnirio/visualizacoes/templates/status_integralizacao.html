@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Status de Integralização dos Alunos</title>
+    <style>
+        .filtros-container {
+            display: flex;
+            gap: 2em;
+            margin-bottom: 1em;
+            align-items: center;
+        }
+        .filtro-label {
+            font-weight: bold;
+            margin-right: 0.5em;
+        }
+    </style>
+</head>
+<body>
+    <h2>Status de Integralização dos Alunos por Período</h2>
+
+    <form method="get" id="filtros-form">
+        <div class="filtros-container">
+            {% for filtro in filtros_options %}
+                <label class="filtro-label">
+                    <input type="checkbox" name="{{ filtro.name }}" value="ativos" {% if filtro.selected %}checked{% endif %} onchange="document.getElementById('filtros-form').submit();">
+                    {{ filtro.label }}
+                </label>
+            {% endfor %}
+
+            <label class="filtro-label" for="periodo_ingresso">Período de Ingresso:</label>
+            <select name="periodo_ingresso" id="periodo_ingresso" onchange="document.getElementById('filtros-form').submit();">
+                <option value="">Todos</option>
+                {% for periodo in periodos_options %}
+                    <option value="{{ periodo.value }}" {% if periodo.selected %}selected{% endif %}>{{ periodo.label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+
+    {{ plot_div|safe }}
+</body>
+</html>

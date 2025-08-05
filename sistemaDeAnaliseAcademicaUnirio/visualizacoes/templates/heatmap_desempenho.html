@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Heatmap de Desempenho Acadêmico</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .form-container {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .form-container h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .select-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .select-container label {
+            font-weight: bold;
+            color: #555;
+        }
+        .select-container select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+            min-width: 200px;
+        }
+        .submit-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+        .filtros-container {
+            display: flex;
+            gap: 2em;
+            margin-bottom: 1em;
+            align-items: center;
+        }
+        .filtro-label {
+            font-weight: bold;
+            margin-right: 0.5em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Heatmap de Desempenho Acadêmico</h1>
+
+    <form method="get" id="filtros-form">
+        <div class="filtros-container">
+            {% for filtro in filtros_options %}
+                <label class="filtro-label">
+                    <input type="checkbox" name="{{ filtro.name }}" value="ativos" {% if filtro.selected %}checked{% endif %} onchange="document.getElementById('filtros-form').submit();">
+                    {{ filtro.label }}
+                </label>
+            {% endfor %}
+            <label class="filtro-label" for="periodo_ingresso">Período de Ingresso:</label>
+            <select name="periodo_ingresso" id="periodo_ingresso" onchange="document.getElementById('filtros-form').submit();">
+                <option value="">Todos</option>
+                {% for periodo in periodos_options %}
+                    <option value="{{ periodo.value }}" {% if periodo.selected %}selected{% endif %}>{{ periodo.label }}</option>
+                {% endfor %}
+            </select>
+            <label class="filtro-label" for="curriculo-select">Currículo:</label>
+            <select name="curriculos" id="curriculo-select" onchange="document.getElementById('filtros-form').submit();">
+                {% for curriculo in curriculos_options %}
+                    <option value="{{ curriculo.value }}" {% if curriculo.selected %}selected{% endif %}>
+                        {{ curriculo.label }}
+                    </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="submit-btn">Atualizar</button>
+        </div>
+    </form>
+
+    {{ plot_div|safe }}
+</body>
+</html>

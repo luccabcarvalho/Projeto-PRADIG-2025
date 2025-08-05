@@ -231,7 +231,7 @@ def status_integralizacao(request):
     colunas = []
     cores = []
     for nome, tam, cor in blocos:
-        colunas += [nome] + [""] * (tam - 1)
+        colunas += [""] * (tam - 1) + [nome]
         cores += [cor] * tam
 
     nomes = [
@@ -271,7 +271,7 @@ def status_integralizacao(request):
             tickmode='array',
             tickvals=list(range(n_periodos)),
             ticktext=[f'{colunas[i]}' for i in range(n_periodos)],
-            tickangle=45,
+            tickangle=20,
             side='top',
             range=[
                 (n_periodos / 2) - 5,  

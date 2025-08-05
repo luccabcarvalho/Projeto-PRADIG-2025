@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema de Análise Acadêmica UNIRIO{% endblock %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --unirio-blue: #003366;
+            --unirio-blue-light: #2356a8;
+            --unirio-black: #000;
+            --unirio-white: #fff;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--unirio-white);
+            color: var(--unirio-black);
+            margin: 0;
+            min-height: 100vh;
+        }
+        .navbar {
+            background: var(--unirio-blue);
+            color: var(--unirio-white);
+            padding: 0.5rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .navbar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+        }
+        .navbar-logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .navbar-links {
+            display: flex;
+            gap: 2rem;
+        }
+        .navbar-links a {
+            color: var(--unirio-white);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+        .navbar-links a:hover, .navbar-links .active {
+            color: var(--unirio-blue-light);
+            text-decoration: underline;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: #888;
+            font-size: 0.9rem;
+        }
+        @media (max-width: 768px) {
+            .navbar-container, .container {
+                padding: 1rem;
+            }
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-logo">
+                <i class="fas fa-graduation-cap"></i>  Sistema de Análise Acadêmica
+            </div>
+            <div class="navbar-links">
+                <a href="{% url 'home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>Home</a>
+                <a href="{% url 'visualizacoes_hub' %}" {% if request.resolver_match.url_name == 'visualizacoes_hub' %}class="active"{% endif %}>Visualizações</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        {% block content %}{% endblock %}
+        <div class="footer">
+            <p><i class="fas fa-code"></i> Desenvolvido para UNIRIO - Sistema de Análise Acadêmica © 2025</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -664,3 +664,26 @@ def heatmap_desempenho(request):
 
 def home(request):
     return render(request, 'home.html')
+
+def visualizacoes_hub(request):
+    visualizacoes = [
+        {
+            'url': 'desempenho_aluno_periodo',
+            'icon': 'fas fa-chart-line',
+            'titulo': 'Desempenho Acadêmico',
+            'descricao': 'Acompanhe o desempenho individual dos alunos ao longo dos períodos.'
+        },
+        {
+            'url': 'heatmap_desempenho',
+            'icon': 'fas fa-fire',
+            'titulo': 'Heatmap de Desempenho',
+            'descricao': 'Visualize padrões de aprovação e reprovação por disciplina e turma.'
+        },
+        {
+            'url': 'status_integralizacao',
+            'icon': 'fas fa-tasks',
+            'titulo': 'Status de Integralização',
+            'descricao': 'Monitore o progresso dos alunos em relação à conclusão do curso.'
+        }
+    ]
+    return render(request, 'visualizacoes_hub.html', {'visualizacoes': visualizacoes})

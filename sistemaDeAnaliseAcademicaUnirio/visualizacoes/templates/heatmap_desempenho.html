@@ -1,94 +1,122 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Heatmap de Desempenho Acadêmico</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+{% extends "base.html" %}
+{% block title %}Heatmap de Desempenho Acadêmico{% endblock %}
+{% block extra_head %}
+<style>
+    .filtros-dropdown {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 2em;
+    }
+    .filtros-btn {
+        background: #003366;
+        color: #fff;
+        padding: 0.7em 2em;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.7em;
+        transition: background 0.2s;
+    }
+    .filtros-btn:hover, .filtros-btn:focus {
+        background: #2356a8;
+    }
+    .filtros-content {
+        display: none;
+        position: absolute;
+        left: 0;
+        top: 110%;
+        background: #fff;
+        min-width: 320px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        border-radius: 8px;
+        z-index: 10;
+        padding: 1.5em 1.5em 1em 1.5em;
+    }
+    .filtros-dropdown.open .filtros-content {
+        display: block;
+    }
+    .filtros-content label, .filtros-content select {
+        display: block;
+        margin-bottom: 1em;
+        color: #003366;
+        font-weight: 500;
+    }
+    .filtros-content input[type="checkbox"] {
+        margin-right: 0.5em;
+    }
+    .filtros-content .submit-btn {
+        background-color: #003366;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 0.5em;
+        width: 100%;
+    }
+    .filtros-content .submit-btn:hover {
+        background-color: #2356a8;
+    }
+    @media (max-width: 600px) {
+        .filtros-content {
+            min-width: 220px;
+            padding: 1em;
         }
-        .form-container {
-            background-color: #f5f5f5;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+    }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropdown = document.querySelector('.filtros-dropdown');
+        const btn = document.querySelector('.filtros-btn');
+        if (dropdown && btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                dropdown.classList.toggle('open');
+            });
+            document.addEventListener('click', function(e) {
+                if (!dropdown.contains(e.target)) {
+                    dropdown.classList.remove('open');
+                }
+            });
         }
-        .form-container h3 {
-            margin-top: 0;
-            color: #333;
-        }
-        .select-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .select-container label {
-            font-weight: bold;
-            color: #555;
-        }
-        .select-container select {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background-color: white;
-            font-size: 14px;
-            min-width: 200px;
-        }
-        .submit-btn {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-        .submit-btn:hover {
-            background-color: #0056b3;
-        }
-        .filtros-container {
-            display: flex;
-            gap: 2em;
-            margin-bottom: 1em;
-            align-items: center;
-        }
-        .filtro-label {
-            font-weight: bold;
-            margin-right: 0.5em;
-        }
-    </style>
-</head>
-<body>
-    <h1>Heatmap de Desempenho Acadêmico</h1>
-
-    <form method="get" id="filtros-form">
-        <div class="filtros-container">
+    });
+</script>
+{% endblock %}
+{% block content %}
+<h1 style="color:#000000;">Heatmap de Desempenho Acadêmico</h1>
+<div class="filtros-dropdown">
+    <button class="filtros-btn" type="button">
+        <i class="fas fa-filter"></i> Filtros
+    </button>
+    <div class="filtros-content">
+        <form method="get" id="filtros-form">
             {% for filtro in filtros_options %}
-                <label class="filtro-label">
-                    <input type="checkbox" name="{{ filtro.name }}" value="ativos" {% if filtro.selected %}checked{% endif %} onchange="document.getElementById('filtros-form').submit();">
+                <label>
+                    <input type="checkbox" name="{{ filtro.name }}" value="ativos" {% if filtro.selected %}checked{% endif %}>
                     {{ filtro.label }}
                 </label>
             {% endfor %}
-            <label class="filtro-label" for="periodo_ingresso">Período de Ingresso:</label>
-            <select name="periodo_ingresso" id="periodo_ingresso" onchange="document.getElementById('filtros-form').submit();">
+            <label for="periodo_ingresso">Período de Ingresso:</label>
+            <select name="periodo_ingresso" id="periodo_ingresso">
                 <option value="">Todos</option>
                 {% for periodo in periodos_options %}
                     <option value="{{ periodo.value }}" {% if periodo.selected %}selected{% endif %}>{{ periodo.label }}</option>
                 {% endfor %}
             </select>
-            <label class="filtro-label" for="curriculo-select">Currículo:</label>
-            <select name="curriculos" id="curriculo-select" onchange="document.getElementById('filtros-form').submit();">
+            <label for="curriculo-select">Currículo:</label>
+            <select name="curriculos" id="curriculo-select">
                 {% for curriculo in curriculos_options %}
                     <option value="{{ curriculo.value }}" {% if curriculo.selected %}selected{% endif %}>
                         {{ curriculo.label }}
                     </option>
                 {% endfor %}
             </select>
-            <button type="submit" class="submit-btn">Atualizar</button>
-        </div>
-    </form>
-
-    {{ plot_div|safe }}
-</body>
-</html>
+            <button type="submit" class="submit-btn">Aplicar Filtros</button>
+        </form>
+    </div>
+</div>
+{{ plot_div|safe }}
+{% endblock %}

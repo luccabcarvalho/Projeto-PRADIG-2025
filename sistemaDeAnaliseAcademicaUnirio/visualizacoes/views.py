@@ -184,7 +184,6 @@ def status_integralizacao(request):
     n_periodos = sum([bloco[1] for bloco in blocos])
     matriculas = list(matriz_geral.keys())
     matriz_integralizacao = []
-
     tooltips_integralizacao = []
 
     for matr in matriculas:
@@ -194,28 +193,26 @@ def status_integralizacao(request):
         )
         linha = []
         linha_tooltip = []
-        for periodo in periodos_ordenados:
-            if len(linha) < n_periodos:
-                label = formatar_periodo(*periodo)
-                celula = matriz_geral[matr][periodo]
-                disciplinas = []
-                for disciplina in celula.get('aprovacoes', []):
-                    disciplinas.append(
-                        f"{disciplina['nome']}<br>    Nota: {disciplina['nota']}<br>    Situação: {disciplina['status']}"
-                    )
-                for disciplina in celula.get('reprovacoes', []):
-                    disciplinas.append(
-                        f"{disciplina['nome']}<br>    Nota: {disciplina['nota']}<br>    Situação: {disciplina['status']}"
-                    )
-                for disciplina in celula.get('outros', []):
-                    disciplinas.append(
-                        f"{disciplina['nome']}<br>    Nota: {disciplina['nota']}<br>    Situação: {disciplina['status']}"
-                    )
-                tooltip = "<br>".join(disciplinas) if disciplinas else "Nenhuma disciplina cursada"
-                linha.append(label)
-                linha_tooltip.append(tooltip)
-            else:
+        for idx, periodo in enumerate(periodos_ordenados):
+            if len(linha) >= n_periodos:
                 break
+            label = formatar_periodo(*periodo)
+            celula = matriz_geral[matr][periodo]
+            todas_disciplinas = (
+                celula.get('aprovacoes', []) +
+                celula.get('reprovacoes', []) +
+                celula.get('outros', [])
+            )
+            if todas_disciplinas:
+                disciplinas_tooltip = [
+                    f"{disc['nome']}<br>    Nota: {disc['nota']}<br>    Situação: {disc['status']}"
+                    for disc in todas_disciplinas
+                ]
+                tooltip = "<br>".join(disciplinas_tooltip)
+            else:
+                tooltip = "Nenhuma disciplina cursada"
+            linha.append(label)
+            linha_tooltip.append(tooltip)
         if len(periodos_ordenados) > n_periodos:
             linha[-1] = '+'
             linha_tooltip[-1] = 'Períodos excedentes'
@@ -231,7 +228,7 @@ def status_integralizacao(request):
     colunas = []
     cores = []
     for nome, tam, cor in blocos:
-        colunas += [nome] + [""] * (tam - 1)
+        colunas += [""] * (tam - 1) + [nome]
         cores += [cor] * tam
 
     nomes = [
@@ -271,7 +268,7 @@ def status_integralizacao(request):
             tickmode='array',
             tickvals=list(range(n_periodos)),
             ticktext=[f'{colunas[i]}' for i in range(n_periodos)],
-            tickangle=45,
+            tickangle=20,
             side='top',
             range=[
                 (n_periodos / 2) - 5,  
@@ -288,7 +285,7 @@ def status_integralizacao(request):
         ),
         autosize=False,
         width=1800,
-        height=750,
+        height=650,
         margin=dict(l=10, r=10, t=60, b=10),
     )
 
@@ -664,3 +661,26 @@ def heatmap_desempenho(request):
 
 def home(request):
     return render(request, 'home.html')
+
+def visualizacoes_hub(request):
+    visualizacoes = [
+        {
+            'url': 'desempenho_aluno_periodo',
+            'icon': 'fas fa-chart-line',
+            'titulo': 'Desempenho Acadêmico',
+            'descricao': 'Acompanhe o desempenho individual dos alunos ao longo dos períodos.'
+        },
+        {
+            'url': 'heatmap_desempenho',
+            'icon': 'fas fa-fire',
+            'titulo': 'Heatmap de Desempenho',
+            'descricao': 'Visualize padrões de aprovação e reprovação por disciplina e turma.'
+        },
+        {
+            'url': 'status_integralizacao',
+            'icon': 'fas fa-tasks',
+            'titulo': 'Status de Integralização',
+            'descricao': 'Monitore o progresso dos alunos em relação à conclusão do curso.'
+        }
+    ]
+    return render(request, 'visualizacoes_hub.html', {'visualizacoes': visualizacoes})

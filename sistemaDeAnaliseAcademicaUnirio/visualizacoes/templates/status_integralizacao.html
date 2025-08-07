@@ -1,42 +1,122 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Status de Integralização dos Alunos</title>
-    <style>
-        .filtros-container {
-            display: flex;
-            gap: 2em;
-            margin-bottom: 1em;
-            align-items: center;
+{% extends "base.html" %}
+{% block title %}Status de Integralização dos Alunos{% endblock %}
+{% block extra_head %}
+<style>
+    .filtros-dropdown {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 2em;
+    }
+    .filtros-btn {
+        background: #003366;
+        color: #fff;
+        padding: 0.7em 2em;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.7em;
+        transition: background 0.2s;
+    }
+    .filtros-btn:hover, .filtros-btn:focus {
+        background: #2356a8;
+    }
+    .filtros-content {
+        display: none;
+        position: absolute;
+        left: 0;
+        top: 110%;
+        background: #fff;
+        min-width: 320px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        border-radius: 8px;
+        z-index: 10;
+        padding: 1.5em 1.5em 1em 1.5em;
+    }
+    .filtros-dropdown.open .filtros-content {
+        display: block;
+    }
+    .filtros-content label, .filtros-content select {
+        display: block;
+        margin-bottom: 1em;
+        color: #003366;
+        font-weight: 500;
+    }
+    .filtros-content input[type="checkbox"] {
+        margin-right: 0.5em;
+    }
+    .filtros-content .submit-btn {
+        background-color: #003366;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 0.5em;
+        width: 100%;
+    }
+    .filtros-content .submit-btn:hover {
+        background-color: #2356a8;
+    }
+    @media (max-width: 600px) {
+        .filtros-content {
+            min-width: 220px;
+            padding: 1em;
         }
-        .filtro-label {
-            font-weight: bold;
-            margin-right: 0.5em;
+    }
+    .grafico-wrapper {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        margin-top: 2em;
+    }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropdown = document.querySelector('.filtros-dropdown');
+        const btn = document.querySelector('.filtros-btn');
+        if (dropdown && btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                dropdown.classList.toggle('open');
+            });
+            document.addEventListener('click', function(e) {
+                if (!dropdown.contains(e.target)) {
+                    dropdown.classList.remove('open');
+                }
+            });
         }
-    </style>
-</head>
-<body>
-    <h2>Status de Integralização dos Alunos por Período</h2>
-
-    <form method="get" id="filtros-form">
-        <div class="filtros-container">
+    });
+</script>
+{% endblock %}
+{% block content %}
+<h2 style="color:#000000;">Status de Integralização dos Alunos por Período</h2>
+<div class="filtros-dropdown">
+    <button class="filtros-btn" type="button">
+        <i class="fas fa-filter"></i> Filtros
+    </button>
+    <div class="filtros-content">
+        <form method="get" id="filtros-form">
             {% for filtro in filtros_options %}
-                <label class="filtro-label">
-                    <input type="checkbox" name="{{ filtro.name }}" value="ativos" {% if filtro.selected %}checked{% endif %} onchange="document.getElementById('filtros-form').submit();">
+                <label>
+                    <input type="checkbox" name="{{ filtro.name }}" value="ativos" {% if filtro.selected %}checked{% endif %}>
                     {{ filtro.label }}
                 </label>
             {% endfor %}
-
-            <label class="filtro-label" for="periodo_ingresso">Período de Ingresso:</label>
-            <select name="periodo_ingresso" id="periodo_ingresso" onchange="document.getElementById('filtros-form').submit();">
+            <label for="periodo_ingresso">Período de Ingresso:</label>
+            <select name="periodo_ingresso" id="periodo_ingresso">
                 <option value="">Todos</option>
                 {% for periodo in periodos_options %}
                     <option value="{{ periodo.value }}" {% if periodo.selected %}selected{% endif %}>{{ periodo.label }}</option>
                 {% endfor %}
             </select>
-        </div>
-    </form>
-
+            <button type="submit" class="submit-btn">Aplicar Filtros</button>
+        </form>
+    </div>
+</div>
+<div class="grafico-wrapper">
     {{ plot_div|safe }}
-</body>
-</html>
+</div>
+{% endblock %}

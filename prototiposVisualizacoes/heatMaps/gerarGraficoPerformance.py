@@ -50,13 +50,15 @@ for matricula, cod_disciplina, status in zip(df_historico['MATR ALUNO'], df_hist
     # else:
     #     print(f"Índices fora do range: matricula={matricula}, cod_disciplina={cod_disciplina}, idx_aluno={idx_aluno}, idx_disc={idx_disc}")
 
-for matricula, cod_disciplina, status, media_final, ano, periodo in zip(
+for matricula, cod_disciplina, status, media_final, ano, periodo, nome, nome_disciplina in zip(
     df_historico['MATR ALUNO'],
     df_historico['COD ATIV CURRIC'],
     df_historico['DESCR SITUACAO'],
     df_historico['MEDIA FINAL'],
     df_historico['ANO'],
-    df_historico['PERIODO']
+    df_historico['PERIODO'],
+    df_historico['NOME PESSOA'],
+    df_historico['NOME ATIV CURRIC']
 ):
     idx_aluno = alunos_dict.get(str(matricula))
     idx_disc = disciplinas_dict.get(cod_disciplina)
@@ -73,6 +75,17 @@ for matricula, cod_disciplina, status, media_final, ano, periodo in zip(
             'media_final': media_final,
             'ano_periodo': f"{ano}-{periodo}"
         })
+        if 'aluno' not in matriz_tooltips[idx_aluno][idx_disc]:
+            matriz_tooltips[idx_aluno][idx_disc]['aluno'] = []
+        matriz_tooltips[idx_aluno][idx_disc]['aluno'].append({
+            'nome': nome
+        })
+        if 'disciplina' not in matriz_tooltips[idx_aluno][idx_disc]:
+            matriz_tooltips[idx_aluno][idx_disc]['disciplina'] = []
+        matriz_tooltips[idx_aluno][idx_disc]['disciplina'].append({
+            'nome_disciplina': nome_disciplina
+        })
+
 
 
 print(matriz_tooltips)

@@ -453,83 +453,86 @@ def heatmap_desempenho(request):
 
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     data_dir = os.path.join(BASE_DIR, 'visualizacoes', 'data')
-    df = pd.read_csv(os.path.join(data_dir, 'HistoricoEscolarSimplificado.csv'))
+
+    # Carregar dados
     df_alunos = pd.read_csv(os.path.join(data_dir, 'alunosPorCurso.csv'))
+    df_historico = pd.read_csv(os.path.join(data_dir, 'HistoricoEscolarSimplificado.csv'))
+    df_disciplinas_20232 = pd.read_csv(os.path.join(data_dir, 'curriculo-20232.csv'))
+    df_disciplinas_20052 = pd.read_csv(os.path.join(data_dir, 'curriculo-20052.csv'))
+    df_disciplinas_20002 = pd.read_csv(os.path.join(data_dir, 'curriculo-20002.csv'))
+    df_disciplinas_20081 = pd.read_csv(os.path.join(data_dir, 'curriculo-20081.csv'))
 
-    # --- Filtros ---
-    filtro_ativos = request.GET.get('ativos', 'todos')
-    if filtro_ativos == 'ativos':
-        alunos_ativos = df_alunos[df_alunos['FORMA EVASAO'] == 'Sem evasão']['ID PESSOA'].unique()
-        df = df[df['ID PESSOA'].isin(alunos_ativos)]
-        df_alunos = df_alunos[df_alunos['ID PESSOA'].isin(alunos_ativos)]
+    # Filtrar obrigatórias
+    df_disciplinas_20232 = df_disciplinas_20232[df_disciplinas_20232['TIPO DISCIPLINA'] == 'Obrigatória']
+    df_disciplinas_20052 = df_disciplinas_20052[df_disciplinas_20052['TIPO DISCIPLINA'] == 'Obrigatória']
+    df_disciplinas_20002 = df_disciplinas_20002[df_disciplinas_20002['TIPO DISCIPLINA'] == 'Disciplinas obrigatórias']
+    df_disciplinas_20081 = df_disciplinas_20081[df_disciplinas_20081['TIPO DISCIPLINA'] == 'Obrigatória']
 
-    filtro_periodo = request.GET.get('periodo_ingresso', '')
-    if filtro_periodo:
-        df_alunos = df_alunos[df_alunos['PERIODO INGRESSO'] == filtro_periodo]
-        df = df[df['ID PESSOA'].isin(df_alunos['ID PESSOA'].unique())]
-
-    curriculos_disponiveis = sorted(df['NUM VERSAO'].unique())
-    periodos_unicos = sorted(df_alunos['PERIODO INGRESSO'].dropna().unique())
-    periodos_options = [
-        {'value': p, 'label': p, 'selected': p == filtro_periodo}
-        for p in periodos_unicos
-    ]
-
-    curriculos_selecionados = request.GET.getlist('curriculos')
-    if not curriculos_selecionados:
-        curriculos_selecionados = [curriculos_disponiveis[-1]]  # Último currículo por padrão
-
-    df_filtrado = df[df['NUM VERSAO'].isin(curriculos_selecionados)]
-
-    if df_filtrado.empty:
-        fig = go.Figure()
-        fig.update_layout(
-            title='Nenhum dado encontrado para os currículos selecionados',
-            xaxis_title='Disciplinas',
-            yaxis_title='Matrículas',
-            height=400
-        )
-        plot_div = fig.to_html(full_html=False)
-
-        curriculos_options = [
-            {'value': curriculo, 'label': curriculo, 'selected': curriculo in curriculos_selecionados}
-            for curriculo in curriculos_disponiveis
-        ]
-
-        return render(request, 'heatmap_desempenho.html', {
-            'plot_div': plot_div,
-            'curriculos_options': curriculos_options,
-            'periodos_options': periodos_options,
-            'filtros_options': [
-                {'name': 'ativos', 'label': 'Exibir apenas alunos ativos (sem evasão)', 'selected': filtro_ativos == 'ativos'},
-            ],
-        })
-
-    matricula_id_col = 'MATR ALUNO'
-    disciplinas_dict = dict(zip(df_filtrado['COD ATIV CURRIC'], df_filtrado['NOME ATIV CURRIC']))
-    matriculas = df_filtrado[matricula_id_col].unique().tolist()
-    disciplinas = df_filtrado['COD ATIV CURRIC'].unique().tolist()
-    mapa_matriculas = {mat: i for i, mat in enumerate(matriculas)}
-    mapa_disciplinas = {disc: i for i, disc in enumerate(disciplinas)}
-
-    matriz = [[[] for _ in range(len(disciplinas))] for _ in range(len(matriculas))]
-    for (matricula, cod_disc), grupo in df_filtrado.groupby([matricula_id_col, 'COD ATIV CURRIC']):
-        i = mapa_matriculas[matricula]
-        j = mapa_disciplinas[cod_disc]
-        matriz[i][j] = grupo['DESCR SITUACAO'].astype(str).tolist()
-
-    df_matriz = pd.DataFrame(
-        [[', '.join(attempts) if attempts else '' for attempts in linha] for linha in matriz],
-        index=matriculas,
-        columns=[disciplinas_dict[cod] for cod in disciplinas]
+    disciplinas_list = sorted(
+        set(df_disciplinas_20052['COD DISCIPLINA']) |
+        set(df_disciplinas_20002['COD DISCIPLINA']) |
+        set(df_disciplinas_20232['COD DISCIPLINA']) |
+        set(df_disciplinas_20081['COD DISCIPLINA'])
     )
 
-    if 'NOME PESSOA' in df_filtrado.columns:
-        aluno_info = df_filtrado.drop_duplicates(matricula_id_col).set_index(matricula_id_col)[['NOME PESSOA', 'NUM VERSAO']]
-        df_matriz.index = [
-            f"{mid} - {aluno_info.loc[mid, 'NOME PESSOA']} (Currículo: {aluno_info.loc[mid, 'NUM VERSAO']})"
-            for mid in df_matriz.index
-        ]
+    df_alunos['MATR ALUNO'] = df_alunos['MATR ALUNO'].astype(str)
+    df_alunos = df_alunos.drop_duplicates(subset=['MATR ALUNO'])
+    df_alunos = df_alunos.sort_values('MATR ALUNO').reset_index(drop=True)
+    df_historico['MATR ALUNO'] = df_historico['MATR ALUNO'].astype(str)
+
+    alunos_dict = dict((matricula, idx) for idx, matricula in enumerate(df_alunos['MATR ALUNO']))
+    disciplinas_dict = dict((cod_disciplina, idx) for idx, cod_disciplina in enumerate(disciplinas_list))
+
+    n_alunos = len(alunos_dict)
+    n_disciplinas = len(disciplinas_dict)
+    matriz_geral = [['' for _ in range(n_disciplinas)] for _ in range(n_alunos)]
+    matriz_tooltips = [[{} for _ in range(n_disciplinas)] for _ in range(n_alunos)]
+
+    for matricula, cod_disciplina, status in zip(df_historico['MATR ALUNO'], df_historico['COD ATIV CURRIC'], df_historico['DESCR SITUACAO']):
+        idx_aluno = alunos_dict.get(str(matricula))
+        idx_disc = disciplinas_dict.get(cod_disciplina)
+        if idx_aluno is not None and idx_disc is not None:
+            matriz_geral[idx_aluno][idx_disc] = status
+
+    for matricula, cod_disciplina, status, media_final, ano, periodo, nome, nome_disciplina in zip(
+        df_historico['MATR ALUNO'],
+        df_historico['COD ATIV CURRIC'],
+        df_historico['DESCR SITUACAO'],
+        df_historico['MEDIA FINAL'],
+        df_historico['ANO'],
+        df_historico['PERIODO'],
+        df_historico['NOME PESSOA'],
+        df_historico['NOME ATIV CURRIC']
+    ):
+        idx_aluno = alunos_dict.get(str(matricula))
+        idx_disc = disciplinas_dict.get(cod_disciplina)
+        if (
+            idx_aluno is not None and idx_disc is not None
+            and 0 <= idx_aluno < n_alunos
+            and 0 <= idx_disc < n_disciplinas
+        ):
+            matriz_geral[idx_aluno][idx_disc] = status
+            if 'status_list' not in matriz_tooltips[idx_aluno][idx_disc]:
+                matriz_tooltips[idx_aluno][idx_disc]['status_list'] = []
+            matriz_tooltips[idx_aluno][idx_disc]['status_list'].append({
+                'status': status,
+                'media_final': media_final,
+                'ano_periodo': f"{ano}-{periodo}"
+            })
+
+    alunos_labels = [
+        f"{matricula} - {df_alunos.loc[df_alunos['MATR ALUNO'] == matricula, 'NOME PESSOA'].values[0]}"
+        if not df_alunos.loc[df_alunos['MATR ALUNO'] == matricula, 'NOME PESSOA'].empty else str(matricula)
+        for matricula in df_alunos['MATR ALUNO']
+    ]
+    def get_nome_disciplina(cod):
+        for df in [df_disciplinas_20232, df_disciplinas_20052, df_disciplinas_20002, df_disciplinas_20081]:
+            nome = df.loc[df['COD DISCIPLINA'] == cod, 'NOME DISCIPLINA']
+            if not nome.empty:
+                return nome.values[0]
+        return str(cod)
+
+    disciplinas_labels = [get_nome_disciplina(cod) for cod in disciplinas_list]
 
     aprovados = {
         'APV - Aprovado', 'APV- Aprovado', 'APV - Aprovado sem nota',
@@ -544,75 +547,41 @@ def heatmap_desempenho(request):
     }
     matriculado = {'ASC - Matrícula'}
 
-    def classificar_status(cell):
-        if pd.isna(cell) or not cell.strip():
-            return np.nan
-        status_list = [s.strip() for s in cell.split(',') if s.strip()]
-        if any(s in aprovados for s in status_list):
+    def status_to_num(status):
+        if status in aprovados:
             return 1
-        if any(s in matriculado for s in status_list):
+        if status in matriculado:
             return 0
-        if any(s in reprovados for s in status_list):
+        if status in reprovados:
             return -1
-        else:
-            return 0
+        return np.nan
 
-    df_numerico = df_matriz.map(classificar_status)
+    matriz_numerica = [
+        [status_to_num(cell) for cell in row]
+        for row in matriz_geral
+    ]
 
-    def construir_tooltip(nome_aluno, disciplina, status_str):
-        if pd.isna(status_str) or not status_str.strip():
-            return (
-                f"{disciplina}<br>"
-                f"<b>Histórico:</b><br>"
-                f"    Nenhum<br>"
-                f"<b>Situação final:</b><br>"
-                f"    Indefinido"
-            )
-        status_list = [s.strip() for s in status_str.split(',') if s.strip()]
-        status_formatado = ""
-        # Buscar períodos para cada status usando df_filtrado
-        status_periodos = []
-        for s in status_list:
-            # Resgata o período da disciplina para o aluno
-            filtro = (
-                (df_filtrado['NOME PESSOA'] == nome_aluno.split(' - ')[-2].strip() if ' - ' in nome_aluno else nome_aluno) &
-                (df_filtrado['NOME ATIV CURRIC'] == disciplina)
-            )
-            # Se não encontrar, tenta por matrícula
-            if not df_filtrado[filtro].empty:
-                ano = df_filtrado[filtro]['ANO'].iloc[0]
-                periodo = df_filtrado[filtro]['PERIODO'].iloc[0]
-                periodo_str = f"{ano} - {periodo}"
-            else:
-                periodo_str = ""
-            status_periodos.append((s, periodo_str))
+    def tooltip_format(cell_tooltip):
+        if not cell_tooltip or 'status_list' not in cell_tooltip:
+            return ""
+        lines = []
+        for s in sorted(cell_tooltip['status_list'], key=lambda x: x.get('ano_periodo', ''), reverse=True):
+            status = s.get('status', '')
+            media = s.get('media_final', '')
+            periodo = s.get('ano_periodo', '')
+            lines.append(f"{status} (Nota: {media}, Período: {periodo})")
+        return "<br>".join(lines)
 
-        for s, periodo_str in status_periodos:
-            if periodo_str:
-                status_formatado += f"    {s} ({periodo_str})<br>"
-            else:
-                status_formatado += f"    {s}<br>"
-        status_final = status_list[-1] if status_list else 'Indefinido'
-        return (
-            f"{disciplina}<br>"
-            f"<b>Histórico:</b><br>{status_formatado}"
-            f"<b>Situação final:</b><br>    {status_final}"
-        )
-
-    hover_text = df_matriz.apply(
-        lambda row: [
-            "" if pd.isna(row.iloc[j]) or not str(row.iloc[j]).strip()
-            else construir_tooltip(row.name, df_matriz.columns[j], row.iloc[j])
-            for j in range(len(row))
-        ],
-        axis=1
-    ).tolist()
+    matriz_tooltips_str = [
+        [tooltip_format(cell) for cell in row]
+        for row in matriz_tooltips
+    ]
 
     fig = go.Figure(data=go.Heatmap(
-        z=df_numerico.values,
-        x=df_numerico.columns,
-        y=df_numerico.index,
-        text=hover_text,
+        z=matriz_numerica,
+        x=disciplinas_labels,
+        y=alunos_labels,
+        text=matriz_tooltips_str,
         hoverinfo='text',
         colorscale=[
             [0.0, 'red'],
@@ -623,40 +592,24 @@ def heatmap_desempenho(request):
             title='Status',
             tickvals=[-1, 0, 1],
             ticktext=['Reprovado/Trancado', 'Matriculado', 'Aprovado']
-        ),
-        showscale=False
+        )
     ))
 
-    if len(curriculos_selecionados) == 1:
-        titulo_curriculos = f"Currículo: {curriculos_selecionados[0]}"
-    else:
-        titulo_curriculos = f"Currículos: {', '.join(curriculos_selecionados)}"
-
     fig.update_layout(
-        title=f'Desempenho Acadêmico por Matrícula e Disciplina<br><sub>{titulo_curriculos}</sub>',
+        title='Desempenho Acadêmico por Matrícula e Disciplina',
         xaxis=dict(title='Disciplinas', tickangle=45, tickfont=dict(size=9)),
         yaxis=dict(title='Matrículas', tickfont=dict(size=9)),
         autosize=True,
-        margin=dict(l=50, r=50, t=100, b=100),
-        height=max(600, len(matriculas) * 20 + 200),
+        margin=dict(l=50, r=50, t=80, b=100),
+        height=1200,
     )
 
     plot_div = fig.to_html(full_html=False)
-
-    curriculos_options = [
-        {'value': curriculo, 'label': curriculo, 'selected': curriculo in curriculos_selecionados}
-        for curriculo in curriculos_disponiveis
-    ]
-
-    filtros_options = [
-        {'name': 'ativos', 'label': 'Exibir apenas alunos ativos (sem evasão)', 'selected': filtro_ativos == 'ativos'},
-    ]
-
     return render(request, 'heatmap_desempenho.html', {
         'plot_div': plot_div,
-        'curriculos_options': curriculos_options,
-        'periodos_options': periodos_options,
-        'filtros_options': filtros_options,
+        'curriculos_options': [],
+        'periodos_options': [],
+        'filtros_options': [],
     })
 
 def home(request):

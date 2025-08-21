@@ -9,7 +9,6 @@ start_time = time.time()
 df_alunos = pd.read_csv(r'prototiposVisualizacoes/docs/alunosPorCurso.csv')
 
 # TODO:
-# adicionar filtro para disciplinas obrigatorias
 # utilizar sorted para organizar periodos antes de montar o plotly
 # no tooltip utilizar a ordenação do mais novo para o mais antigo
 # tentar utilizar .sort para cada elemento da matriz de tooltips
@@ -23,6 +22,11 @@ df_disciplinas_20232 = pd.read_csv(r'prototiposVisualizacoes/docs/curriculo-2023
 df_disciplinas_20052 = pd.read_csv(r'prototiposVisualizacoes/docs/curriculo-20052.csv')
 df_disciplinas_20002 = pd.read_csv(r'prototiposVisualizacoes/docs/curriculo-20002.csv')
 df_disciplinas_20081 = pd.read_csv(r'prototiposVisualizacoes/docs/curriculo-20081.csv')
+
+df_disciplinas_20232 = df_disciplinas_20232[df_disciplinas_20232['TIPO DISCIPLINA'] == 'Obrigatória']
+df_disciplinas_20052 = df_disciplinas_20052[df_disciplinas_20052['TIPO DISCIPLINA'] == 'Obrigatória']
+df_disciplinas_20002 = df_disciplinas_20002[df_disciplinas_20002['TIPO DISCIPLINA'] == 'Disciplinas obrigatórias']
+df_disciplinas_20081 = df_disciplinas_20081[df_disciplinas_20081['TIPO DISCIPLINA'] == 'Obrigatória']
 
 disciplinas_list = sorted(
     set(df_disciplinas_20052['COD DISCIPLINA']) |
@@ -53,7 +57,6 @@ for matricula, cod_disciplina, status in zip(df_historico['MATR ALUNO'], df_hist
     idx_disc = disciplinas_dict.get(cod_disciplina)
     if (
         idx_aluno is not None and idx_disc is not None
-        # TO DO - analisar e corrigir o bug
     ):
         matriz_geral[idx_aluno][idx_disc] = status
 
@@ -98,11 +101,14 @@ alunos_labels = [
     if not df_alunos.loc[df_alunos['MATR ALUNO'] == matricula, 'NOME PESSOA'].empty else str(matricula)
     for matricula in df_alunos['MATR ALUNO']
 ]
-disciplinas_labels = [
-    df_disciplinas_20232.loc[df_disciplinas_20232['COD DISCIPLINA'] == cod, 'NOME DISCIPLINA'].values[0]
-    if not df_disciplinas_20232.loc[df_disciplinas_20232['COD DISCIPLINA'] == cod, 'NOME DISCIPLINA'].empty else str(cod)
-    for cod in disciplinas_list
-]
+def get_nome_disciplina(cod):
+    for df in [df_disciplinas_20232, df_disciplinas_20052, df_disciplinas_20002, df_disciplinas_20081]:
+        nome = df.loc[df['COD DISCIPLINA'] == cod, 'NOME DISCIPLINA']
+        if not nome.empty:
+            return nome.values[0]
+    return str(cod)
+
+disciplinas_labels = [get_nome_disciplina(cod) for cod in disciplinas_list]
 
 aprovados = {
     'APV - Aprovado', 'APV- Aprovado', 'APV - Aprovado sem nota',

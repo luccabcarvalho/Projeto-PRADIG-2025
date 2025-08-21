@@ -462,18 +462,51 @@ def heatmap_desempenho(request):
     df_disciplinas_20002 = pd.read_csv(os.path.join(data_dir, 'curriculo-20002.csv'))
     df_disciplinas_20081 = pd.read_csv(os.path.join(data_dir, 'curriculo-20081.csv'))
 
-    # Filtrar obrigatórias
-    df_disciplinas_20232 = df_disciplinas_20232[df_disciplinas_20232['TIPO DISCIPLINA'] == 'Obrigatória']
-    df_disciplinas_20052 = df_disciplinas_20052[df_disciplinas_20052['TIPO DISCIPLINA'] == 'Obrigatória']
-    df_disciplinas_20002 = df_disciplinas_20002[df_disciplinas_20002['TIPO DISCIPLINA'] == 'Disciplinas obrigatórias']
-    df_disciplinas_20081 = df_disciplinas_20081[df_disciplinas_20081['TIPO DISCIPLINA'] == 'Obrigatória']
+    # --- Filtros ---
+    filtro_ativos = request.GET.get('ativos', 'todos')
+    filtro_curriculos = request.GET.getlist('curriculos')
+    curriculos_map = {
+        '20232': df_disciplinas_20232,
+        '20052': df_disciplinas_20052,
+        '20002': df_disciplinas_20002,
+        '20081': df_disciplinas_20081,
+    }
+    curriculos_options = [
+        {'value': '20232', 'label': 'Currículo 2023/2', 'selected': '20232' in filtro_curriculos},
+        {'value': '20052', 'label': 'Currículo 2005/2', 'selected': '20052' in filtro_curriculos},
+        {'value': '20002', 'label': 'Currículo 2000/2', 'selected': '20002' in filtro_curriculos},
+        {'value': '20081', 'label': 'Currículo 2008/1', 'selected': '20081' in filtro_curriculos},
+    ]
 
-    disciplinas_list = sorted(
-        set(df_disciplinas_20052['COD DISCIPLINA']) |
-        set(df_disciplinas_20002['COD DISCIPLINA']) |
-        set(df_disciplinas_20232['COD DISCIPLINA']) |
-        set(df_disciplinas_20081['COD DISCIPLINA'])
-    )
+    # Filtrar alunos ativos
+    if filtro_ativos == 'ativos':
+        alunos_ativos = df_alunos[df_alunos['FORMA EVASAO'] == 'Sem evasão']['ID PESSOA'].unique()
+        df_historico = df_historico[df_historico['ID PESSOA'].isin(alunos_ativos)]
+        df_alunos = df_alunos[df_alunos['ID PESSOA'].isin(alunos_ativos)]
+
+    # Filtrar currículos
+    if filtro_curriculos:
+        disciplinas_list = set()
+        for curr in filtro_curriculos:
+            df = curriculos_map.get(curr)
+            if df is not None:
+                if curr == '20002':
+                    disciplinas = df[df['TIPO DISCIPLINA'] == 'Disciplinas obrigatórias']['COD DISCIPLINA']
+                else:
+                    disciplinas = df[df['TIPO DISCIPLINA'] == 'Obrigatória']['COD DISCIPLINA']
+                disciplinas_list.update(disciplinas)
+        disciplinas_list = sorted(disciplinas_list)
+    else:
+        # Se nada selecionado, mostra todas obrigatórias de todos currículos
+        disciplinas_list = sorted(
+            set(
+                df_disciplinas_20232[df_disciplinas_20232['TIPO DISCIPLINA'] == 'Obrigatória']['COD DISCIPLINA']
+            ).union(
+                df_disciplinas_20052[df_disciplinas_20052['TIPO DISCIPLINA'] == 'Obrigatória']['COD DISCIPLINA'],
+                df_disciplinas_20002[df_disciplinas_20002['TIPO DISCIPLINA'] == 'Disciplinas obrigatórias']['COD DISCIPLINA'],
+                df_disciplinas_20081[df_disciplinas_20081['TIPO DISCIPLINA'] == 'Obrigatória']['COD DISCIPLINA'],
+            )
+        )
 
     df_alunos['MATR ALUNO'] = df_alunos['MATR ALUNO'].astype(str)
     df_alunos = df_alunos.drop_duplicates(subset=['MATR ALUNO'])
@@ -605,11 +638,15 @@ def heatmap_desempenho(request):
     )
 
     plot_div = fig.to_html(full_html=False)
+    filtros_options = [
+        {'name': 'ativos', 'label': 'Exibir apenas alunos ativos (sem evasão)', 'selected': filtro_ativos == 'ativos'},
+    ]
     return render(request, 'heatmap_desempenho.html', {
         'plot_div': plot_div,
-        'curriculos_options': [],
+        'curriculos_options': curriculos_options,
         'periodos_options': [],
-        'filtros_options': [],
+        'filtros_options': filtros_options,
+        'curriculos_selecionados': filtro_curriculos,
     })
 
 def home(request):

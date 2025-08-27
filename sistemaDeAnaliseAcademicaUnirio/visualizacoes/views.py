@@ -527,8 +527,9 @@ def heatmap_desempenho(request):
         if idx_aluno is not None and idx_disc is not None:
             matriz_geral[idx_aluno][idx_disc] = status
 
-    for matricula, cod_disciplina, status, media_final, ano, periodo, nome, nome_disciplina in zip(
+    for matricula, nome_aluno, cod_disciplina, status, media_final, ano, periodo, nome, nome_disciplina in zip(
         df_historico['MATR ALUNO'],
+        df_historico['NOME PESSOA'],
         df_historico['COD ATIV CURRIC'],
         df_historico['DESCR SITUACAO'],
         df_historico['MEDIA FINAL'],
@@ -548,9 +549,11 @@ def heatmap_desempenho(request):
             if 'status_list' not in matriz_tooltips[idx_aluno][idx_disc]:
                 matriz_tooltips[idx_aluno][idx_disc]['status_list'] = []
             matriz_tooltips[idx_aluno][idx_disc]['status_list'].append({
+                'nome_disciplina': nome_disciplina,
                 'status': status,
                 'media_final': media_final,
-                'ano_periodo': f"{ano}-{periodo}"
+                'ano_periodo': f"{ano}.{periodo}",
+                'nome_aluno': nome_aluno
             })
 
     alunos_labels = [
@@ -599,10 +602,18 @@ def heatmap_desempenho(request):
             return ""
         lines = []
         for s in sorted(cell_tooltip['status_list'], key=lambda x: x.get('ano_periodo', ''), reverse=True):
+            nome_aluno = s.get('nome_aluno', '')
             status = s.get('status', '')
             media = s.get('media_final', '')
             periodo = s.get('ano_periodo', '')
-            lines.append(f"{status} (Nota: {media}, Período: {periodo})")
+            nota_str = f"{media}" if pd.notna(media) else ""
+            lines.append(
+                f"{nome_aluno}<br>"
+                f"{nome_disciplina}<br>"
+                f"  Status: {status}<br>"
+                f"      {periodo}<br>"
+                f"      {nota_str}<br>"
+            )
         return "<br>".join(lines)
 
     matriz_tooltips_str = [

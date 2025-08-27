@@ -1,6 +1,33 @@
 {% extends "base.html" %}
 {% block title %}Heatmap de Desempenho Acadêmico{% endblock %}
 {% block extra_head %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#curriculo-select').select2({
+            placeholder: "Selecione um ou mais currículos",
+            allowClear: true,
+            width: '100%'
+        });
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropdown = document.querySelector('.filtros-dropdown');
+        const btn = document.querySelector('.filtros-btn');
+        if (dropdown && btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                dropdown.classList.toggle('open');
+            });
+            document.addEventListener('click', function(e) {
+                if (!dropdown.contains(e.target)) {
+                    dropdown.classList.remove('open');
+                }
+            });
+        }
+    });
+</script>
 <style>
     .filtros-dropdown {
         position: relative;
@@ -67,23 +94,7 @@
         }
     }
 </style>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const dropdown = document.querySelector('.filtros-dropdown');
-        const btn = document.querySelector('.filtros-btn');
-        if (dropdown && btn) {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                dropdown.classList.toggle('open');
-            });
-            document.addEventListener('click', function(e) {
-                if (!dropdown.contains(e.target)) {
-                    dropdown.classList.remove('open');
-                }
-            });
-        }
-    });
-</script>
+
 {% endblock %}
 {% block content %}
 <h1 style="color:#000000;">Heatmap de Desempenho Acadêmico</h1>
@@ -99,15 +110,8 @@
                     {{ filtro.label }}
                 </label>
             {% endfor %}
-            <label for="periodo_ingresso">Período de Ingresso:</label>
-            <select name="periodo_ingresso" id="periodo_ingresso">
-                <option value="">Todos</option>
-                {% for periodo in periodos_options %}
-                    <option value="{{ periodo.value }}" {% if periodo.selected %}selected{% endif %}>{{ periodo.label }}</option>
-                {% endfor %}
-            </select>
             <label for="curriculo-select">Currículo:</label>
-            <select name="curriculos" id="curriculo-select">
+            <select name="curriculos" id="curriculo-select" multiple="multiple" style="width:100%;">
                 {% for curriculo in curriculos_options %}
                     <option value="{{ curriculo.value }}" {% if curriculo.selected %}selected{% endif %}>
                         {{ curriculo.label }}

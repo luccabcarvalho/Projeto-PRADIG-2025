@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Gerenciar Arquivos{% endblock %}
+{% block extra_head %}
+<style>
+.file-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2rem;
+}
+.file-table th, .file-table td {
+    border-bottom: 1px solid #eee;
+    padding: 0.75rem 1rem;
+    text-align: left;
+}
+.file-table th {
+    background: #f5f7fa;
+    color: #333;
+}
+.file-table td .btn {
+    margin-right: 0.5rem;
+}
+.upload-form {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+.upload-form input[type="file"] {
+    flex: 1;
+}
+.btn {
+    background: var(--unirio-blue);
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1.2rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+.btn:hover {
+    background: var(--unirio-blue-light);
+}
+</style>
+{% endblock %}
+{% block content %}
+<h2><i class="fas fa-folder-open"></i> Gerenciar Arquivos</h2>
+{% if messages %}
+    <ul>
+    {% for message in messages %}
+        <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+{% endif %}
+<table class="file-table">
+    <thead>
+        <tr>
+            <th>Tipo</th>
+            <th>Arquivo</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Lista de Alunos</td>
+            <td>
+                {% if alunos %}alunosPorCurso.csv{% else %}<span style="color:#888">Nenhum</span>{% endif %}
+            </td>
+            <td>
+                {% if alunos %}
+                <form method="post" style="display:inline">{% csrf_token %}
+                    <input type="hidden" name="remover" value="alunosPorCurso.csv">
+                    <button class="btn" type="submit"><i class="fas fa-trash"></i> Remover</button>
+                </form>
+                {% else %}
+                <form method="post" enctype="multipart/form-data" class="upload-form">{% csrf_token %}
+                    <input type="hidden" name="tipo" value="alunos">
+                    <input type="file" name="arquivo" accept=".csv" required>
+                    <button class="btn" type="submit"><i class="fas fa-upload"></i> Enviar</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td>Histórico Escolar</td>
+            <td>
+                {% if historico %}historicoEscolar.csv{% else %}<span style="color:#888">Nenhum</span>{% endif %}
+            </td>
+            <td>
+                {% if historico %}
+                <form method="post" style="display:inline">{% csrf_token %}
+                    <input type="hidden" name="remover" value="historicoEscolar.csv">
+                    <button class="btn" type="submit"><i class="fas fa-trash"></i> Remover</button>
+                </form>
+                {% else %}
+                <form method="post" enctype="multipart/form-data" class="upload-form">{% csrf_token %}
+                    <input type="hidden" name="tipo" value="historico">
+                    <input type="file" name="arquivo" accept=".csv" required>
+                    <button class="btn" type="submit"><i class="fas fa-upload"></i> Enviar</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td>Currículos</td>
+            <td>
+                {% if curriculos %}
+                    <ul>
+                    {% for c in curriculos %}
+                        <li>{{ c }}
+                            <form method="post" style="display:inline">{% csrf_token %}
+                                <input type="hidden" name="remover" value="{{ c }}">
+                                <button class="btn" type="submit"><i class="fas fa-trash"></i></button>
+                            </form>
+                        </li>
+                    {% endfor %}
+                    </ul>
+                {% else %}
+                    <span style="color:#888">Nenhum</span>
+                {% endif %}
+            </td>
+            <td>
+                <form method="post" enctype="multipart/form-data" class="upload-form">{% csrf_token %}
+                    <input type="hidden" name="tipo" value="curriculo">
+                    <input type="file" name="arquivo" accept=".csv" required>
+                    <button class="btn" type="submit"><i class="fas fa-upload"></i> Adicionar</button>
+                </form>
+            </td>
+        </tr>
+    </tbody>
+</table>
+{% endblock %}

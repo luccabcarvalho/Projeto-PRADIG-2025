@@ -1,10 +1,12 @@
+from django.shortcuts import render, redirect
+from django.urls import reverse
+from django.conf import settings
+from django.contrib import messages
+import os
+import time
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-from django.shortcuts import render
-from django.urls import reverse
-import os
-import time
 
 def status_integralizacao(request):
     start_total = time.time()
@@ -685,3 +687,57 @@ def visualizacoes_hub(request):
         }
     ]
     return render(request, 'visualizacoes_hub.html', {'visualizacoes': visualizacoes})
+
+# Upload de arquivos
+
+USER_ID = 'user1'
+USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID)
+CURRICULOS_DIR = os.path.join(USER_DIR, 'curriculos')
+
+def ensure_user_dirs():
+    os.makedirs(USER_DIR, exist_ok=True)
+    os.makedirs(CURRICULOS_DIR, exist_ok=True)
+
+def gerenciar_arquivos(request):
+    ensure_user_dirs()
+    alunos_path = os.path.join(USER_DIR, 'alunosPorCurso.csv')
+    historico_path = os.path.join(USER_DIR, 'historicoEscolar.csv')
+    curriculos = []
+    if os.path.exists(CURRICULOS_DIR):
+        curriculos = os.listdir(CURRICULOS_DIR)
+    if request.method == 'POST':
+        tipo = request.POST.get('tipo')
+        if tipo in ['alunos', 'historico']:
+            f = request.FILES.get('arquivo')
+            if f:
+                filename = 'alunosPorCurso.csv' if tipo == 'alunos' else 'historicoEscolar.csv'
+                with open(os.path.join(USER_DIR, filename), 'wb+') as dest:
+                    for chunk in f.chunks():
+                        dest.write(chunk)
+                messages.success(request, f'Arquivo {filename} enviado com sucesso!')
+                return redirect('gerenciar_arquivos')
+        elif tipo == 'curriculo':
+            f = request.FILES.get('arquivo')
+            if f:
+                curriculo_name = f'curriculo-{len(curriculos)+1}.csv'
+                with open(os.path.join(CURRICULOS_DIR, curriculo_name), 'wb+') as dest:
+                    for chunk in f.chunks():
+                        dest.write(chunk)
+                messages.success(request, f'Currículo enviado com sucesso!')
+                return redirect('gerenciar_arquivos')
+        elif 'remover' in request.POST:
+            arquivo = request.POST.get('remover')
+            if arquivo == 'alunosPorCurso.csv':
+                os.remove(alunos_path)
+            elif arquivo == 'historicoEscolar.csv':
+                os.remove(historico_path)
+            elif arquivo.startswith('curriculo-'):
+                os.remove(os.path.join(CURRICULOS_DIR, arquivo))
+            messages.success(request, f'Arquivo removido com sucesso!')
+            return redirect('gerenciar_arquivos')
+    context = {
+        'alunos': os.path.exists(alunos_path),
+        'historico': os.path.exists(historico_path),
+        'curriculos': curriculos,
+    }
+    return render(request, 'gerenciar_arquivos.html', context)

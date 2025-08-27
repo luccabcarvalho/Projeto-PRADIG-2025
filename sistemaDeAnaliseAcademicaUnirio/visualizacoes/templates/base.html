@@ -87,6 +87,7 @@
             <div class="navbar-links">
                 <a href="{% url 'home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>Home</a>
                 <a href="{% url 'visualizacoes_hub' %}" {% if request.resolver_match.url_name == 'visualizacoes_hub' %}class="active"{% endif %}>Visualizações</a>
+                <a href="{% url 'gerenciar_arquivos' %}" {% if request.resolver_match.url_name == 'gerenciar_arquivos' %}class="active"{% endif %}>Gerenciar Arquivos</a>
             </div>
         </div>
     </nav>

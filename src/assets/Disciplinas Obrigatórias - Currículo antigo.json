@@ -1,0 +1,522 @@
+{
+    "CurriculoAntigo": [
+        {
+            "Codigo": "TIN0117",
+            "Nome": "Administração Financeira",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Análise e Controle Financeiro. Gerência de operações ativas. Aspectos básicos de operações passivas. Demonstrações Financeiras. Contabilidade de custos: conceitos básicos; custos gerais de produção (enfoque em informática); Relação custo\/volume\/lucro. Matemática financeira: Juros Simples e Compostos; Montante e Capital; Método do Valor Atual, Custo Anual e Taxa de Retorno. Orçamentos, Índices Financeiros.",
+            "PreRequisitos": "TIN0013",
+            "PeriodoRecomendado": 6,
+            "Sigla": "AF",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TME0015",
+            "Nome": "Álgebra Linear",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Vetores, matrizes, espaços vetoriais, transformações lineares, resolução de sistemas de equações lineares por métodos diretos, auto-valores e auto-vetores, diagonalização de operadores, produto interno, ortogonalização.",
+            "PeriodoRecomendado": 2,
+            "Sigla": "AL",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0118",
+            "Nome": "Análise de Algoritmos",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Critérios de análise, correção e eficiência. Análise de algoritmos: tempo de processamento e número de operações elementares, complexidade de pior caso. Algoritmos e estruturas de dados para problemas em grafos. Teoria da Complexidade: problemas de decisão, transformações polinomiais, classe P, algoritmos não determinísticos, classes NP e NP-completa.",
+            "PreRequisitos": "TIN0168",
+            "PeriodoRecomendado": 5,
+            "Sigla": "AA",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0115",
+            "Nome": "Análise de Sistemas",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "O projeto de sistemas de informação no ciclo de desenvolvimento.\nProjeto funcional: modularização do sistema, definição de programas.Projeto de dados: normalização, projeto de arquivos.\nProjeto de interfaces: interface homem-máquina, projeto de telas e relatórios. Documentação técnica. Estudos de casos.",
+            "PreRequisitos": "TIN0112",
+            "PeriodoRecomendado": 4,
+            "Sigla": "AS",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0013",
+            "Nome": "Análise Empresarial e Administrativa",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Administração: conceito, definição, evolução. Campo de atuação da Administração.\nFunções administrativas: planejamento, organização, coordenação e controle.\nFunções empresariais: marketing, produção, finanças e recursos humanos. Administração e desenvolvimento interpessoal e gerencial. Liderança e motivação.",
+            "PeriodoRecomendado": 2,
+            "Sigla": "AEA",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0120",
+            "Nome": "Bancos de Dados I",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Conceitos básicos sobre Bancos de Dados e Sistemas de Gerência de Banco de Dados. Modelo Entidades e Relacionamentos e Modelagem de Dados com UML. Modelo relacional. Álgebra relacional e SQL. Restrições de integridade e visões. Dependências Funcionais e Formas Normais. Projeto de bancos de dados relacionais.",
+            "PreRequisitos": "TIN0011",
+            "PeriodoRecomendado": 3,
+            "Sigla": "BD I",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0169",
+            "Nome": "Bancos de Dados II",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Revisão de SGBD relacional e SQL. Armazenamento de dados, Indexação e Processamento de Consultas. Projeto de bancos de dados relacionais. Conceitos de Processamento de Transações. Segurança e Autorização em bancos de dados. Introdução à Orientação a Objetos em banco de dados. SGBD relacional-objeto.",
+            "PreRequisitos": "TIN0120, TIN0168",
+            "PeriodoRecomendado": 5,
+            "Sigla": "BD II",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TME0112",
+            "Nome": "Cálculo Diferencial e Integral I",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Funções, Limites e Continuidade. Definição de Derivada. Significado Físico e Geométrico das Derivadas. Aplicações das Derivadas. Integral Indefinida e Aplicações. Integral Definida e Aplicações. Teorema Fundamental do Cálculo e Aplicasções.",
+            "PreRequisitos": "TME0011",
+            "PeriodoRecomendado": 2,
+            "Sigla": "Calc I",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TME0113",
+            "Nome": "Cálculo Diferencial e Integral II",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Técnicas de Integração. Aplicações da Integral. Funções de Várias Variáveis: Limites, Continuidade e Diferenciabilidade. Gradiente, Regra da Cadeia, Teorema do Valor Médio. Derivadas Parciais de Ordem Superior e Teorema de Schwarz. Máximos e Mínimos de Funções de Várias Variáveis.",
+            "PreRequisitos": "TME0112",
+            "PeriodoRecomendado": 3,
+            "Sigla": "Calc II",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0106",
+            "Nome": "Desenvolvimento de Páginas WEB",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Linguagens para escrita de páginas web, multimídia para web, e projeto web (webdesign).",
+            "PeriodoRecomendado": 1,
+            "Sigla": "DPW",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0130",
+            "Nome": "Empreendedorismo",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "O ambiente dos negócios. Análise do ambiente: idéias x oportunidades de negócios. O conceito e a necessidade de se empreender. Escolha do negócio. Conceito do negócio e seus atributos de valor. Reconhecimento e administração dos riscos. Avaliação do potencial do negócio. Dinâmica dos negócios. Escolha da estratégia competitiva certa. Análise financeira do negócio. Plano de Negócios. Comportamento empreendedor. Ferramentas de gestão de negócios. Empreendedorismo Social.",
+            "PreRequisitos": "TIN0013",
+            "PeriodoRecomendado": 5,
+            "Sigla": "EMP",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TME0115",
+            "Nome": "Estatística",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Estatística descritiva. Principais características dos modelos probabilísticos discretos e contínuos. Noções de intervalo de confiança e testes de hipóteses. Noções de linguagem S.",
+            "PreRequisitos": "TME0114",
+            "PeriodoRecomendado": 4,
+            "Sigla": "Estat",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0114",
+            "Nome": "Estruturas de Dados I",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Revisão de Abstração de Dados e Programação Orientada a Objetos. Estruturas de Arquivos. Pilhas, filas e listas encadeadas. Heaps e filas de prioridade. Conjuntos. Árvores binárias e de grau N. Árvores binárias de busca.",
+            "PreRequisitos": "TIN0011",
+            "PeriodoRecomendado": 3,
+            "Sigla": "ED I",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0168",
+            "Nome": "Estrutura de Dados II",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Noções de complexidade de algoritmos. Árvores balanceadas. Tabelas de Dispersão (Hashing). Representações de Grafos.",
+            "PreRequisitos": "TIN0114",
+            "PeriodoRecomendado": 4,
+            "Sigla": "ED II",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0109",
+            "Nome": "Estruturas Discretas",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Relações Binárias: Conceitos e Propriedades. Aritmética Modular. Noções de Teoria de grafos: isomorfismo, planaridade, coloração, conectividade, propriedades de árvores.",
+            "PreRequisitos": "TIN0105",
+            "PeriodoRecomendado": 3,
+            "Sigla": "ED",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0112",
+            "Nome": "Fundamentos de Sistemas de Informação",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Introdução a Sistemas de Informação; Sistemas de Informação na Empresa; Infra-Estrutura da Tecnologia de Informação; Desenvolvimento de Sistemas de Informação e Paradigmas de Modelagem de Sistemas.",
+            "PeriodoRecomendado": 1,
+            "Sigla": "FSI",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0132",
+            "Nome": "Gerência de Projetos de Informática",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Conceitos de Projeto e Gerência de Projetos. Processos da Gerência de Projetos. Gerência de Recursos. Gerência de Riscos. Gerência da Qualidade. Gerência de Comunicação. Gerência de Mudanças. Gerência de Tempo. Gerência de Custos. Gerência de Escopo. Gerência de Aquisições. Planejamento de Projetos. Plano de Projeto. Acompanhamento de Projetos. Finalização de Projetos. PMBOK.",
+            "PreRequisitos": "TIN0171",
+            "PeriodoRecomendado": 8,
+            "Sigla": "GPI",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0110",
+            "Nome": "Interação Humano-Computador",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Conceitos Básicos, Sistemas centrados no usuário, Requisitos não Funcionais de Usabilidade, Globalização, Projetos de Sites.",
+            "PeriodoRecomendado": 4,
+            "Sigla": "IHC",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0105",
+            "Nome": "Introdução à Lógica Computacional",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Lógica proposicional e álgebra booleana. Lógica de predicados. Indução. Recursão.",
+            "PeriodoRecomendado": 2,
+            "Sigla": "ILC",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0119",
+            "Nome": "Linguagens Formais e Autômatos",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Hierarquia de Chomsky. Alfabetos e linguagens. Gramáticas. Autômatos finitos e linguagens regulares; máquinas de pilha e linguagens livres de contexto, gramáticas LL(k) e LR(k); gramáticas sensíveis a contexto. Máquinas de Turing. Capacidade e limite de cada classe. Decidibilidade e Computabilidade.",
+            "PreRequisitos": "TIN0109",
+            "PeriodoRecomendado": 4,
+            "Sigla": "LFA",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TME0101",
+            "Nome": "Matemática Básica",
+            "CargaHoraria": 60,
+            "Creditos": 2,
+            "Ementa": "Teoria dos Conjuntos\nRelações e Funções\nFunção do 1º grau, função do 2º grau, função modular\nComposição de funções e função inversa\nFunção exponencial e função logarítmica\nFunções trigonométricas\nNúmeros inteiros",
+            "PeriodoRecomendado": 1,
+            "Sigla": "MB",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0108",
+            "Nome": "Organização de Computadores",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Histórico do desenvolvimento de Computadores. Princípios e Componentes. Funcionamento da UCP, Memória e Dispositivos de Entrada\/Saída. Portas Lógicas – construção de uma Unidade Lógica Aritmética.",
+            "PeriodoRecomendado": 1,
+            "Sigla": "OC",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TME0114",
+            "Nome": "Probabilidade",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Análise Combinatória. Noções de Probabilidade. Variáveis aleatórias. Modelos probabilísticos discretos e contínuos. Noções de linguagem S.",
+            "PeriodoRecomendado": 3,
+            "Sigla": "PROB",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0122",
+            "Nome": "Processos de Software",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Processo de Software. Modelos de ciclo de vida de desenvolvimento de software. Homologação. Implantação de Software. Manutenção de Software. Gerência de requisitos. Garantia da Qualidade de Processos e Produtos. Métricas e Medições. Fábrica de Software. Modelos de qualidade de processos de software.",
+            "PreRequisitos": "TIN0171",
+            "PeriodoRecomendado": 7,
+            "Sigla": "PS",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0121",
+            "Nome": "Programação Modular",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Estilos de programação. Processo de desenvolvimento de programas modulares. Princípios de programação modular. Módulos, interfaces, acoplamento. Ferramentas para programação modular. Tipos abstratos de dados. Conceitos de orientação a objetos. Princípios de projeto de sistemas. Padrões de projeto. Tratamento de exceções. Revisões e Inspeções. Técnicas e estratégias de teste de software. Testes de unidade. Testes de integração. Integração de programas. Gerência de Configuração de Software.",
+            "PreRequisitos": "TIN0171",
+            "PeriodoRecomendado": 6,
+            "Sigla": "PM",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0131",
+            "Nome": "Projeto de Graduação I",
+            "CargaHoraria": 60,
+            "Creditos": 3,
+            "Ementa": "Orientação para a escolha do tema para o desenvolvimento do Projeto de Graduação e escrita da monografia. Elaboração de uma proposta de trabalho de final de curso com a definição de um professor orientador.",
+            "PreRequisitos": "TIN0114",
+            "PeriodoRecomendado": 7,
+            "Sigla": "PG I",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0133",
+            "Nome": "Projeto de Graduação II",
+            "CargaHoraria": 90,
+            "Creditos": 3,
+            "Ementa": "Implementação do projeto formulado em Projeto de Graduação I. Elaboração de uma monografia e apresentação oral do trabalho a uma banca examinadora.",
+            "PreRequisitos": "TIN0131",
+            "PeriodoRecomendado": 8,
+            "Sigla": "PG II",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0171",
+            "Nome": "Projeto e Construção de Sistemas",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Seleção de um ambiente com uma linguagem de programação que dê suporte ao modelo cliente-servidor; construção de programas: estruturado, orientado a eventos e a objetos; teste; asserção de qualidade de programas, implementação de sistema; treinamento de usuário; entrega de sistema; revisão pós-implementação; gerenciamento de configuração; manutenção; engenharia reversa e re-engenharia.",
+            "PreRequisitos": "TIN0011, TIN0108",
+            "PeriodoRecomendado": 5,
+            "Sigla": "PCS",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0125",
+            "Nome": "Projeto e Construção de Sistemas com SGBD",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Modelos de dados e ferramentas de modelagem; técnicas de projeto estruturado e orientado a objetos; modelos para banco de dados: relacional, hierárquico, em redes, orientado a objetos; ferramentas CASE; dicionários de dados, repositórios, warehouses. Implementação: codificação Windows\/GUI ou implementação, geração de código\/aplicação, planejamento cliente-servidor, teste e instalação; conversão de sistema, treinamento e integração do usuário final e revisão pós-implementação.",
+            "PreRequisitos": "TIN0169, TIN0171",
+            "PeriodoRecomendado": 6,
+            "Sigla": "PCS-SGBD",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0123",
+            "Nome": "Redes de Computadores I",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Redes de Computadores e Internet. Protocolos. Tecnologias de redes. Arquitetura TCP\/IP. Camada de aplicação, Camada de transporte, Camada de rede, Camada de enlace: serviços e protocolos.",
+            "PreRequisitos": "TIN0116",
+            "PeriodoRecomendado": 4,
+            "Sigla": "REDES I",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0126",
+            "Nome": "Redes de Computadores II",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Redes multimídia\nSegurança em redes\nAspectos práticos de infra-estrutura de redes\nGerenciamento de redes e sistemas",
+            "PreRequisitos": "TIN0123",
+            "PeriodoRecomendado": 5,
+            "Sigla": "REDES II",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0116",
+            "Nome": "Sistemas Operacionais",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "Ementa": "Histórico do desenvolvimento dos Sistema Operacionais\nPrincípios e Componentes\nProcessos e seu gerenciamento do processador\nMemória e seu gerenciamento – paginação e segmentação\nEntrada\/Saída e seu gerenciamento – dispositivos em bloco e caractere\nSistemas de Arquivos e seu gerenciamento",
+            "PreRequisitos": "TIN0108",
+            "PeriodoRecomendado": 3,
+            "Sigla": "SO",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0107",
+            "Nome": "Técnicas de Programação I",
+            "CargaHoraria": 90,
+            "Creditos": 5,
+            "Ementa": "O conceito de algoritmo\nPrincípios de programação estruturada\nConceitos básicos de uma linguagem de programação\nRecursividade\nVetores e matrizes\nAlgoritmos de ordenação\nPesquisa sequencial e binária",
+            "PeriodoRecomendado": 1,
+            "Sigla": "TP I",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0011",
+            "Nome": "Técnicas de Programação II",
+            "CargaHoraria": 90,
+            "Creditos": 5,
+            "Ementa": "Tipos de dados compostos\nPonteiros\nImplementação das estruturas de dados básicas (listas, filas e pilhas)\nRegistros e arquivos\nAlgoritmos recursivos",
+            "PreRequisitos": "TIN0107",
+            "PeriodoRecomendado": 2,
+            "Sigla": "TP II",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "HTD0058",
+            "Nome": "Teorias e Práticas Discursivas",
+            "CargaHoraria": 60,
+            "Creditos": 3,
+            "Ementa": "Noções gerais de Gênero Discursivo\nLíngua oral e língua escrita\nNormas gramaticais\nParagrafação\nExposição oral",
+            "PeriodoRecomendado": 1,
+            "Sigla": "TPD",
+            "Tipo": "Obrigatoria"
+        },
+        {
+            "Codigo": "TIN0054",
+            "Nome": "Atividades Curriculares de Extensão 1",
+            "CargaHoraria": 90,
+            "Creditos": 3,
+            "Ementa": "Atividades de extensão universitária, compreendendo: ações comunitárias, estágios internos e externos, participação em projetos de extensão, e outras modalidades de formação complementar apresentadas na Resolução No 2628, de 08\/09\/2005 que dispõe sobre a regulamentação das Atividades Complementares nos currículos dos Cursos de Graduação da UNIRIO.",
+            "PeriodoRecomendado": 5,
+            "Sigla": "ACE I"
+        },
+        {
+            "Codigo": "TIN0055",
+            "Nome": "Atividades Curriculares de Extensão 2",
+            "CargaHoraria": 90,
+            "Creditos": 3,
+            "Ementa": "Atividades de extensão universitária, compreendendo: ações comunitárias, estágios internos e externos, participação em projetos de extensão, e outras modalidades de formação complementar apresentadas na Resolução No 2628, de 08\/09\/2005 que dispõe sobre a regulamentação das Atividades Complementares nos currículos dos Cursos de Graduação da UNIRIO.",
+            "PeriodoRecomendado": 6,
+            "Sigla": "ACE II"
+        },
+        {
+            "Codigo": "TIN0056",
+            "Nome": "Atividades Curriculares de Extensão 3",
+            "CargaHoraria": 90,
+            "Creditos": 3,
+            "Ementa": "Atividades de extensão universitária, compreendendo: ações comunitárias, estágios internos e externos, participação em projetos de extensão, e outras modalidades de formação complementar apresentadas na Resolução No 2628, de 08\/09\/2005 que dispõe sobre a regulamentação das Atividades Complementares nos currículos dos Cursos de Graduação da UNIRIO.",
+            "PeriodoRecomendado": 7,
+            "Sigla": "ACE III"
+        },
+        {
+            "Codigo": "TIN0057",
+            "Nome": "Atividades Curriculares de Extensão 4",
+            "CargaHoraria": 90,
+            "Creditos": 3,
+            "Ementa": "Atividades de extensão universitária, compreendendo: ações comunitárias, estágios internos e externos, participação em projetos de extensão, e outras modalidades de formação complementar apresentadas na Resolução No 2628, de 08\/09\/2005 que dispõe sobre a regulamentação das Atividades Complementares nos currículos dos Cursos de Graduação da UNIRIO.",
+            "PeriodoRecomendado": 8,
+            "Sigla": "ACE IV"
+        },
+        {
+            "Codigo": "OPT0001",
+            "Nome": "Disciplina Optativa I",
+            "CargaHoraria": null,
+            "Creditos": null,
+            "PeriodoRecomendado": 6,
+            "Sigla": "OPT I",
+            "Tipo": "Optativa"
+        },
+        {
+            "Codigo": "OPT0002",
+            "Nome": "Disciplina Optativa II",
+            "CargaHoraria": null,
+            "Creditos": null,
+            "PeriodoRecomendado": 6,
+            "Sigla": "OPT II",
+            "Tipo": "Optativa"
+        },
+        {
+            "Codigo": "OPT0003",
+            "Nome": "Disciplina Optativa III",
+            "CargaHoraria": null,
+            "Creditos": null,
+            "PeriodoRecomendado": 7,
+            "Sigla": "OPT III",
+            "Tipo": "Optativa"
+        },
+        {
+            "Codigo": "OPT0004",
+            "Nome": "Disciplina Optativa IV",
+            "CargaHoraria": null,
+            "Creditos": null,
+            "PeriodoRecomendado": 7,
+            "Sigla": "OPT IV",
+            "Tipo": "Optativa"
+        },
+        {
+            "Codigo": "OPT0005",
+            "Nome": "Disciplina Optativa V",
+            "CargaHoraria": null,
+            "Creditos": null,
+            "PeriodoRecomendado": 7,
+            "Sigla": "OPT V",
+            "Tipo": "Optativa"
+        },
+        {
+            "Codigo": "OPT0006",
+            "Nome": "Disciplina Optativa VI",
+            "CargaHoraria": null,
+            "Creditos": null,
+            "PeriodoRecomendado": 8,
+            "Sigla": "OPT VI",
+            "Tipo": "Optativa"
+        },
+        {
+            "Codigo": "OPT0007",
+            "Nome": "Disciplina Optativa VII",
+            "CargaHoraria": null,
+            "Creditos": null,
+            "PeriodoRecomendado": 8,
+            "Sigla": "OPT VII",
+            "Tipo": "Optativa"
+        },
+        {
+            "Codigo": "OPT0008",
+            "Nome": "Disciplina Optativa VIII",
+            "CargaHoraria": null,
+            "Creditos": null,
+            "PeriodoRecomendado": 8,
+            "Sigla": "OPT VIII",
+            "Tipo": "Optativa"
+        },
+        {
+            "Codigo": "TIN0151",
+            "Nome": "Disciplina Eletiva 1",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "PeriodoRecomendado": 2,
+            "Sigla": "ELE I",
+            "Tipo": "Eletiva"
+        },
+        {
+            "Codigo": "TIN0152",
+            "Nome": "Disciplina Eletiva 2",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "PeriodoRecomendado": 3,
+            "Sigla": "ELE II",
+            "Tipo": "Eletiva"
+        },
+        {
+            "Codigo": "TIN0153",
+            "Nome": "Disciplina Eletiva 3",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "PeriodoRecomendado": 4,
+            "Sigla": "ELE III",
+            "Tipo": "Eletiva"
+        },
+        {
+            "Codigo": "TIN0154",
+            "Nome": "Disciplina Eletiva 4",
+            "CargaHoraria": 60,
+            "Creditos": 4,
+            "PeriodoRecomendado": 5,
+            "Sigla": "ELE IV",
+            "Tipo": "Eletiva"
+        }
+    ]
+}

@@ -452,19 +452,16 @@ def desempenho_aluno_periodo(request):
 def heatmap_desempenho(request):
     USER_ID = 'user1'
     USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID)
-    CURRICULOS_DIR = os.path.join(USER_DIR, 'curriculos')
     alunos_path = os.path.join(USER_DIR, 'alunosPorCurso.csv')
     historico_path = os.path.join(USER_DIR, 'historicoEscolar.csv')
 
     df_alunos = pd.read_csv(alunos_path)
     df_historico = pd.read_csv(historico_path)
 
-    BASE_DIR_CURRIC = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    data_dir = os.path.join(BASE_DIR_CURRIC, 'visualizacoes', 'data')
-    df_disciplinas_20232 = pd.read_csv(os.path.join(data_dir, 'curriculo-20232.csv'))
-    df_disciplinas_20052 = pd.read_csv(os.path.join(data_dir, 'curriculo-20052.csv'))
-    df_disciplinas_20002 = pd.read_csv(os.path.join(data_dir, 'curriculo-20002.csv'))
-    df_disciplinas_20081 = pd.read_csv(os.path.join(data_dir, 'curriculo-20081.csv'))
+    df_disciplinas_20232 = pd.read_csv(os.path.join(CURRICULOS_DIR, 'curriculo-20232.csv'))
+    df_disciplinas_20052 = pd.read_csv(os.path.join(CURRICULOS_DIR, 'curriculo-20052.csv'))
+    df_disciplinas_20002 = pd.read_csv(os.path.join(CURRICULOS_DIR, 'curriculo-20002.csv'))
+    df_disciplinas_20081 = pd.read_csv(os.path.join(CURRICULOS_DIR, 'curriculo-20081.csv'))
 
     # --- Filtros ---
     filtro_ativos = request.GET.get('ativos', 'todos')

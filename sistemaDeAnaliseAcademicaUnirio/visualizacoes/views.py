@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.conf import settings
@@ -689,7 +690,6 @@ def visualizacoes_hub(request):
 
 # Upload de arquivos
 
-
 USER_ID = 'user1'
 USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID)
 
@@ -698,6 +698,40 @@ CURRICULOS_DIR = os.path.join(settings.MEDIA_ROOT, 'curriculos_bsi')
 def ensure_user_dirs():
     os.makedirs(USER_DIR, exist_ok=True)
     os.makedirs(CURRICULOS_DIR, exist_ok=True)
+
+def checar_arquivos_necessarios(request):
+    """
+    Recebe via GET o parâmetro 'visualizacao' e retorna JSON com arquivos faltantes.
+    """
+    visualizacao = request.GET.get('visualizacao')
+    USER_ID = 'user1' 
+    USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID)
+    CURRICULOS_DIR = os.path.join(settings.MEDIA_ROOT, 'curriculos_bsi')
+    faltando = []
+    if visualizacao == 'desempenho_aluno_periodo':
+        if not os.path.exists(os.path.join(USER_DIR, 'alunosPorCurso.csv')):
+            faltando.append('alunosPorCurso.csv')
+        if not os.path.exists(os.path.join(USER_DIR, 'historicoEscolar.csv')):
+            faltando.append('historicoEscolar.csv')
+    elif visualizacao == 'status_integralizacao':
+        if not os.path.exists(os.path.join(USER_DIR, 'alunosPorCurso.csv')):
+            faltando.append('alunosPorCurso.csv')
+        if not os.path.exists(os.path.join(USER_DIR, 'historicoEscolar.csv')):
+            faltando.append('historicoEscolar.csv')
+    elif visualizacao == 'heatmap_desempenho':
+        if not os.path.exists(os.path.join(USER_DIR, 'alunosPorCurso.csv')):
+            faltando.append('alunosPorCurso.csv')
+        if not os.path.exists(os.path.join(USER_DIR, 'historicoEscolar.csv')):
+            faltando.append('historicoEscolar.csv')
+        curriculos = [
+            'curriculo-20002.csv',
+            'curriculo-20052.csv',
+            'curriculo-20081.csv',
+            'curriculo-20232.csv',
+        ]
+        curriculos_faltando = [c for c in curriculos if not os.path.exists(os.path.join(CURRICULOS_DIR, c))]
+        faltando.extend(curriculos_faltando)
+    return JsonResponse({'faltando': faltando})
 
 def gerenciar_arquivos(request):
     ensure_user_dirs()

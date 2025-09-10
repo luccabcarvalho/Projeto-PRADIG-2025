@@ -10,4 +10,5 @@ urlpatterns = [
     path('heatmap/', views.heatmap_desempenho, name='heatmap_desempenho'),
     path('integralizacao/', views.status_integralizacao, name='status_integralizacao'),
     path('gerenciar-arquivos/', views.gerenciar_arquivos, name='gerenciar_arquivos'),
+    path('checar-arquivos/', views.checar_arquivos_necessarios, name='checar_arquivos_necessarios'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -692,9 +692,11 @@ def visualizacoes_hub(request):
 
 # Upload de arquivos
 
+
 USER_ID = 'user1'
 USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID)
-CURRICULOS_DIR = os.path.join(USER_DIR, 'curriculos')
+
+CURRICULOS_DIR = os.path.join(settings.MEDIA_ROOT, 'curriculos_bsi')
 
 def ensure_user_dirs():
     os.makedirs(USER_DIR, exist_ok=True)

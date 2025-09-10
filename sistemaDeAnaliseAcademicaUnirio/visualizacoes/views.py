@@ -707,8 +707,14 @@ def gerenciar_arquivos(request):
     alunos_path = os.path.join(USER_DIR, 'alunosPorCurso.csv')
     historico_path = os.path.join(USER_DIR, 'historicoEscolar.csv')
     curriculos = []
+    curriculos_padrao = [
+        'curriculo-20002.csv',
+        'curriculo-20052.csv',
+        'curriculo-20081.csv',
+        'curriculo-20232.csv',
+    ]
     if os.path.exists(CURRICULOS_DIR):
-        curriculos = os.listdir(CURRICULOS_DIR)
+        curriculos = [c for c in curriculos_padrao if os.path.exists(os.path.join(CURRICULOS_DIR, c))]
     if request.method == 'POST':
         tipo = request.POST.get('tipo')
         if tipo in ['alunos', 'historico']:
@@ -723,11 +729,18 @@ def gerenciar_arquivos(request):
         elif tipo == 'curriculo':
             f = request.FILES.get('arquivo')
             if f:
-                curriculo_name = f'curriculo-{len(curriculos)+1}.csv'
-                with open(os.path.join(CURRICULOS_DIR, curriculo_name), 'wb+') as dest:
-                    for chunk in f.chunks():
-                        dest.write(chunk)
-                messages.success(request, f'Currículo enviado com sucesso!')
+                curriculos_existentes = [c for c in curriculos_padrao if os.path.exists(os.path.join(CURRICULOS_DIR, c))]
+                if len(curriculos_existentes) >= 4:
+                    messages.error(request, 'Limite de 4 currículos atingido. Remova um currículo antes de enviar outro.')
+                    return redirect('gerenciar_arquivos')
+                for curriculo_nome in curriculos_padrao:
+                    curriculo_path = os.path.join(CURRICULOS_DIR, curriculo_nome)
+                    if not os.path.exists(curriculo_path):
+                        with open(curriculo_path, 'wb+') as dest:
+                            for chunk in f.chunks():
+                                dest.write(chunk)
+                        messages.success(request, f'Currículo enviado como {curriculo_nome}!')
+                        break
                 return redirect('gerenciar_arquivos')
         elif 'remover' in request.POST:
             arquivo = request.POST.get('remover')
@@ -735,13 +748,13 @@ def gerenciar_arquivos(request):
                 os.remove(alunos_path)
             elif arquivo == 'historicoEscolar.csv':
                 os.remove(historico_path)
-            elif arquivo.startswith('curriculo-'):
+            elif arquivo in curriculos_padrao:
                 os.remove(os.path.join(CURRICULOS_DIR, arquivo))
             messages.success(request, f'Arquivo removido com sucesso!')
             return redirect('gerenciar_arquivos')
     context = {
         'alunos': os.path.exists(alunos_path),
         'historico': os.path.exists(historico_path),
-        'curriculos': curriculos,
+        'curriculos': [c for c in curriculos_padrao if os.path.exists(os.path.join(CURRICULOS_DIR, c))],
     }
     return render(request, 'gerenciar_arquivos.html', context)

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Heatmap de Desempenho Acadêmico{% endblock %}
+{% block title %}Matriz de Progressão{% endblock %}
 {% block extra_head %}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -97,7 +97,7 @@
 
 {% endblock %}
 {% block content %}
-<h1 style="color:#000000;">Heatmap de Desempenho Acadêmico</h1>
+<h1 style="color:#000000;">Matriz de Progressão</h1>
 <div class="filtros-dropdown">
     <button class="filtros-btn" type="button">
         <i class="fas fa-filter"></i> Filtros
@@ -122,5 +122,7 @@
         </form>
     </div>
 </div>
-{{ plot_div|safe }}
+<div style="display: flex; justify-content: center; width: 100%;">
+    {{ plot_div|safe }}
+</div>
 {% endblock %}

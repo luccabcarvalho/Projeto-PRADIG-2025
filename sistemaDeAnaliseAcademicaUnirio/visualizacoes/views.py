@@ -1,20 +1,27 @@
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.urls import reverse
+from django.conf import settings
+from django.contrib import messages
+import os
+import time
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-from django.shortcuts import render
-from django.urls import reverse
-import os
-import time
+
+USER_ID = 'user1'
 
 def status_integralizacao(request):
     start_total = time.time()
 
     # Bloco 1: Leitura dos dados
     start = time.time()
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    data_dir = os.path.join(BASE_DIR, 'visualizacoes', 'data')
-    df_alunos = pd.read_csv(os.path.join(data_dir, 'alunosPorCurso.csv'))
-    df_historico = pd.read_csv(os.path.join(data_dir, 'HistoricoEscolarSimplificado.csv'))
+    
+    USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID)
+    alunos_path = os.path.join(USER_DIR, 'alunosPorCurso.csv')
+    historico_path = os.path.join(USER_DIR, 'historicoEscolar.csv')
+    df_alunos = pd.read_csv(alunos_path)
+    df_historico = pd.read_csv(historico_path)
     print(f"Tempo leitura CSVs: {time.time() - start:.3f}s")
 
     # --- Filtros ---
@@ -263,7 +270,6 @@ def status_integralizacao(request):
     )
 
     fig.update_layout(
-        title='Status de Integralização dos Alunos por Período',
         xaxis=dict(
             tickmode='array',
             tickvals=list(range(n_periodos)),
@@ -304,14 +310,12 @@ def status_integralizacao(request):
     })
 
 def desempenho_aluno_periodo(request):
-    import pandas as pd
-    import plotly.graph_objects as go
-    import os
+    USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID)
+    alunos_path = os.path.join(USER_DIR, 'alunosPorCurso.csv')
+    historico_path = os.path.join(USER_DIR, 'historicoEscolar.csv')
 
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    data_dir = os.path.join(BASE_DIR, 'visualizacoes', 'data')
-    df_historico = pd.read_csv(os.path.join(data_dir, 'HistoricoEscolarSimplificado.csv'))
-    df_alunos = pd.read_csv(os.path.join(data_dir, 'alunosPorCurso.csv'))
+    df_historico = pd.read_csv(historico_path)
+    df_alunos = pd.read_csv(alunos_path)
 
     df_historico['PERIODO_NUM'] = df_historico['PERIODO'].str.extract(r'(\d)')[0].astype(float)
     df_historico = df_historico.sort_values(['MATR ALUNO', 'COD ATIV CURRIC', 'ANO', 'PERIODO_NUM'])
@@ -429,8 +433,8 @@ def desempenho_aluno_periodo(request):
         barmode='stack',
         xaxis_title='Ano - Período',
         yaxis_title='Carga Horária',
-        title='Desempenho por Período com Acúmulo de Aprovados',
-        height=800
+        height=800,
+        width=1800
     )
 
     alunos_options = [
@@ -446,21 +450,18 @@ def desempenho_aluno_periodo(request):
     })
 
 def heatmap_desempenho(request):
-    import pandas as pd
-    import numpy as np
-    import plotly.graph_objects as go
-    import os
+    USER_ID = 'user1'
+    USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID)
+    alunos_path = os.path.join(USER_DIR, 'alunosPorCurso.csv')
+    historico_path = os.path.join(USER_DIR, 'historicoEscolar.csv')
 
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    data_dir = os.path.join(BASE_DIR, 'visualizacoes', 'data')
+    df_alunos = pd.read_csv(alunos_path)
+    df_historico = pd.read_csv(historico_path)
 
-    # Carregar dados
-    df_alunos = pd.read_csv(os.path.join(data_dir, 'alunosPorCurso.csv'))
-    df_historico = pd.read_csv(os.path.join(data_dir, 'HistoricoEscolarSimplificado.csv'))
-    df_disciplinas_20232 = pd.read_csv(os.path.join(data_dir, 'curriculo-20232.csv'))
-    df_disciplinas_20052 = pd.read_csv(os.path.join(data_dir, 'curriculo-20052.csv'))
-    df_disciplinas_20002 = pd.read_csv(os.path.join(data_dir, 'curriculo-20002.csv'))
-    df_disciplinas_20081 = pd.read_csv(os.path.join(data_dir, 'curriculo-20081.csv'))
+    df_disciplinas_20232 = pd.read_csv(os.path.join(CURRICULOS_DIR, 'curriculo-20232.csv'))
+    df_disciplinas_20052 = pd.read_csv(os.path.join(CURRICULOS_DIR, 'curriculo-20052.csv'))
+    df_disciplinas_20002 = pd.read_csv(os.path.join(CURRICULOS_DIR, 'curriculo-20002.csv'))
+    df_disciplinas_20081 = pd.read_csv(os.path.join(CURRICULOS_DIR, 'curriculo-20081.csv'))
 
     # --- Filtros ---
     filtro_ativos = request.GET.get('ativos', 'todos')
@@ -640,12 +641,12 @@ def heatmap_desempenho(request):
     ))
 
     fig.update_layout(
-        title='Desempenho Acadêmico por Matrícula e Disciplina',
         xaxis=dict(title='Disciplinas', tickangle=45, tickfont=dict(size=9)),
         yaxis=dict(title='Matrículas', tickfont=dict(size=9)),
         autosize=True,
         margin=dict(l=50, r=50, t=80, b=100),
         height=1200,
+        width=1800
     )
 
     plot_div = fig.to_html(full_html=False)
@@ -685,3 +686,105 @@ def visualizacoes_hub(request):
         }
     ]
     return render(request, 'visualizacoes_hub.html', {'visualizacoes': visualizacoes})
+
+# Upload de arquivos
+
+USER_ID = 'user1'
+USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID)
+
+CURRICULOS_DIR = os.path.join(settings.MEDIA_ROOT, 'curriculos_bsi')
+
+def ensure_user_dirs():
+    os.makedirs(USER_DIR, exist_ok=True)
+    os.makedirs(CURRICULOS_DIR, exist_ok=True)
+
+def checar_arquivos_necessarios(request):
+    """
+    Recebe via GET o parâmetro 'visualizacao' e retorna JSON com arquivos faltantes.
+    """
+    visualizacao = request.GET.get('visualizacao')
+    USER_ID = 'user1' 
+    USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID)
+    CURRICULOS_DIR = os.path.join(settings.MEDIA_ROOT, 'curriculos_bsi')
+    faltando = []
+    if visualizacao == 'desempenho_aluno_periodo':
+        if not os.path.exists(os.path.join(USER_DIR, 'alunosPorCurso.csv')):
+            faltando.append('alunosPorCurso.csv')
+        if not os.path.exists(os.path.join(USER_DIR, 'historicoEscolar.csv')):
+            faltando.append('historicoEscolar.csv')
+    elif visualizacao == 'status_integralizacao':
+        if not os.path.exists(os.path.join(USER_DIR, 'alunosPorCurso.csv')):
+            faltando.append('alunosPorCurso.csv')
+        if not os.path.exists(os.path.join(USER_DIR, 'historicoEscolar.csv')):
+            faltando.append('historicoEscolar.csv')
+    elif visualizacao == 'heatmap_desempenho':
+        if not os.path.exists(os.path.join(USER_DIR, 'alunosPorCurso.csv')):
+            faltando.append('alunosPorCurso.csv')
+        if not os.path.exists(os.path.join(USER_DIR, 'historicoEscolar.csv')):
+            faltando.append('historicoEscolar.csv')
+        curriculos = [
+            'curriculo-20002.csv',
+            'curriculo-20052.csv',
+            'curriculo-20081.csv',
+            'curriculo-20232.csv',
+        ]
+        curriculos_faltando = [c for c in curriculos if not os.path.exists(os.path.join(CURRICULOS_DIR, c))]
+        faltando.extend(curriculos_faltando)
+    return JsonResponse({'faltando': faltando})
+
+def gerenciar_arquivos(request):
+    ensure_user_dirs()
+    alunos_path = os.path.join(USER_DIR, 'alunosPorCurso.csv')
+    historico_path = os.path.join(USER_DIR, 'historicoEscolar.csv')
+    curriculos = []
+    curriculos_padrao = [
+        'curriculo-20002.csv',
+        'curriculo-20052.csv',
+        'curriculo-20081.csv',
+        'curriculo-20232.csv',
+    ]
+    if os.path.exists(CURRICULOS_DIR):
+        curriculos = [c for c in curriculos_padrao if os.path.exists(os.path.join(CURRICULOS_DIR, c))]
+    if request.method == 'POST':
+        tipo = request.POST.get('tipo')
+        if tipo in ['alunos', 'historico']:
+            f = request.FILES.get('arquivo')
+            if f:
+                filename = 'alunosPorCurso.csv' if tipo == 'alunos' else 'historicoEscolar.csv'
+                with open(os.path.join(USER_DIR, filename), 'wb+') as dest:
+                    for chunk in f.chunks():
+                        dest.write(chunk)
+                messages.success(request, f'Arquivo {filename} enviado com sucesso!')
+                return redirect('gerenciar_arquivos')
+        elif tipo == 'curriculo':
+            f = request.FILES.get('arquivo')
+            if f:
+                curriculos_existentes = [c for c in curriculos_padrao if os.path.exists(os.path.join(CURRICULOS_DIR, c))]
+                if len(curriculos_existentes) >= 4:
+                    messages.error(request, 'Limite de 4 currículos atingido. Remova um currículo antes de enviar outro.')
+                    return redirect('gerenciar_arquivos')
+                for curriculo_nome in curriculos_padrao:
+                    curriculo_path = os.path.join(CURRICULOS_DIR, curriculo_nome)
+                    if not os.path.exists(curriculo_path):
+                        with open(curriculo_path, 'wb+') as dest:
+                            for chunk in f.chunks():
+                                dest.write(chunk)
+                        messages.success(request, f'Currículo enviado como {curriculo_nome}!')
+                        break
+                return redirect('gerenciar_arquivos')
+        elif 'remover' in request.POST:
+            arquivo = request.POST.get('remover')
+            if arquivo == 'alunosPorCurso.csv':
+                os.remove(alunos_path)
+            elif arquivo == 'historicoEscolar.csv':
+                os.remove(historico_path)
+            elif arquivo in curriculos_padrao:
+                os.remove(os.path.join(CURRICULOS_DIR, arquivo))
+            messages.success(request, f'Arquivo removido com sucesso!')
+            return redirect('gerenciar_arquivos')
+    context = {
+        'alunos': os.path.exists(alunos_path),
+        'historico': os.path.exists(historico_path),
+        'curriculos': [c for c in curriculos_padrao if os.path.exists(os.path.join(CURRICULOS_DIR, c))],
+    }
+    return render(request, 'gerenciar_arquivos.html', context)

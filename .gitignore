@@ -7,6 +7,7 @@ db.sqlite3
 media
 
 # Distribution / packaging 
+sistemaDeAnaliseAcademicaUnirio/visualizacoes/user_uploads/
 .Python build/ 
 develop-eggs/ 
 dist/ 

@@ -270,7 +270,6 @@ def status_integralizacao(request):
     )
 
     fig.update_layout(
-        title='Status de Integralização dos Alunos por Período',
         xaxis=dict(
             tickmode='array',
             tickvals=list(range(n_periodos)),
@@ -434,8 +433,8 @@ def desempenho_aluno_periodo(request):
         barmode='stack',
         xaxis_title='Ano - Período',
         yaxis_title='Carga Horária',
-        title='Desempenho por Período com Acúmulo de Aprovados',
-        height=800
+        height=800,
+        width=1800
     )
 
     alunos_options = [
@@ -642,12 +641,12 @@ def heatmap_desempenho(request):
     ))
 
     fig.update_layout(
-        title='Desempenho Acadêmico por Matrícula e Disciplina',
         xaxis=dict(title='Disciplinas', tickangle=45, tickfont=dict(size=9)),
         yaxis=dict(title='Matrículas', tickfont=dict(size=9)),
         autosize=True,
         margin=dict(l=50, r=50, t=80, b=100),
         height=1200,
+        width=1800
     )
 
     plot_div = fig.to_html(full_html=False)

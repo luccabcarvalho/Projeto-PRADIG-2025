@@ -266,10 +266,11 @@ def status_integralizacao(request):
 
     fig.update_traces(
         showscale=False,
-        textfont=dict(size=13, color='black'),
+        textfont=dict(size=18, color='black'),
     )
 
     fig.update_layout(
+        font=dict(size=18),
         xaxis=dict(
             tickmode='array',
             tickvals=list(range(n_periodos)),
@@ -280,10 +281,11 @@ def status_integralizacao(request):
                 (n_periodos / 2) - 5,  
                 (n_periodos / 2) + 5   
             ],
+            tickfont=dict(size=16),
         ),
         yaxis=dict(
             automargin=True,
-            tickfont=dict(size=10),
+            tickfont=dict(size=16),
             scaleanchor="x",
             scaleratio=1.1,
             range=[-0.5, min(9.5, len(matriculas)-0.5)],
@@ -430,9 +432,12 @@ def desempenho_aluno_periodo(request):
 
     fig = go.Figure(barras)
     fig.update_layout(
+        font=dict(size=18),
         barmode='stack',
         xaxis_title='Ano - Período',
         yaxis_title='Carga Horária',
+        xaxis=dict(tickfont=dict(size=16)),
+        yaxis=dict(tickfont=dict(size=16)),
         height=800,
         width=1800
     )
@@ -641,8 +646,9 @@ def heatmap_desempenho(request):
     ))
 
     fig.update_layout(
-        xaxis=dict(title='Disciplinas', tickangle=45, tickfont=dict(size=9)),
-        yaxis=dict(title='Matrículas', tickfont=dict(size=9)),
+        font=dict(size=18),
+        xaxis=dict(title='Disciplinas', tickangle=45, tickfont=dict(size=16)),
+        yaxis=dict(title='Matrículas', tickfont=dict(size=16)),
         autosize=True,
         margin=dict(l=50, r=50, t=80, b=100),
         height=1200,

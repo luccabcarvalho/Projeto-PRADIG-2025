@@ -657,11 +657,7 @@ def heatmap_desempenho(request):
             [0.5, 'yellow'],
             [1.0, 'green']
         ],
-        colorbar=dict(
-            title='Status',
-            tickvals=[-1, 0, 1],
-            ticktext=['Reprovado/Trancado', 'Matriculado', 'Aprovado']
-        )
+        showscale=False
     ))
 
     fig.update_layout(
@@ -669,9 +665,9 @@ def heatmap_desempenho(request):
         xaxis=dict(title='Disciplinas', tickangle=45, tickfont=dict(size=16)),
         yaxis=dict(title='Matrículas', tickfont=dict(size=16)),
         autosize=True,
-        margin=dict(l=50, r=50, t=80, b=100),
+        margin=dict(l=10, r=10, t=10, b=10),
         height=1200,
-        width=1800
+        width=2100
     )
 
     plot_div = fig.to_html(full_html=False)

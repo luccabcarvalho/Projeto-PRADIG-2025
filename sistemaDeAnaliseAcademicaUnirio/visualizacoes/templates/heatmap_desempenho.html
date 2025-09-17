@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 {% block title %}Matriz de Progressão{% endblock %}
 {% block extra_head %}
@@ -7,12 +8,12 @@
 <script>
     $(document).ready(function() {
         $('#curriculo-select').select2({
-            placeholder: "Selecione um ou mais currículos",
+            placeholder: "Currículo(s)",
             allowClear: true,
             width: '100%'
         });
         $('#tipo-disciplina-select').select2({
-            placeholder: "Selecione o tipo de disciplina",
+            placeholder: "Tipo de disciplina",
             allowClear: true,
             width: '100%'
         });
@@ -34,22 +35,40 @@
     });
 </script>
 <style>
+    body {
+        background: #f7f9fb;
+    }
+    .heatmap-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2em;
+        margin-top: 0.5em;
+    }
+    .heatmap-title {
+        color: #003366;
+        font-size: 2.1rem;
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: 0.5px;
+    }
     .filtros-dropdown {
         position: relative;
         display: inline-block;
-        margin-bottom: 2em;
+        margin-bottom: 0;
     }
     .filtros-btn {
         background: #003366;
         color: #fff;
-        padding: 0.7em 2em;
+        padding: 0.5em 1.2em;
         border: none;
-        border-radius: 6px;
+        border-radius: 5px;
         font-size: 1rem;
         cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 0.7em;
+        gap: 0.5em;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         transition: background 0.2s;
     }
     .filtros-btn:hover, .filtros-btn:focus {
@@ -61,20 +80,21 @@
         left: 0;
         top: 110%;
         background: #fff;
-        min-width: 320px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        min-width: 260px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.10);
         border-radius: 8px;
         z-index: 10;
-        padding: 1.5em 1.5em 1em 1.5em;
+        padding: 1em 1em 0.7em 1em;
     }
     .filtros-dropdown.open .filtros-content {
         display: block;
     }
     .filtros-content label, .filtros-content select {
         display: block;
-        margin-bottom: 1em;
+        margin-bottom: 0.7em;
         color: #003366;
         font-weight: 500;
+        font-size: 1rem;
     }
     .filtros-content input[type="checkbox"] {
         margin-right: 0.5em;
@@ -82,80 +102,106 @@
     .filtros-content .submit-btn {
         background-color: #003366;
         color: white;
-        padding: 10px 20px;
+        padding: 8px 0;
         border: none;
         border-radius: 4px;
         cursor: pointer;
-        margin-top: 0.5em;
+        margin-top: 0.2em;
         width: 100%;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
     .filtros-content .submit-btn:hover {
         background-color: #2356a8;
     }
-    @media (max-width: 600px) {
-        .filtros-content {
-            min-width: 220px;
-            padding: 1em;
+    .heatmap-legenda {
+        display: flex;
+        gap: 1.2em;
+        align-items: center;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        padding: 0.7em 1.2em;
+        font-size: 0.98em;
+    }
+    .heatmap-legenda-item {
+        display: flex;
+        align-items: center;
+        gap: 0.4em;
+    }
+    .heatmap-legenda-cor {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        margin-right: 0.2em;
+    }
+    .cor-aprovado { background: #32CD32; }
+    .cor-reprovado { background: #CD5C5C; }
+    .cor-matricula { background: #FFD700; }
+    @media (max-width: 700px) {
+        .heatmap-header {
+            flex-direction: column;
+            gap: 1em;
+        }
+        .heatmap-title {
+            font-size: 1.3rem;
+        }
+        .heatmap-legenda {
+            font-size: 0.9em;
+            padding: 0.5em 0.7em;
         }
     }
 </style>
-
 {% endblock %}
 {% block content %}
-<h1 style="color:#000000;">Matriz de Progressão</h1>
-<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2em;">
-    <div class="filtros-dropdown">
-        <button class="filtros-btn" type="button">
-            <i class="fas fa-filter"></i> Filtros
-        </button>
-        <div class="filtros-content">
-            <form method="get" id="filtros-form">
-                {% for filtro in filtros_options %}
-                    {% if filtro.name == 'ativos' %}
-                        <label>
-                            <input type="checkbox" name="{{ filtro.name }}" value="ativos" {% if filtro.selected %}checked{% endif %}>
-                            {{ filtro.label }}
-                        </label>
-                    {% endif %}
-                {% endfor %}
-                <label for="curriculo-select">Currículo:</label>
-                <select name="curriculos" id="curriculo-select" multiple="multiple" style="width:100%;">
-                    {% for curriculo in curriculos_options %}
-                        <option value="{{ curriculo.value }}" {% if curriculo.selected %}selected{% endif %}>
-                            {{ curriculo.label }}
-                        </option>
+<div class="heatmap-header">
+    <h1 class="heatmap-title">Matriz de Progressão</h1>
+    <div style="display: flex; gap: 1.2em; align-items: center;">
+        <div class="filtros-dropdown">
+            <button class="filtros-btn" type="button">
+                <i class="fas fa-filter"></i> Filtros
+            </button>
+            <div class="filtros-content">
+                <form method="get" id="filtros-form">
+                    {% for filtro in filtros_options %}
+                        {% if filtro.name == 'ativos' %}
+                            <label>
+                                <input type="checkbox" name="{{ filtro.name }}" value="ativos" {% if filtro.selected %}checked{% endif %}>
+                                {{ filtro.label }}
+                            </label>
+                        {% endif %}
                     {% endfor %}
-                </select>
-                <label for="tipo-disciplina-select">Tipo de disciplina:</label>
-                <select name="tipo_disciplina" id="tipo-disciplina-select" style="width:100%;">
-                    {% for tipo in tipo_disciplina_options %}
-                        <option value="{{ tipo.value }}" {% if tipo.selected %}selected{% endif %}>
-                            {{ tipo.label }}
-                        </option>
-                    {% endfor %}
-                </select>
-                <button type="submit" class="submit-btn">Aplicar Filtros</button>
-            </form>
+                    <label for="curriculo-select">Currículo:</label>
+                    <select name="curriculos" id="curriculo-select" multiple="multiple" style="width:100%;">
+                        {% for curriculo in curriculos_options %}
+                            <option value="{{ curriculo.value }}" {% if curriculo.selected %}selected{% endif %}>
+                                {{ curriculo.label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <label for="tipo-disciplina-select">Tipo de disciplina:</label>
+                    <select name="tipo_disciplina" id="tipo-disciplina-select" style="width:100%;">
+                        {% for tipo in tipo_disciplina_options %}
+                            <option value="{{ tipo.value }}" {% if tipo.selected %}selected{% endif %}>
+                                {{ tipo.label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="submit-btn">Aplicar Filtros</button>
+                </form>
+            </div>
         </div>
-    </div>
-    <div style="display: flex; align-items: center; gap: 1.5em; min-width: 220px;">
-        <div style="display: flex; gap: 1em; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 0.5em;">
-                <div style="width: 22px; height: 22px; background: green; border-radius: 4px; border: 1px solid #ccc;"></div>
-                <span style="color: #003366; font-size: 0.95em;">Aprovação</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 0.5em;">
-                <div style="width: 22px; height: 22px; background: red; border-radius: 4px; border: 1px solid #ccc;"></div>
-                <span style="color: #003366; font-size: 0.95em;">Reprovação/Trancamento</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 0.5em;">
-                <div style="width: 22px; height: 22px; background: yellow; border-radius: 4px; border: 1px solid #ccc;"></div>
-                <span style="color: #003366; font-size: 0.95em;">Matrícula</span>
-            </div>
+        <div class="heatmap-legenda">
+            <div class="heatmap-legenda-item"><div class="heatmap-legenda-cor cor-aprovado"></div> Aprovação</div>
+            <div class="heatmap-legenda-item"><div class="heatmap-legenda-cor cor-reprovado"></div> Reprovação/Trancamento</div>
+            <div class="heatmap-legenda-item"><div class="heatmap-legenda-cor cor-matricula"></div> Matrícula</div>
         </div>
     </div>
 </div>
-<div style="display: flex; justify-content: center; width: 100%;">
+<div style="display: flex; justify-content: center; width: 100%; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); padding: 1.2em 0;">
     {{ plot_div|safe }}
 </div>
 {% endblock %}

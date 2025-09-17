@@ -11,6 +11,11 @@
             allowClear: true,
             width: '100%'
         });
+        $('#tipo-disciplina-select').select2({
+            placeholder: "Selecione o tipo de disciplina",
+            allowClear: true,
+            width: '100%'
+        });
     });
     document.addEventListener('DOMContentLoaded', function() {
         const dropdown = document.querySelector('.filtros-dropdown');
@@ -105,16 +110,26 @@
     <div class="filtros-content">
         <form method="get" id="filtros-form">
             {% for filtro in filtros_options %}
-                <label>
-                    <input type="checkbox" name="{{ filtro.name }}" value="ativos" {% if filtro.selected %}checked{% endif %}>
-                    {{ filtro.label }}
-                </label>
+                {% if filtro.name == 'ativos' %}
+                    <label>
+                        <input type="checkbox" name="{{ filtro.name }}" value="ativos" {% if filtro.selected %}checked{% endif %}>
+                        {{ filtro.label }}
+                    </label>
+                {% endif %}
             {% endfor %}
             <label for="curriculo-select">Currículo:</label>
             <select name="curriculos" id="curriculo-select" multiple="multiple" style="width:100%;">
                 {% for curriculo in curriculos_options %}
                     <option value="{{ curriculo.value }}" {% if curriculo.selected %}selected{% endif %}>
                         {{ curriculo.label }}
+                    </option>
+                {% endfor %}
+            </select>
+            <label for="tipo-disciplina-select">Tipo de disciplina:</label>
+            <select name="tipo_disciplina" id="tipo-disciplina-select" style="width:100%;">
+                {% for tipo in tipo_disciplina_options %}
+                    <option value="{{ tipo.value }}" {% if tipo.selected %}selected{% endif %}>
+                        {{ tipo.label }}
                     </option>
                 {% endfor %}
             </select>

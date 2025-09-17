@@ -471,6 +471,7 @@ def heatmap_desempenho(request):
     # --- Filtros ---
     filtro_ativos = request.GET.get('ativos', 'todos')
     filtro_curriculos = request.GET.getlist('curriculos')
+    filtro_tipo_disciplina = request.GET.get('tipo_disciplina', 'todas')
     curriculos_map = {
         '20232': df_disciplinas_20232,
         '20052': df_disciplinas_20052,
@@ -483,6 +484,11 @@ def heatmap_desempenho(request):
         {'value': '20002', 'label': 'Currículo 2000/2', 'selected': '20002' in filtro_curriculos},
         {'value': '20081', 'label': 'Currículo 2008/1', 'selected': '20081' in filtro_curriculos},
     ]
+    tipo_disciplina_options = [
+        {'value': 'todas', 'label': 'Todas', 'selected': filtro_tipo_disciplina == 'todas'},
+        {'value': 'obrigatoria', 'label': 'Obrigatórias', 'selected': filtro_tipo_disciplina == 'obrigatoria'},
+        {'value': 'optativa', 'label': 'Optativas', 'selected': filtro_tipo_disciplina == 'optativa'},
+    ]
 
     # Filtrar alunos ativos
     if filtro_ativos == 'ativos':
@@ -490,29 +496,42 @@ def heatmap_desempenho(request):
         df_historico = df_historico[df_historico['ID PESSOA'].isin(alunos_ativos)]
         df_alunos = df_alunos[df_alunos['ID PESSOA'].isin(alunos_ativos)]
 
-    # Filtrar currículos
+    # Filtrar currículos e tipo de disciplina
+    def filtrar_disciplinas(df, curriculo, tipo):
+        if tipo == 'todas':
+            if curriculo == '20002':
+                return df['COD DISCIPLINA']
+            else:
+                return df['COD DISCIPLINA']
+        elif tipo == 'obrigatoria':
+            if curriculo == '20002':
+                return df[df['DESCR ESTRUTURA'] == 'Disciplinas obrigatórias']['COD DISCIPLINA']
+            else:
+                return df[df['TIPO DISCIPLINA'] == 'Obrigatória']['COD DISCIPLINA']
+        elif tipo == 'optativa':
+            if curriculo == '20002':
+                return df[df['DESCR ESTRUTURA'] == 'Disciplinas optativas']['COD DISCIPLINA']
+            else:
+                return df[df['TIPO DISCIPLINA'] == 'Optativa']['COD DISCIPLINA']
+        else:
+            return df['COD DISCIPLINA']
+
     if filtro_curriculos:
         disciplinas_list = set()
         for curr in filtro_curriculos:
             df = curriculos_map.get(curr)
             if df is not None:
-                if curr == '20002':
-                    disciplinas = df[df['TIPO DISCIPLINA'] == 'Disciplinas obrigatórias']['COD DISCIPLINA']
-                else:
-                    disciplinas = df[df['TIPO DISCIPLINA'] == 'Obrigatória']['COD DISCIPLINA']
+                disciplinas = filtrar_disciplinas(df, curr, filtro_tipo_disciplina)
                 disciplinas_list.update(disciplinas)
         disciplinas_list = sorted(disciplinas_list)
     else:
         # Se nada selecionado, mostra todas obrigatórias de todos currículos
-        disciplinas_list = sorted(
-            set(
-                df_disciplinas_20232[df_disciplinas_20232['TIPO DISCIPLINA'] == 'Obrigatória']['COD DISCIPLINA']
-            ).union(
-                df_disciplinas_20052[df_disciplinas_20052['TIPO DISCIPLINA'] == 'Obrigatória']['COD DISCIPLINA'],
-                df_disciplinas_20002[df_disciplinas_20002['TIPO DISCIPLINA'] == 'Disciplinas obrigatórias']['COD DISCIPLINA'],
-                df_disciplinas_20081[df_disciplinas_20081['TIPO DISCIPLINA'] == 'Obrigatória']['COD DISCIPLINA'],
-            )
-        )
+        disciplinas_list = set()
+        disciplinas_list.update(filtrar_disciplinas(df_disciplinas_20232, '20232', filtro_tipo_disciplina))
+        disciplinas_list.update(filtrar_disciplinas(df_disciplinas_20052, '20052', filtro_tipo_disciplina))
+        disciplinas_list.update(filtrar_disciplinas(df_disciplinas_20002, '20002', filtro_tipo_disciplina))
+        disciplinas_list.update(filtrar_disciplinas(df_disciplinas_20081, '20081', filtro_tipo_disciplina))
+        disciplinas_list = sorted(disciplinas_list)
 
     df_alunos['MATR ALUNO'] = df_alunos['MATR ALUNO'].astype(str)
     df_alunos = df_alunos.drop_duplicates(subset=['MATR ALUNO'])
@@ -665,6 +684,8 @@ def heatmap_desempenho(request):
         'periodos_options': [],
         'filtros_options': filtros_options,
         'curriculos_selecionados': filtro_curriculos,
+        'tipo_disciplina_options': tipo_disciplina_options,
+        'tipo_disciplina_selecionado': filtro_tipo_disciplina,
     })
 
 def home(request):

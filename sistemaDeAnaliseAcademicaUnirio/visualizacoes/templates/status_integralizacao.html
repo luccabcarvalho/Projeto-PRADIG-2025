@@ -1,79 +1,17 @@
 {% extends "base.html" %}
 {% block title %}Prazos de Integralização{% endblock %}
 {% block extra_head %}
-<style>
-    .filtros-dropdown {
-        position: relative;
-        display: inline-block;
-        margin-bottom: 2em;
-    }
-    .filtros-btn {
-        background: #003366;
-        color: #fff;
-        padding: 0.7em 2em;
-        border: none;
-        border-radius: 6px;
-        font-size: 1rem;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 0.7em;
-        transition: background 0.2s;
-    }
-    .filtros-btn:hover, .filtros-btn:focus {
-        background: #2356a8;
-    }
-    .filtros-content {
-        display: none;
-        position: absolute;
-        left: 0;
-        top: 110%;
-        background: #fff;
-        min-width: 320px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-        border-radius: 8px;
-        z-index: 10;
-        padding: 1.5em 1.5em 1em 1.5em;
-    }
-    .filtros-dropdown.open .filtros-content {
-        display: block;
-    }
-    .filtros-content label, .filtros-content select {
-        display: block;
-        margin-bottom: 1em;
-        color: #003366;
-        font-weight: 500;
-    }
-    .filtros-content input[type="checkbox"] {
-        margin-right: 0.5em;
-    }
-    .filtros-content .submit-btn {
-        background-color: #003366;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        margin-top: 0.5em;
-        width: 100%;
-    }
-    .filtros-content .submit-btn:hover {
-        background-color: #2356a8;
-    }
-    @media (max-width: 600px) {
-        .filtros-content {
-            min-width: 220px;
-            padding: 1em;
-        }
-    }
-    .grafico-wrapper {
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        margin-top: 2em;
-    }
-</style>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
+    $(document).ready(function() {
+        $('#periodo_ingresso').select2({
+            placeholder: "Período de Ingresso",
+            allowClear: true,
+            width: '100%'
+        });
+    });
     document.addEventListener('DOMContentLoaded', function() {
         const dropdown = document.querySelector('.filtros-dropdown');
         const btn = document.querySelector('.filtros-btn');
@@ -90,30 +28,132 @@
         }
     });
 </script>
+<style>
+    body {
+        background: #f7f9fb;
+    }
+    .heatmap-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2em;
+        margin-top: 0.5em;
+    }
+    .heatmap-title {
+        color: #003366;
+        font-size: 2.1rem;
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: 0.5px;
+    }
+    .filtros-dropdown {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 0;
+    }
+    .filtros-btn {
+        background: #003366;
+        color: #fff;
+        padding: 0.5em 1.2em;
+        border: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        transition: background 0.2s;
+    }
+    .filtros-btn:hover, .filtros-btn:focus {
+        background: #2356a8;
+    }
+    .filtros-content {
+        display: none;
+        position: absolute;
+        left: 0;
+        top: 110%;
+        background: #fff;
+        min-width: 260px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+        border-radius: 8px;
+        z-index: 10;
+        padding: 1em 1em 0.7em 1em;
+    }
+    .filtros-dropdown.open .filtros-content {
+        display: block;
+    }
+    .filtros-content label, .filtros-content select {
+        display: block;
+        margin-bottom: 0.7em;
+        color: #003366;
+        font-weight: 500;
+        font-size: 1rem;
+    }
+    .filtros-content input[type="checkbox"] {
+        margin-right: 0.5em;
+    }
+    .filtros-content .submit-btn {
+        background-color: #003366;
+        color: white;
+        padding: 8px 0;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 0.2em;
+        width: 100%;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .filtros-content .submit-btn:hover {
+        background-color: #2356a8;
+    }
+    @media (max-width: 700px) {
+        .heatmap-header {
+            flex-direction: column;
+            gap: 1em;
+        }
+        .heatmap-title {
+            font-size: 1.3rem;
+        }
+    }
+    .grafico-wrapper {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        margin-top: 2em;
+    }
+</style>
 {% endblock %}
 {% block content %}
-<h2 style="color:#000000;">Prazos de Integralização</h2>
-<div class="filtros-dropdown">
-    <button class="filtros-btn" type="button">
-        <i class="fas fa-filter"></i> Filtros
-    </button>
-    <div class="filtros-content">
-        <form method="get" id="filtros-form">
-            {% for filtro in filtros_options %}
-                <label>
-                    <input type="checkbox" name="{{ filtro.name }}" value="ativos" {% if filtro.selected %}checked{% endif %}>
-                    {{ filtro.label }}
-                </label>
-            {% endfor %}
-            <label for="periodo_ingresso">Período de Ingresso:</label>
-            <select name="periodo_ingresso" id="periodo_ingresso">
-                <option value="">Todos</option>
-                {% for periodo in periodos_options %}
-                    <option value="{{ periodo.value }}" {% if periodo.selected %}selected{% endif %}>{{ periodo.label }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="submit-btn">Aplicar Filtros</button>
-        </form>
+<div class="heatmap-header">
+    <h1 class="heatmap-title">Prazos de Integralização</h1>
+    <div style="display: flex; gap: 1.2em; align-items: center;">
+        <div class="filtros-dropdown">
+            <button class="filtros-btn" type="button">
+                <i class="fas fa-filter"></i> Filtros
+            </button>
+            <div class="filtros-content">
+                <form method="get" id="filtros-form">
+                    {% for filtro in filtros_options %}
+                        <label>
+                            <input type="checkbox" name="{{ filtro.name }}" value="ativos" {% if filtro.selected %}checked{% endif %}>
+                            {{ filtro.label }}
+                        </label>
+                    {% endfor %}
+                    <label for="periodo_ingresso">Período de Ingresso:</label>
+                    <select name="periodo_ingresso" id="periodo_ingresso" style="width:100%;">
+                        <option value="">Todos</option>
+                        {% for periodo in periodos_options %}
+                            <option value="{{ periodo.value }}" {% if periodo.selected %}selected{% endif %}>{{ periodo.label }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="submit-btn">Aplicar Filtros</button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 <div class="grafico-wrapper">

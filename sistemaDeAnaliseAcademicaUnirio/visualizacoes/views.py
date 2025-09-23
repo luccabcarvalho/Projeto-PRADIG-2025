@@ -471,7 +471,7 @@ def heatmap_desempenho(request):
     # --- Filtros ---
     filtro_ativos = request.GET.get('ativos', 'todos')
     filtro_curriculos = request.GET.getlist('curriculos')
-    filtro_tipo_disciplina = request.GET.get('tipo_disciplina', 'todas')
+    filtro_tipo_disciplina = request.GET.get('tipo_disciplina', 'obrigatoria')
     curriculos_map = {
         '20232': df_disciplinas_20232,
         '20052': df_disciplinas_20052,

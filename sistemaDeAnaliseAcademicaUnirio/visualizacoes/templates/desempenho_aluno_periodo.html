@@ -9,23 +9,11 @@
         $('#matr_aluno').select2({
             placeholder: "Selecione um aluno",
             allowClear: true,
-            width: '100%'
+            width: '300px'
         });
-    });
-    document.addEventListener('DOMContentLoaded', function() {
-        const dropdown = document.querySelector('.filtros-dropdown');
-        const btn = document.querySelector('.filtros-btn');
-        if (dropdown && btn) {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                dropdown.classList.toggle('open');
-            });
-            document.addEventListener('click', function(e) {
-                if (!dropdown.contains(e.target)) {
-                    dropdown.classList.remove('open');
-                }
-            });
-        }
+        $('#matr_aluno').on('change', function() {
+            $('#filtros-form').submit();
+        });
     });
 </script>
 <style>
@@ -121,25 +109,15 @@
 {% block content %}
 <div class="heatmap-header">
     <h1 class="heatmap-title">Progressão Individual</h1>
-    <div style="display: flex; gap: 1.2em; align-items: center;">
-        <div class="filtros-dropdown">
-            <button class="filtros-btn" type="button">
-                <i class="fas fa-filter"></i> Filtros
-            </button>
-            <div class="filtros-content">
-                <form method="get" id="filtros-form">
-                    <label for="matr_aluno">Aluno:</label>
-                    <select name="matr_aluno" id="matr_aluno" style="width:100%;">
-                        <option value="">Selecione</option>
-                        {% for aluno in alunos_options %}
-                            <option value="{{ aluno.id }}" {% if selected_id == aluno.id %}selected{% endif %}>{{ aluno.label }}</option>
-                        {% endfor %}
-                    </select>
-                    <button type="submit" class="submit-btn">Buscar</button>
-                </form>
-            </div>
-        </div>
-    </div>
+    <form method="get" id="filtros-form" style="margin: 0; display: flex; align-items: center; gap: 1em;">
+        <label for="matr_aluno" style="font-weight: 500; color: #003366; font-size: 1rem; margin-right: 0.7em;">Aluno:</label>
+        <select name="matr_aluno" id="matr_aluno" style="width:300px;">
+            <option value="">Selecione</option>
+            {% for aluno in alunos_options %}
+                <option value="{{ aluno.id }}" {% if selected_id == aluno.id %}selected{% endif %}>{{ aluno.label }}</option>
+            {% endfor %}
+        </select>
+    </form>
 </div>
 <div style="display: flex; justify-content: center; width: 100%;">
     {{ plot_div|safe }}

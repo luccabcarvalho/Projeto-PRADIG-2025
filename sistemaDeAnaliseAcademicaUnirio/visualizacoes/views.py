@@ -336,6 +336,19 @@ def desempenho_aluno_periodo(request):
         matr_aluno = df_historico['MATR ALUNO'].iloc[0]
 
     dados_aluno = df_historico[df_historico['MATR ALUNO'] == matr_aluno].copy()
+    if dados_aluno.empty:
+        alunos_options = [
+            {'id': str(matr_aluno), 'label': f"{matr_aluno} - {nome_pessoa}"}
+            for matr_aluno, nome_pessoa in df_historico[['MATR ALUNO', 'NOME PESSOA']].drop_duplicates().values
+        ]
+        mensagem = "Não há dados disponíveis para o aluno selecionado."
+        return render(request, 'desempenho_aluno_periodo.html', {
+            'plot_div': '',
+            'alunos_options': alunos_options,
+            'selected_id': str(matr_aluno),
+            'mensagem': mensagem,
+        })
+
     dados_aluno['STATUS'] = dados_aluno['DESCR SITUACAO'].str.strip()
     dados_aluno['CARGA'] = dados_aluno['TOTAL CARGA HORARIA']
     dados_aluno['DISCIPLINA'] = (
@@ -349,6 +362,19 @@ def desempenho_aluno_periodo(request):
         return int(ano) * 10 + (1 if '1' in per else 2)
 
     periodos = sorted(dados_aluno['ANO_PERIODO'].unique(), key=ordenar_periodo)
+    if not periodos:
+        alunos_options = [
+            {'id': str(matr_aluno), 'label': f"{matr_aluno} - {nome_pessoa}"}
+            for matr_aluno, nome_pessoa in df_historico[['MATR ALUNO', 'NOME PESSOA']].drop_duplicates().values
+        ]
+        mensagem = "Não há dados disponíveis para o aluno selecionado."
+        return render(request, 'desempenho_aluno_periodo.html', {
+            'plot_div': '',
+            'alunos_options': alunos_options,
+            'selected_id': str(matr_aluno),
+            'mensagem': mensagem,
+        })
+
     status_aprovados = {
         'APV - Aprovado', 'APV- Aprovado', 'APV - Aprovado sem nota',
         'ADI - Aproveitamento', 'ADI - Aproveitamento de créditos da disciplina',
@@ -419,6 +445,19 @@ def desempenho_aluno_periodo(request):
             hovertext=hover
         )
         barras.append(barra)
+
+    if not barras:
+        alunos_options = [
+            {'id': str(matr_aluno), 'label': f"{matr_aluno} - {nome_pessoa}"}
+            for matr_aluno, nome_pessoa in df_historico[['MATR ALUNO', 'NOME PESSOA']].drop_duplicates().values
+        ]
+        mensagem = "Não há dados disponíveis para o aluno selecionado."
+        return render(request, 'desempenho_aluno_periodo.html', {
+            'plot_div': '',
+            'alunos_options': alunos_options,
+            'selected_id': str(matr_aluno),
+            'mensagem': mensagem,
+        })
 
     carga_referencia = 3240
     linha_referencia = go.Scatter(

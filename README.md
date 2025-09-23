@@ -30,7 +30,6 @@ O projeto oferece duas formas principais de visualização dos dados acadêmicos
 O sistema web centraliza as visualizações em uma interface única e interativa:
 
 - **Página Inicial**: Visão geral do sistema.
-- **Hub de Visualizações**: Acesso rápido a todas as visualizações disponíveis.
 - **Desempenho Acadêmico por Aluno**: `/visualizacoes/desempenho/`
 - **Heatmap de Desempenho Acadêmico**: `/visualizacoes/heatmap/`
 - **Status de Integralização**: `/visualizacoes/integralizacao/`
@@ -97,7 +96,6 @@ Se você nunca rodou uma aplicação Django, siga este passo a passo detalhado:
 
 7. **Acesse no navegador:**
    - Página inicial: http://127.0.0.1:8000/visualizacoes/
-   - Hub de visualizações: http://127.0.0.1:8000/visualizacoes/hub/
    - Desempenho Acadêmico: http://127.0.0.1:8000/visualizacoes/desempenho/
    - Heatmap: http://127.0.0.1:8000/visualizacoes/heatmap/
    - Status de Integralização: http://127.0.0.1:8000/visualizacoes/integralizacao/

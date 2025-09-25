@@ -464,7 +464,7 @@ def desempenho_aluno_periodo(request):
         x=periodos,
         y=[carga_referencia] * len(periodos),
         mode='lines',
-        name='Ritmo de Integralização de Referência',
+        name='C.H. Total',
         line=dict(color='rgba(100,100,100,0.3)')
     )
     barras.append(linha_referencia)

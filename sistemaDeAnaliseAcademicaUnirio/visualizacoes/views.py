@@ -701,12 +701,22 @@ def heatmap_desempenho(request):
 
     fig.update_layout(
         font=dict(size=18),
-        xaxis=dict(title='Disciplinas', tickangle=45, tickfont=dict(size=16)),
-        yaxis=dict(title='Matrículas', tickfont=dict(size=16)),
+        xaxis=dict(
+            title='Disciplinas',
+            tickangle=45,
+            tickfont=dict(size=16),
+            fixedrange=True  
+        ),
+        yaxis=dict(
+            title='Matrículas',
+            tickfont=dict(size=16),
+        ),
         autosize=True,
+        hovermode="x unified",
         margin=dict(l=10, r=10, t=10, b=10),
         height=1200,
-        width=2100
+        width=2100,
+        dragmode="pan"  
     )
 
     plot_div = fig.to_html(full_html=False)

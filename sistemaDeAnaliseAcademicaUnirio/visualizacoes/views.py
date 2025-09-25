@@ -266,7 +266,7 @@ def status_integralizacao(request):
 
     fig.update_traces(
         showscale=False,
-        textfont=dict(size=18, color='black'),
+        textfont=dict(size=15, color='black'),
     )
 
     fig.update_layout(
@@ -281,11 +281,11 @@ def status_integralizacao(request):
                 (n_periodos / 2) - 5,  
                 (n_periodos / 2) + 5   
             ],
-            tickfont=dict(size=16),
+            tickfont=dict(size=18),
         ),
         yaxis=dict(
             automargin=True,
-            tickfont=dict(size=16),
+            tickfont=dict(size=18),
             scaleanchor="x",
             scaleratio=1.1,
             range=[-0.5, min(9.5, len(matriculas)-0.5)],
@@ -293,7 +293,7 @@ def status_integralizacao(request):
         ),
         autosize=False,
         width=1800,
-        height=650,
+        height=850,
         margin=dict(l=10, r=10, t=60, b=10),
     )
 

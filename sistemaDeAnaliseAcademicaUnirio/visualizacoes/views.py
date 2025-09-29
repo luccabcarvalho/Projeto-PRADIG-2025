@@ -664,21 +664,38 @@ def heatmap_desempenho(request):
     def tooltip_format(cell_tooltip):
         if not cell_tooltip or 'status_list' not in cell_tooltip:
             return ""
-        lines = []
-        for s in sorted(cell_tooltip['status_list'], key=lambda x: x.get('ano_periodo', ''), reverse=True):
+        status_list = cell_tooltip['status_list']
+        if len(status_list) == 1:
+            s = status_list[0]
             nome_aluno = s.get('nome_aluno', '')
+            nome_disciplina = s.get('nome_disciplina', '')
             status = s.get('status', '')
             media = s.get('media_final', '')
             periodo = s.get('ano_periodo', '')
             nota_str = f"{media}" if pd.notna(media) else ""
-            lines.append(
+            return (
                 f"{nome_aluno}<br>"
                 f"{nome_disciplina}<br>"
                 f"  Status: {status}<br>"
                 f"      {periodo}<br>"
                 f"      {nota_str}<br>"
             )
-        return "<br>".join(lines)
+        else:
+            s0 = status_list[0]
+            nome_aluno = s0.get('nome_aluno', '')
+            nome_disciplina = s0.get('nome_disciplina', '')
+            historico = []
+            for s in sorted(status_list, key=lambda x: x.get('ano_periodo', ''), reverse=True):
+                status = s.get('status', '')
+                media = s.get('media_final', '')
+                periodo = s.get('ano_periodo', '')
+                nota_str = f"{media}" if pd.notna(media) else ""
+                historico.append(f"{status} ({periodo}) {nota_str}")
+            return (
+                f"{nome_aluno}<br>"
+                f"{nome_disciplina}<br>"
+                f"Histórico: <br>" + "<br>".join(historico)
+            )
 
     matriz_tooltips_str = [
         [tooltip_format(cell) for cell in row]

@@ -11,7 +11,7 @@
             allowClear: true,
             width: '100%',
             maximumSelectionLength: 1
-        });
+        }); 
         $('#tipo-disciplina-select').select2({
             placeholder: "Tipo de disciplina",
             allowClear: true,
@@ -161,7 +161,7 @@
             {% endfor %}
             <div class="filtro-item">
                 <label for="curriculo-select">Currículo:</label>
-                <select name="curriculos" id="curriculo-select" multiple="multiple">
+                <select name="curriculos" id="curriculo-select">
                     {% for curriculo in curriculos_options %}
                         <option value="{{ curriculo.value }}" {% if curriculo.selected %}selected{% endif %}>
                             {{ curriculo.label }}

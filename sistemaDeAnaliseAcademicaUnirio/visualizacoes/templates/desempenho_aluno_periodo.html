@@ -9,9 +9,9 @@
         $('#matr_aluno').select2({
             placeholder: "Selecione um aluno",
             allowClear: true,
-            width: '300px'
+            width: '100%'
         });
-        $('#matr_aluno').on('change', function() {
+        $('#filtros-form select').on('change', function() {
             $('#filtros-form').submit();
         });
     });
@@ -34,66 +34,51 @@
         margin: 0;
         letter-spacing: 0.5px;
     }
-    .filtros-dropdown {
-        position: relative;
-        display: inline-block;
-        margin-bottom: 0;
-    }
-    .filtros-btn {
-        background: #003366;
-        color: #fff;
-        padding: 0.5em 1.2em;
-        border: none;
-        border-radius: 5px;
-        font-size: 1rem;
-        cursor: pointer;
+    .filtros-bar {
         display: flex;
+        gap: 1.5em;
         align-items: center;
-        gap: 0.5em;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        transition: background 0.2s;
-    }
-    .filtros-btn:hover, .filtros-btn:focus {
-        background: #2356a8;
-    }
-    .filtros-content {
-        display: none;
-        position: absolute;
-        left: 0;
-        top: 110%;
         background: #fff;
-        min-width: 260px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.10);
         border-radius: 8px;
-        z-index: 10;
-        padding: 1em 1em 0.7em 1em;
-    }
-    .filtros-dropdown.open .filtros-content {
-        display: block;
-    }
-    .filtros-content label, .filtros-content select {
-        display: block;
-        margin-bottom: 0.7em;
-        color: #003366;
-        font-weight: 500;
-        font-size: 1rem;
-    }
-    .filtros-content .submit-btn {
-        background-color: #003366;
-        color: white;
-        padding: 8px 0;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        margin-top: 0.2em;
-        width: 100%;
-        font-size: 1rem;
-        font-weight: 600;
-        letter-spacing: 0.5px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        padding: 1.2em 2em 1.2em 2em;
+        margin-bottom: 1.2em;
+        flex-wrap: nowrap;
+        width: 70vw;
+        max-width: 1100px;
+        min-width: 0;
+        margin-left: auto;
+        margin-right: auto;
     }
-    .filtros-content .submit-btn:hover {
-        background-color: #2356a8;
+    .filtro-item {
+        display: flex;
+        flex-direction: column;
+        min-width: 180px;
+        margin-bottom: 0.5em;
+        margin-right: 1.2em;
+    }
+    .filtro-item label {
+        color: #003366;
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 0.3em;
+        white-space: nowrap;
+        margin-left: 0.3em;
+        margin-right: 0;
+    }
+    .filtro-item select {
+        font-size: 1rem;
+        border-radius: 5px;
+        border: 1px solid #bfc9d1;
+        padding: 0.4em 0.7em;
+        background: #f7f9fb;
+        color: #003366;
+        outline: none;
+        transition: border 0.2s;
+        min-width: 120px;
+    }
+    .filtro-item select:focus {
+        border: 1.5px solid #2356a8;
     }
     @media (max-width: 700px) {
         .heatmap-header {
@@ -109,16 +94,22 @@
 {% block content %}
 <div class="heatmap-header">
     <h1 class="heatmap-title">Progressão Individual</h1>
-    <form method="get" id="filtros-form" style="margin: 0; display: flex; align-items: center; gap: 1em;">
-        <label for="matr_aluno" style="font-weight: 500; color: #003366; font-size: 1rem; margin-right: 0.7em;">Aluno:</label>
-        <select name="matr_aluno" id="matr_aluno" style="width:300px;">
-            <option value="">Selecione</option>
-            {% for aluno in alunos_options %}
-                <option value="{{ aluno.id }}" {% if selected_id == aluno.id %}selected{% endif %}>{{ aluno.label }}</option>
-            {% endfor %}
-        </select>
-    </form>
 </div>
+<form method="get" id="filtros-form">
+    <div class="filtros-bar">
+        <div style="display:flex; align-items:center; gap:1.2em; flex:1 1 auto; min-width:0;">
+            <div class="filtro-item">
+                <label for="matr_aluno">Aluno:</label>
+                <select name="matr_aluno" id="matr_aluno">
+                    <option value="">Selecione</option>
+                    {% for aluno in alunos_options %}
+                        <option value="{{ aluno.id }}" {% if selected_id == aluno.id %}selected{% endif %}>{{ aluno.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+</form>
 {% if mensagem %}
     <div style="display: flex; justify-content: center; width: 100%;">
         <div style="background: #f7f9fb; color: #003366; border: 4px solid #00336633; border-radius: 8px; padding: 2em 3em; font-size: 1.2rem; font-weight: 500; margin-top: 2em; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">

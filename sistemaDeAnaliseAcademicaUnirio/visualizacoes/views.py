@@ -303,7 +303,7 @@ def status_integralizacao(request):
 
     plot_div = fig.to_html(full_html=False)
     filtros_options = [
-        {'name': 'ativos', 'label': 'Exibir apenas alunos ativos (sem evasão)', 'selected': filtro_ativos == 'ativos'},
+        {'name': 'ativos', 'label': 'Alunos ativos', 'selected': filtro_ativos == 'ativos'},
     ]
     return render(request, 'status_integralizacao.html', {
         'plot_div': plot_div,
@@ -738,7 +738,7 @@ def heatmap_desempenho(request):
 
     plot_div = fig.to_html(full_html=False)
     filtros_options = [
-        {'name': 'ativos', 'label': 'Exibir apenas alunos ativos (sem evasão)', 'selected': filtro_ativos == 'ativos'},
+        {'name': 'ativos', 'label': 'Alunos ativos', 'selected': filtro_ativos == 'ativos'},
     ]
     return render(request, 'heatmap_desempenho.html', {
         'plot_div': plot_div,

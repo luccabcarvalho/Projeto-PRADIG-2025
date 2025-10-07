@@ -719,13 +719,11 @@ def heatmap_desempenho(request):
     fig.update_layout(
         font=dict(size=18),
         xaxis=dict(
-            title='Disciplinas',
             tickangle=330,
             tickfont=dict(size=16),
             fixedrange=True  
         ),
         yaxis=dict(
-            title='Matrículas',
             tickfont=dict(size=16),
         ),
         autosize=True,

@@ -494,6 +494,9 @@ def desempenho_aluno_periodo(request):
     })
 
 def heatmap_desempenho(request):
+    if not request.GET:
+        return redirect(f"{reverse('heatmap_desempenho')}?curriculos=20232&tipo_disciplina=obrigatoria")
+
     USER_ID = 'user1'
     USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID)
     alunos_path = os.path.join(USER_DIR, 'alunosPorCurso.csv')

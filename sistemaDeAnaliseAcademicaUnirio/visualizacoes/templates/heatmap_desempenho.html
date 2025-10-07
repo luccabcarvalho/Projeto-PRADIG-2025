@@ -189,16 +189,6 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="filtro-item">
-                        <label for="tipo-disciplina-select">Tipo de disciplina:</label>
-                        <select name="tipo_disciplina" id="tipo-disciplina-select">
-                            {% for tipo in tipo_disciplina_options %}
-                                <option value="{{ tipo.value }}" {% if tipo.selected %}selected{% endif %}>
-                                    {{ tipo.label }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
                 </div>
             </div>
         </form>

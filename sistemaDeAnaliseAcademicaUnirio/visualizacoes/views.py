@@ -720,7 +720,7 @@ def heatmap_desempenho(request):
         font=dict(size=18),
         xaxis=dict(
             title='Disciplinas',
-            tickangle=320,
+            tickangle=330,
             tickfont=dict(size=16),
             fixedrange=True  
         ),
@@ -731,7 +731,7 @@ def heatmap_desempenho(request):
         autosize=True,
         hovermode="x unified",
         margin=dict(l=10, r=10, t=10, b=10),
-        height=1200,
+        height=950,
         width=2100,
         dragmode="pan"  
     )

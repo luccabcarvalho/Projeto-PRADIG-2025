@@ -729,8 +729,8 @@ def heatmap_desempenho(request):
         autosize=True,
         hovermode="x unified",
         margin=dict(l=10, r=10, t=10, b=10),
-        height=950,
-        width=2100,
+        height=880,
+        width=2200,
         dragmode="pan"  
     )
 

@@ -29,8 +29,6 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 0.2em;
-        margin-top: 0.2em;
     }
     .heatmap-title {
         color: #003366;
@@ -43,8 +41,6 @@
         display: flex;
         gap: 1.5em;
         align-items: center;
-        padding: 1.2em 2em 1.2em 2em;
-        margin-bottom: 1.2em;
         flex-wrap: nowrap;
         width: 70vw;
         max-width: 1100px;
@@ -102,8 +98,19 @@
         display: flex;
         gap: 1.2em;
         align-items: center;
-        padding: 0.7em 1.2em;
         font-size: 0.98em;
+    }
+    .heatmap-legenda-above {
+        width: 154%;
+        display: flex;
+        justify-content: flex-start; 
+        padding-bottom: 7px;
+    }
+    .heatmap-plot-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
     }
     .heatmap-legenda-item {
         display: flex;
@@ -131,6 +138,11 @@
         .heatmap-legenda {
             font-size: 0.9em;
             padding: 0.5em 0.7em;
+        }
+        .heatmap-legenda-above {
+            justify-content: center;
+            padding-right: 0;
+            width: calc(100% - 2em);
         }
     }
 </style>
@@ -171,14 +183,17 @@
                 </select>
             </div>
         </div>
-        <div class="heatmap-legenda" style="margin-left:auto;">
-            <div class="heatmap-legenda-item"><div class="heatmap-legenda-cor cor-aprovado"></div> Aprovação</div>
-            <div class="heatmap-legenda-item"><div class="heatmap-legenda-cor cor-reprovado"></div> Reprovação/Trancamento</div>
-            <div class="heatmap-legenda-item"><div class="heatmap-legenda-cor cor-matricula"></div> Matrícula</div>
-        </div>
     </div>
 </form>
-<div style="display: flex; justify-content: center; width: 100%; margin: 0 auto; padding: 1.2em 0;">
-    {{ plot_div|safe }}
+<div class="heatmap-plot-wrapper">
+    <div class="heatmap-legenda heatmap-legenda-above" role="group" aria-label="Legenda do heatmap" aria-hidden="false">
+        <div class="heatmap-legenda-item"><div class="heatmap-legenda-cor cor-aprovado"></div> Aprovação</div>
+        <div class="heatmap-legenda-item"><div class="heatmap-legenda-cor cor-reprovado"></div> Reprovação/Trancamento</div>
+        <div class="heatmap-legenda-item"><div class="heatmap-legenda-cor cor-matricula"></div> Matrícula</div>
+    </div>
+
+    <div style="display: flex; justify-content: center; width: 100%; margin: 0 auto;">
+        {{ plot_div|safe }}
+    </div>
 </div>
 {% endblock %}

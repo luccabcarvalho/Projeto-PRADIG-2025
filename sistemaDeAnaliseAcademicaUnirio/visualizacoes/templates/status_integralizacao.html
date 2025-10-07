@@ -19,10 +19,17 @@
 <style>
     .heatmap-header {
         display: flex;
+        width: 100%;
+        padding: 0.8em 0;
+    }
+    .heatmap-header-inner {
+        width: 100%;
+        max-width: 1200px;
+        min-width: 0;
+        display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1.2em;
-        margin-top: 0.5em;
+        gap: 1em;
     }
     .heatmap-title {
         color: #003366;
@@ -33,16 +40,14 @@
     }
     .filtros-bar {
         display: flex;
-        gap: 1.5em;
+        gap: 1.2em;
         align-items: center;
-        padding: 1.2em 2em 1.2em 2em;
-        margin-bottom: 1.2em;
         flex-wrap: nowrap;
-        width: 70vw;
-        max-width: 1100px;
+        justify-content: flex-end;
+        flex: 0 1 auto;
         min-width: 0;
+        padding-top: 10px;
         margin-left: auto;
-        margin-right: auto;
     }
     .filtro-item {
         display: flex;
@@ -98,6 +103,13 @@
         .heatmap-title {
             font-size: 1.3rem;
         }
+        .filtros-bar {
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.6em;
+            margin-left: 0;
+            padding-top: 8px;
+        }
     }
     .grafico-wrapper {
         width: 100%;
@@ -109,29 +121,32 @@
 {% endblock %}
 {% block content %}
 <div class="heatmap-header">
-    <h1 class="heatmap-title">Prazos de Integralização</h1>
-</div>
-<form method="get" id="filtros-form">
-    <div class="filtros-bar">
-        <div style="display:flex; align-items:center; gap:1.2em; flex:1 1 auto; min-width:0;">
-            {% for filtro in filtros_options %}
-                <div class="filtro-item inline">
-                    <input type="checkbox" name="{{ filtro.name }}" value="ativos" id="filtro-{{ filtro.name }}" {% if filtro.selected %}checked{% endif %}>
-                    <label for="filtro-{{ filtro.name }}">{{ filtro.label }}</label>
-                </div>
-            {% endfor %}
-            <div class="filtro-item">
-                <label for="periodo_ingresso">Período de Ingresso:</label>
-                <select name="periodo_ingresso" id="periodo_ingresso">
-                    <option value="">Todos</option>
-                    {% for periodo in periodos_options %}
-                        <option value="{{ periodo.value }}" {% if periodo.selected %}selected{% endif %}>{{ periodo.label }}</option>
+    <div class="heatmap-header-inner">
+        <h1 class="heatmap-title">Prazos de Integralização</h1>
+
+        <form method="get" id="filtros-form">
+            <div class="filtros-bar">
+                <div style="display:flex; align-items:center; gap:1.2em; flex:0 1 auto; min-width:0;">
+                    {% for filtro in filtros_options %}
+                        <div class="filtro-item inline">
+                            <input type="checkbox" name="{{ filtro.name }}" value="ativos" id="filtro-{{ filtro.name }}" {% if filtro.selected %}checked{% endif %}>
+                            <label for="filtro-{{ filtro.name }}">{{ filtro.label }}</label>
+                        </div>
                     {% endfor %}
-                </select>
+                    <div class="filtro-item">
+                        <label for="periodo_ingresso">Período de Ingresso:</label>
+                        <select name="periodo_ingresso" id="periodo_ingresso">
+                            <option value="">Todos</option>
+                            {% for periodo in periodos_options %}
+                                <option value="{{ periodo.value }}" {% if periodo.selected %}selected{% endif %}>{{ periodo.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
             </div>
-        </div>
+        </form>
     </div>
-</form>
+</div>
 <div class="grafico-wrapper">
     {{ plot_div|safe }}
 </div>

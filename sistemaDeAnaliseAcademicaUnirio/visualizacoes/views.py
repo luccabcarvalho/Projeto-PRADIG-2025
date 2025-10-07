@@ -277,19 +277,12 @@ def status_integralizacao(request):
             ticktext=[f'{colunas[i]}' for i in range(n_periodos)],
             tickangle=20,
             side='top',
-            range=[
-                (n_periodos / 2) - 5,  
-                (n_periodos / 2) + 5   
-            ],
             tickfont=dict(size=18),
+            fixedrange=True,
         ),
         yaxis=dict(
             automargin=True,
             tickfont=dict(size=18),
-            scaleanchor="x",
-            scaleratio=1.1,
-            range=[-0.5, min(9.5, len(matriculas)-0.5)],
-            dtick=0.5,
         ),
         autosize=False,
         width=1800,

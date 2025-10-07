@@ -283,6 +283,7 @@ def status_integralizacao(request):
         yaxis=dict(
             automargin=True,
             tickfont=dict(size=18),
+            range=[0, 10], 
         ),
         autosize=False,
         width=1800,

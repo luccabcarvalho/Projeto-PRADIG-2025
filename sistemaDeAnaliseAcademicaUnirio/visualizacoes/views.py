@@ -418,7 +418,7 @@ def desempenho_aluno_periodo(request):
         barra = go.Bar(
             x=periodos,
             y=y,
-            base=carga_aprovada_acumulada.tolist(),
+            base=(carga_aprovada_acumulada - y).tolist(),
             name=status,
             marker_color=cor,
             hoverinfo='text',

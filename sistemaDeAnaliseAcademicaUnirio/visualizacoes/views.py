@@ -89,15 +89,22 @@ def status_integralizacao(request):
     ]
 
     status_aprovados = {
-        'APV - Aprovado', 'APV- Aprovado', 'APV - Aprovado sem nota',
-        'ADI - Aproveitamento', 'ADI - Aproveitamento de créditos da disciplina',
-        'ADI - Dispensa com nota', 'DIS - Dispensa sem nota'
+        'APV - Aprovado': '#006400',
+        'APV- Aprovado': '#006400',
+        'APV - Aprovado sem nota': '#32CD32',
+        'ADI - Aproveitamento': '#7CFC00',
+        'ADI - Aproveitamento de créditos da disciplina': '#ADFF2F',
+        'ADI - Dispensa com nota': '#228B22',
+        'DIS - Dispensa sem nota': '#32CD32',
     }
     status_reprovados = {
-        'REP - Reprovado por nota/conceito', 'REF - Reprovado por falta',
-        'ASC - Reprovado sem nota', 'TRA - Trancamento de disciplina'
+        'REP - Reprovado por nota/conceito': '#8B0000',
+        'REF - Reprovado por falta': '#CD5C5C',
+        'ASC - Reprovado sem nota': '#FFA07A',
+        'TRA - Trancamento de disciplina': '#8B0000',
     }
     status_matriculado = {'ASC - Matrícula'}
+    cores_status = {**status_aprovados, **status_reprovados}
 
     # Bloco 4: Construção da matriz_geral
 
@@ -166,14 +173,16 @@ def status_integralizacao(request):
                 'nome': nome_ativ_curric[i],
                 'status': descr_situacao[i],
                 'codigo': cod_ativ_curric[i],
-                'nota': nota_ativ_curric[i] if pd.notna(nota_ativ_curric[i]) else 'N/A'
+                'nota': nota_ativ_curric[i] if pd.notna(nota_ativ_curric[i]) else 'N/A',
+                'cor': status_aprovados[status]
             })
         elif status in status_reprovados:
             celula['reprovacoes'].append({
                 'nome': nome_ativ_curric[i],
                 'status': descr_situacao[i],
                 'codigo': cod_ativ_curric[i],
-                'nota': nota_ativ_curric[i] if pd.notna(nota_ativ_curric[i]) else 'N/A'
+                'nota': nota_ativ_curric[i] if pd.notna(nota_ativ_curric[i]) else 'N/A',
+                'cor': status_reprovados[status]
             })
         else:
             celula['outros'].append({
@@ -370,24 +379,24 @@ def desempenho_aluno_periodo(request):
         })
 
     status_aprovados = {
-        'APV - Aprovado', 'APV- Aprovado', 'APV - Aprovado sem nota',
-        'ADI - Aproveitamento', 'ADI - Aproveitamento de créditos da disciplina',
-        'ADI - Dispensa com nota', 'DIS - Dispensa sem nota'
+        'APV - Aprovado': '#006400',
+        'APV- Aprovado': '#006400',
+        'APV - Aprovado sem nota': '#32CD32',
+        'ADI - Aproveitamento': '#7CFC00',
+        'ADI - Aproveitamento de créditos da disciplina': '#ADFF2F',
+        'ADI - Dispensa com nota': '#228B22',
+        'DIS - Dispensa sem nota': '#32CD32',
     }
     status_reprovados = {
-        'REP - Reprovado por nota/conceito', 'REF - Reprovado por falta',
-        'ASC - Reprovado sem nota', 'TRA - Trancamento de disciplina'
+        'REP - Reprovado por nota/conceito': '#8B0000',
+        'REF - Reprovado por falta': '#CD5C5C',
+        'ASC - Reprovado sem nota': '#FFA07A',
+        'TRA - Trancamento de disciplina': '#8B0000',
     }
-    cores_aprovados = ['#006400', '#228B22', '#32CD32', '#7CFC00', '#ADFF2F']
-    cores_reprovados = ['#8B0000', '#CD5C5C', '#FFA07A']
-    cores_status = {}
-    for idx, status in enumerate(status_aprovados):
-        cores_status[status] = cores_aprovados[idx % len(cores_aprovados)]
-    for idx, status in enumerate(status_reprovados):
-        cores_status[status] = cores_reprovados[idx % len(cores_reprovados)]
+    cores_status = {**status_aprovados, **status_reprovados}
 
     carga_aprovada_acumulada = (
-        dados_aluno[dados_aluno['STATUS'].isin(status_aprovados)]
+        dados_aluno[dados_aluno['STATUS'].isin(status_aprovados.keys())]
         .groupby('ANO_PERIODO')['CARGA']
         .sum()
         .reindex(periodos, fill_value=0)
@@ -396,8 +405,7 @@ def desempenho_aluno_periodo(request):
     )
 
     barras = []
-    for status in status_reprovados:
-        cor = cores_status[status]
+    for status, cor in status_reprovados.items():
         dados_status = dados_aluno[dados_aluno['STATUS'] == status]
         if dados_status.empty:
             continue
@@ -418,8 +426,7 @@ def desempenho_aluno_periodo(request):
         )
         barras.append(barra)
 
-    for status in status_aprovados:
-        cor = cores_status[status]
+    for status, cor in status_aprovados.items():
         dados_status = dados_aluno[dados_aluno['STATUS'] == status]
         if dados_status.empty:
             continue

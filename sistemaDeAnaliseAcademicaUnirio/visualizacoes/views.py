@@ -82,10 +82,10 @@ def status_integralizacao(request):
         ('Prorrogação Máxima', 2, '#f9cb9c'),
         ('Situação Irregular', 2, '#e06666'),
         ('Mobilidade', 1, '#93c47d'),
-        ('Períodos Excepcionais', 3, '#ffe599'),
+        ('Períodos Excepcionais', 6, '#ffe599'),
         ('Atividades Calendário Emergencial', 2, '#ffd966'),
-        ('Trancamentos Totais (regulares)', 2, '#b7b7b7'),
-        ('Trancamentos Totais (especiais)', 2, '#cccccc'),
+        ('Trancamentos Totais (regulares)', 4, '#b7b7b7'),
+        ('Trancamentos Totais (especiais)', 6, '#cccccc'),
     ]
 
     status_aprovados = {
@@ -291,11 +291,11 @@ def status_integralizacao(request):
         ),
         yaxis=dict(
             automargin=True,
-            tickfont=dict(size=18),
+            tickfont=dict(size=16),
             range=[0, 10], 
         ),
         autosize=False,
-        width=1800,
+        width=2200,
         height=850,
         margin=dict(l=10, r=10, t=60, b=10),
     )

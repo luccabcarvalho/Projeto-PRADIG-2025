@@ -290,7 +290,7 @@ def status_integralizacao(request):
             tickangle=20,
             side='top',
             tickfont=dict(size=18),
-            fixedrange=True,
+            fixedrange=True
         ),
         yaxis=dict(
             automargin=True,
@@ -301,6 +301,7 @@ def status_integralizacao(request):
         width=2200,
         height=850,
         margin=dict(l=10, r=10, t=60, b=10),
+        dragmode="pan"
     )
 
     print(f"Tempo gráfico: {time.time() - start:.3f}s")

@@ -61,7 +61,8 @@ def status_integralizacao(request):
 
     # Bloco 3: Preparação de periodos_dict
     start = time.time()
-    periodos_unicos = df_historico[['ANO', 'PERIODO']].drop_duplicates().reset_index(drop=True)
+    # Exclui períodos "Curso de Férias" da matriz principal
+    periodos_unicos = df_historico[df_historico['PERIODO'] != 'Curso de Férias'][['ANO', 'PERIODO']].drop_duplicates().reset_index(drop=True)
     periodos_unicos = periodos_unicos[periodos_unicos['ANO'].astype(str).str.isnumeric()].reset_index(drop=True)
 
     periodos_dict = {}
@@ -121,11 +122,24 @@ def status_integralizacao(request):
     total_adicoes_periodo = 0
 
     start = time.time()
+    curso_ferias_dict = {}  # {matr: [disciplinas]}
     for mt, an, pr in zip(df_historico['MATR ALUNO'], df_historico['ANO'], df_historico['PERIODO']):
         total_iteracoes_estrutura += 1
         matr = mt
         periodo = (an, pr)
-        if matr not in matriculas_validas or periodo not in periodos_validos:
+        if matr not in matriculas_validas:
+            continue
+        if pr == 'Curso de Férias':
+            # Armazena para tooltip do próximo período regular
+            if matr not in curso_ferias_dict:
+                curso_ferias_dict[matr] = []
+            curso_ferias_dict[matr].append({
+                'ANO': an,
+                'PERIODO': pr,
+                'INDEX': total_iteracoes_estrutura
+            })
+            continue
+        if periodo not in periodos_validos:
             continue
         if matr not in matriz_geral:
             matriz_geral[matr] = {}
@@ -152,15 +166,24 @@ def status_integralizacao(request):
     cod_ativ_curric = df_historico['COD ATIV CURRIC'].values
     nota_ativ_curric = df_historico['MEDIA FINAL'].values
 
+    # Para cada matrícula, obter lista de períodos regulares ordenados
+    periodos_regulares_por_matr = {}
+    for matr in matriz_geral:
+        periodos_regulares_por_matr[matr] = sorted(matriz_geral[matr].keys(), key=lambda x: (int(x[0]), 1 if '1' in x[1] else 2))
+
     for i in range(len(df_historico)):
         total_iteracoes_preenchimento += 1
         matr = matr_aluno[i]
-        periodo = (anos[i], periodos[i])
-        if matr not in matriculas_validas or periodo not in periodos_validos:
-            continue
+        an = anos[i]
+        pr = periodos[i]
+        periodo = (an, pr)
         nome = nomes_pessoa[i]
         status = descr_situacao[i]
-
+        nome_disc = nome_ativ_curric[i]
+        cod_disc = cod_ativ_curric[i]
+        nota = nota_ativ_curric[i]
+        if matr not in matriculas_validas or pr == 'Curso de Férias' or periodo not in periodos_validos:
+            continue
         celula = matriz_geral[matr][periodo]
         if not celula:
             matriz_geral[matr][periodo] = {
@@ -173,27 +196,49 @@ def status_integralizacao(request):
             total_celulas_criadas += 1
         if status in status_aprovados:
             celula['aprovacoes'].append({
-                'nome': nome_ativ_curric[i],
-                'status': descr_situacao[i],
-                'codigo': cod_ativ_curric[i],
-                'nota': nota_ativ_curric[i] if pd.notna(nota_ativ_curric[i]) else 'N/A',
+                'nome': nome_disc,
+                'status': status,
+                'codigo': cod_disc,
+                'nota': nota if pd.notna(nota) else 'N/A',
                 'cor': status_aprovados[status]
             })
         elif status in status_reprovados:
             celula['reprovacoes'].append({
-                'nome': nome_ativ_curric[i],
-                'status': descr_situacao[i],
-                'codigo': cod_ativ_curric[i],
-                'nota': nota_ativ_curric[i] if pd.notna(nota_ativ_curric[i]) else 'N/A',
+                'nome': nome_disc,
+                'status': status,
+                'codigo': cod_disc,
+                'nota': nota if pd.notna(nota) else 'N/A',
                 'cor': status_reprovados[status]
             })
         else:
             celula['outros'].append({
-                'nome': nome_ativ_curric[i],
-                'status': descr_situacao[i],
-                'codigo': cod_ativ_curric[i],
-                'nota': nota_ativ_curric[i] if pd.notna(nota_ativ_curric[i]) else 'N/A'
+                'nome': nome_disc,
+                'status': status,
+                'codigo': cod_disc,
+                'nota': nota if pd.notna(nota) else 'N/A'
             })
+    for matr, ferias_list in curso_ferias_dict.items():
+        periodos_ord = periodos_regulares_por_matr.get(matr, [])
+        for ferias in ferias_list:
+            ano_ferias = ferias['ANO']
+            idx = None
+            for i, p in enumerate(periodos_ord):
+                if int(p[0]) > int(ano_ferias):
+                    idx = i
+                    break
+            if idx is None and periodos_ord:
+                idx = len(periodos_ord) - 1  
+            if idx is not None:
+                periodo_dest = periodos_ord[idx]
+                celula = matriz_geral[matr][periodo_dest]
+                if 'outros' not in celula:
+                    celula['outros'] = []
+                celula['outros'].append({
+                    'nome': '(Curso de Férias)',
+                    'status': 'Disciplina cursada em Curso de Férias',
+                    'codigo': '',
+                    'nota': '',
+                })
     print(f"Tempo matriz_geral (preenchimento): {time.time() - start:.3f}s")
     print(f"Iterações totais (preenchimento): {total_iteracoes_preenchimento}")
     print(f"Novas células criadas: {total_celulas_criadas}")

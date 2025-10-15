@@ -25,6 +25,9 @@ def status_integralizacao(request):
     print(f"Tempo leitura CSVs: {time.time() - start:.3f}s")
 
     # --- Filtros ---
+    if not request.GET:
+        return redirect(f"{reverse('status_integralizacao')}?ativos=ativos")
+    
     filtro_ativos = request.GET.get('ativos', 'todos')
     if filtro_ativos == 'ativos':
         alunos_ativos = df_alunos[df_alunos['FORMA EVASAO'] == 'Sem evasão']['ID PESSOA'].unique()

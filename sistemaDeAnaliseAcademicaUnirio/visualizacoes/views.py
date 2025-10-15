@@ -426,6 +426,7 @@ def desempenho_aluno_periodo(request):
         )
         barras.append(barra)
 
+    base_aprovada = carga_aprovada_acumulada.copy()
     for status, cor in status_aprovados.items():
         dados_status = dados_aluno[dados_aluno['STATUS'] == status]
         if dados_status.empty:
@@ -439,13 +440,14 @@ def desempenho_aluno_periodo(request):
         barra = go.Bar(
             x=periodos,
             y=y,
-            base=carga_aprovada_acumulada.tolist(),
+            base=base_aprovada.tolist(),
             name=status,
             marker_color=cor,
             hoverinfo='text',
             hovertext=hover
         )
         barras.append(barra)
+        base_aprovada += y
 
     if not barras:
         alunos_options = [

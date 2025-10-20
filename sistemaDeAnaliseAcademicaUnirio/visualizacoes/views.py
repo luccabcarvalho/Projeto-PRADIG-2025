@@ -610,22 +610,34 @@ def heatmap_desempenho(request):
         else:
             return df['COD DISCIPLINA']
 
+    def ordenar_disciplinas_por_periodo(df, codigos):
+        # Tenta ordenar pelo PERIODO IDEAL, se existir
+        if 'PERIODO IDEAL' in df.columns:
+            # Filtra apenas as disciplinas presentes em codigos
+            df_filtrado = df[df['COD DISCIPLINA'].isin(codigos)].copy()
+            df_filtrado['PERIODO IDEAL'] = pd.to_numeric(df_filtrado['PERIODO IDEAL'], errors='coerce').fillna(9999)
+            df_filtrado = df_filtrado.sort_values(['PERIODO IDEAL', 'COD DISCIPLINA'])
+            return df_filtrado['COD DISCIPLINA'].tolist()
+        else:
+            return sorted(list(codigos))
+
     if filtro_curriculos:
-        disciplinas_list = set()
+        disciplinas_set = set()
+        disciplinas_periodo = []
         for curr in filtro_curriculos:
             df = curriculos_map.get(curr)
             if df is not None:
                 disciplinas = filtrar_disciplinas(df, curr, filtro_tipo_disciplina)
-                disciplinas_list.update(disciplinas)
-        disciplinas_list = sorted(disciplinas_list)
+                disciplinas_set.update(disciplinas)
+        df_ord = curriculos_map.get(filtro_curriculos[0], df_disciplinas_20232)
+        disciplinas_list = ordenar_disciplinas_por_periodo(df_ord, disciplinas_set)
     else:
-        # Se nada selecionado, mostra todas obrigatórias de todos currículos
-        disciplinas_list = set()
-        disciplinas_list.update(filtrar_disciplinas(df_disciplinas_20232, '20232', filtro_tipo_disciplina))
-        disciplinas_list.update(filtrar_disciplinas(df_disciplinas_20052, '20052', filtro_tipo_disciplina))
-        disciplinas_list.update(filtrar_disciplinas(df_disciplinas_20002, '20002', filtro_tipo_disciplina))
-        disciplinas_list.update(filtrar_disciplinas(df_disciplinas_20081, '20081', filtro_tipo_disciplina))
-        disciplinas_list = sorted(disciplinas_list)
+        disciplinas_set = set()
+        disciplinas_set.update(filtrar_disciplinas(df_disciplinas_20232, '20232', filtro_tipo_disciplina))
+        disciplinas_set.update(filtrar_disciplinas(df_disciplinas_20052, '20052', filtro_tipo_disciplina))
+        disciplinas_set.update(filtrar_disciplinas(df_disciplinas_20002, '20002', filtro_tipo_disciplina))
+        disciplinas_set.update(filtrar_disciplinas(df_disciplinas_20081, '20081', filtro_tipo_disciplina))
+        disciplinas_list = ordenar_disciplinas_por_periodo(df_disciplinas_20232, disciplinas_set)
 
     df_alunos['MATR ALUNO'] = df_alunos['MATR ALUNO'].astype(str)
     df_alunos = df_alunos.drop_duplicates(subset=['MATR ALUNO'])

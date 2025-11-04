@@ -273,6 +273,10 @@ def status_integralizacao(request):
         linha_tooltip = [''] * n_periodos
         normais_idx = 0
         excepcionais_idx = idx_excepcionais
+        regulares_tranc_idx = sum([b[1] for b in blocos if blocos.index(b) < [i for i, bl in enumerate(blocos) if bl[0] == 'Trancamentos Totais (regulares)'][0]])
+        especiais_tranc_idx = sum([b[1] for b in blocos if blocos.index(b) < [i for i, bl in enumerate(blocos) if bl[0] == 'Trancamentos Totais (especiais)'][0]])
+        regulares_tranc_count = 0
+        especiais_tranc_count = 0
         excedentes = []
         excedentes_tooltip = []
         for periodo in periodos_ordenados:
@@ -284,14 +288,34 @@ def status_integralizacao(request):
                 celula.get('reprovacoes', []) +
                 celula.get('outros', [])
             )
+            tooltip = "Nenhuma disciplina cursada"
             if todas_disciplinas:
                 disciplinas_tooltip = [
-                    f"{disc['nome']}<br>    Nota: {disc['nota']}<br>    Situação: {disc['status']}"
+                    f"{disc['nome']}<br>    Nota: {disc.get('nota', '')}<br>    Situação: {disc['status']}"
                     for disc in todas_disciplinas
                 ]
                 tooltip = "<br>".join(disciplinas_tooltip)
-            else:
-                tooltip = "Nenhuma disciplina cursada"
+            # Trancamento total (regular)
+            nomes_ativ = [disc['nome'] for disc in todas_disciplinas]
+            if "Trancamento Total" in nomes_ativ:
+                if regulares_tranc_count < [b[1] for b in blocos if b[0] == 'Trancamentos Totais (regulares)'][0]:
+                    linha[regulares_tranc_idx + regulares_tranc_count] = formatar_periodo(ano, per)
+                    linha_tooltip[regulares_tranc_idx + regulares_tranc_count] = tooltip
+                    regulares_tranc_count += 1
+                else:
+                    excedentes.append(formatar_periodo(ano, per))
+                    excedentes_tooltip.append(tooltip)
+                continue
+            # Trancamento total (especial)
+            if "Trancamento Total PERÍODO ESPECIAL" in nomes_ativ:
+                if especiais_tranc_count < [b[1] for b in blocos if b[0] == 'Trancamentos Totais (especiais)'][0]:
+                    linha[especiais_tranc_idx + especiais_tranc_count] = formatar_periodo(ano, per)
+                    linha_tooltip[especiais_tranc_idx + especiais_tranc_count] = tooltip
+                    especiais_tranc_count += 1
+                else:
+                    excedentes.append(formatar_periodo(ano, per))
+                    excedentes_tooltip.append(tooltip)
+                continue
             # Período excepcional
             if periodo_excepcional_inicio_int <= periodo_int <= periodo_excepcional_fim_int:
                 if excepcionais_idx < idx_excepcionais + n_excepcionais:

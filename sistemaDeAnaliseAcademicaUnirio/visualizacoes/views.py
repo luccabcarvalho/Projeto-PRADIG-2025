@@ -250,17 +250,34 @@ def status_integralizacao(request):
     matriz_integralizacao = []
     tooltips_integralizacao = []
 
+    # Definição dos períodos excepcionais
+    periodo_excepcional_inicio = (2020, '1')
+    periodo_excepcional_fim = (2022, '2')
+    def periodo_tuple_to_int(ano, periodo):
+        return int(ano) * 10 + int(str(periodo)[0])
+    periodo_excepcional_inicio_int = periodo_tuple_to_int(*periodo_excepcional_inicio)
+    periodo_excepcional_fim_int = periodo_tuple_to_int(*periodo_excepcional_fim)
+
+    n_excepcionais = [b[1] for b in blocos if b[0] == 'Períodos Excepcionais'][0]
+    idx_excepcionais = sum([b[1] for b in blocos if blocos.index(b) < [i for i, bl in enumerate(blocos) if bl[0] == 'Períodos Excepcionais'][0]])
+    n_situacao_irregular = [b[1] for b in blocos if b[0] == 'Situação Irregular'][0]
+    idx_situacao_irregular = sum([b[1] for b in blocos if blocos.index(b) < [i for i, bl in enumerate(blocos) if bl[0] == 'Situação Irregular'][0]])
+    last_situacao_irregular_col = idx_situacao_irregular + n_situacao_irregular - 1
+
     for matr in matriculas:
         periodos_ordenados = sorted(
             matriz_geral[matr].keys(),
             key=lambda x: (int(x[0]), 1 if '1' in x[1] else 2)
         )
-        linha = []
-        linha_tooltip = []
-        for idx, periodo in enumerate(periodos_ordenados):
-            if len(linha) >= n_periodos:
-                break
-            label = formatar_periodo(*periodo)
+        linha = [''] * n_periodos
+        linha_tooltip = [''] * n_periodos
+        normais_idx = 0
+        excepcionais_idx = idx_excepcionais
+        excedentes = []
+        excedentes_tooltip = []
+        for periodo in periodos_ordenados:
+            ano, per = periodo
+            periodo_int = periodo_tuple_to_int(ano, per)
             celula = matriz_geral[matr][periodo]
             todas_disciplinas = (
                 celula.get('aprovacoes', []) +
@@ -275,14 +292,31 @@ def status_integralizacao(request):
                 tooltip = "<br>".join(disciplinas_tooltip)
             else:
                 tooltip = "Nenhuma disciplina cursada"
-            linha.append(label)
-            linha_tooltip.append(tooltip)
-        if len(periodos_ordenados) > n_periodos:
-            linha[-1] = '+'
-            linha_tooltip[-1] = 'Períodos excedentes'
-        while len(linha) < n_periodos:
-            linha.append('')
-            linha_tooltip.append('')
+            # Período excepcional
+            if periodo_excepcional_inicio_int <= periodo_int <= periodo_excepcional_fim_int:
+                if excepcionais_idx < idx_excepcionais + n_excepcionais:
+                    linha[excepcionais_idx] = formatar_periodo(ano, per)
+                    linha_tooltip[excepcionais_idx] = tooltip
+                    excepcionais_idx += 1
+                else:
+                    excedentes.append(formatar_periodo(ano, per))
+                    excedentes_tooltip.append(tooltip)
+            # Período normal
+            else:
+                if normais_idx < idx_excepcionais:
+                    linha[normais_idx] = formatar_periodo(ano, per)
+                    linha_tooltip[normais_idx] = tooltip
+                    normais_idx += 1
+                elif normais_idx >= idx_excepcionais + n_excepcionais and normais_idx < n_periodos:
+                    linha[normais_idx] = formatar_periodo(ano, per)
+                    linha_tooltip[normais_idx] = tooltip
+                    normais_idx += 1
+                else:
+                    excedentes.append(formatar_periodo(ano, per))
+                    excedentes_tooltip.append(tooltip)
+        if excedentes:
+            linha[last_situacao_irregular_col] = '+'
+            linha_tooltip[last_situacao_irregular_col] = f"Períodos posteriores: {', '.join(excedentes)}<br>" + '<br><br>'.join(excedentes_tooltip)
         matriz_integralizacao.append(linha)
         tooltips_integralizacao.append(linha_tooltip)
     print(f"Tempo matriz_integralizacao: {time.time() - start:.3f}s")

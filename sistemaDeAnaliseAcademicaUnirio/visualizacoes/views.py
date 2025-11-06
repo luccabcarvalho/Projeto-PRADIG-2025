@@ -830,6 +830,8 @@ def heatmap_desempenho(request):
         for row in matriz_tooltips
     ]
 
+    alunos_length = len(alunos_labels)
+
     fig = go.Figure(data=go.Heatmap(
         z=matriz_numerica,
         x=disciplinas_labels,
@@ -853,11 +855,12 @@ def heatmap_desempenho(request):
         ),
         yaxis=dict(
             tickfont=dict(size=16),
+            range=[alunos_length - 30, alunos_length - 1],
         ),
         autosize=True,
         hovermode="x unified",
         margin=dict(l=10, r=10, t=10, b=10),
-        height=880,
+        height=920,
         width=2200,
         dragmode="pan"  
     )

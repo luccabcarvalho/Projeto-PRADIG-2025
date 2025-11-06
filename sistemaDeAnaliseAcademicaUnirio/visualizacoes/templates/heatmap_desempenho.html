@@ -1,26 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Matriz de Progressão{% endblock %}
 {% block extra_head %}
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-    $(document).ready(function() {
-        $('#curriculo-select').select2({
-            placeholder: "Currículo(s)",
-            allowClear: true,
-            width: '100%',
-            maximumSelectionLength: 1
-        }); 
-        $('#tipo-disciplina-select').select2({
-            placeholder: "Tipo de disciplina",
-            allowClear: true,
-            width: '100%',
-            maximumSelectionLength: 1
-        });
-
-        $('#filtros-form select, #filtros-form input[type="checkbox"]').on('change', function() {
-            $('#filtros-form').submit();
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('#filtros-form select, #filtros-form input[type="checkbox"]').forEach(function(el) {
+            el.addEventListener('change', function() {
+                document.getElementById('filtros-form').submit();
+            });
         });
     });
 </script>

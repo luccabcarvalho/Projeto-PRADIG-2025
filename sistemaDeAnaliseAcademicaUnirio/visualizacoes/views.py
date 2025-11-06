@@ -754,7 +754,10 @@ def heatmap_desempenho(request):
         for df in [df_disciplinas_20232, df_disciplinas_20052, df_disciplinas_20002, df_disciplinas_20081]:
             nome = df.loc[df['COD DISCIPLINA'] == cod, 'NOME DISCIPLINA']
             if not nome.empty:
-                return nome.values[0]
+                nome_val = nome.values[0]
+                if ' - ' in nome_val:
+                    return nome_val.split(' - ', 1)[1].strip()
+                return nome_val.strip()
         return str(cod)
 
     disciplinas_labels = [get_nome_disciplina(cod) for cod in disciplinas_list]

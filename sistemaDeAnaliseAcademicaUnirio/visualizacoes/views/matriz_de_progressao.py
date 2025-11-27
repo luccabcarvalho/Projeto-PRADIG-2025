@@ -15,6 +15,8 @@ def matriz_de_progressao(request):
     alunos_path = os.path.join(USER_DIR, 'alunosPorCurso.csv')
     historico_path = os.path.join(USER_DIR, 'historicoEscolar.csv')
 
+    CURRICULOS_DIR = os.path.join(settings.MEDIA_ROOT, 'curriculos_bsi')
+
     df_alunos = pd.read_csv(alunos_path)
     df_historico = pd.read_csv(historico_path)
 
@@ -270,7 +272,7 @@ def matriz_de_progressao(request):
     filtros_options = [
         {'name': 'ativos', 'label': 'Alunos ativos', 'selected': filtro_ativos == 'ativos'},
     ]
-    return render(request, 'matriz_de_progressao.html', {
+    return render(request, 'matriz-de-progressao/matriz_de_progressao.html', {
         'plot_div': plot_div,
         'curriculos_options': curriculos_options,
         'periodos_options': [],

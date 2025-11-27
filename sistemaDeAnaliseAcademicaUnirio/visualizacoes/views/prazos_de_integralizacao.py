@@ -9,18 +9,19 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 
-def status_integralizacao(request):
+USER_ID = 'user1'
+
+def prazos_de_integralizacao(request):
 
     USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID)
     alunos_path = os.path.join(USER_DIR, 'alunosPorCurso.csv')
     historico_path = os.path.join(USER_DIR, 'historicoEscolar.csv')
     df_alunos = pd.read_csv(alunos_path)
     df_historico = pd.read_csv(historico_path)
-    print(f"Tempo leitura CSVs: {time.time() - start:.3f}s")
 
     # --- Filtros ---
     if not request.GET:
-        return redirect(f"{reverse('status_integralizacao')}?ativos=ativos")
+        return redirect(f"{reverse('prazos_de_integralizacao')}?ativos=ativos")
     
     filtro_ativos = request.GET.get('ativos', 'todos')
     if filtro_ativos == 'ativos':
@@ -60,7 +61,6 @@ def status_integralizacao(request):
             'ANO': anos[idx],
             'PERIODO': periodos[idx]
         }
-    print(f"Tempo periodos_dict: {time.time() - start:.3f}s")
 
     def formatar_periodo(ano, periodo):
         periodo = periodo.replace('. semestre', '')
@@ -316,7 +316,6 @@ def status_integralizacao(request):
             linha_tooltip[last_situacao_irregular_col] = f"Períodos posteriores: {', '.join(excedentes)}<br>" + '<br><br>'.join(excedentes_tooltip)
         matriz_integralizacao.append(linha)
         tooltips_integralizacao.append(linha_tooltip)
-    print(f"Tempo matriz_integralizacao: {time.time() - start:.3f}s")
 
     colunas = []
     cores = []
@@ -382,7 +381,7 @@ def status_integralizacao(request):
     filtros_options = [
         {'name': 'ativos', 'label': 'Alunos ativos', 'selected': filtro_ativos == 'ativos'},
     ]
-    return render(request, 'status_integralizacao.html', {
+    return render(request, 'prazos_de_integralizacao.html', {
         'plot_div': plot_div,
         'filtros_options': filtros_options,
         'periodos_options': periodos_options,

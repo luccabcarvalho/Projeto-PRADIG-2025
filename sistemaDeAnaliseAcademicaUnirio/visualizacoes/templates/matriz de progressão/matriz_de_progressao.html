@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Matriz de Progressão{% endblock %}
+{% block extra_head %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('#filtros-form select, #filtros-form input[type="checkbox"]').forEach(function(el) {
+            el.addEventListener('change', function() {
+                document.getElementById('filtros-form').submit();
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% block content %}
+<div class="heatmap-header">
+    <div class="heatmap-header-inner">
+        <h1 class="heatmap-title">Matriz de Progressão</h1>
+
+        <form method="get" id="filtros-form">
+            <div class="filtros-bar">
+                <div style="display:flex; align-items:center; gap:1.2em; flex:0 1 auto; min-width:0;">
+                    {% for filtro in filtros_options %}
+                        {% if filtro.name == 'ativos' %}
+                            <div class="filtro-item inline">
+                                <input type="checkbox" name="{{ filtro.name }}" value="ativos" id="filtro-ativos" {% if filtro.selected %}checked{% endif %}>
+                                <label for="filtro-ativos">{{ filtro.label }}</label>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    <div class="filtro-item">
+                        <label for="curriculo-select">Currículo:</label>
+                        <select name="curriculos" id="curriculo-select">
+                            {% for curriculo in curriculos_options %}
+                                <option value="{{ curriculo.value }}" {% if curriculo.selected %}selected{% endif %}>
+                                    {{ curriculo.label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="heatmap-plot-wrapper">
+    <div class="heatmap-legenda heatmap-legenda-above" role="group" aria-label="Legenda do heatmap" aria-hidden="false">
+        <div class="heatmap-legenda-item"><div class="heatmap-legenda-cor cor-aprovado"></div> Aprovação</div>
+        <div class="heatmap-legenda-item"><div class="heatmap-legenda-cor cor-reprovado"></div> Reprovação/Trancamento</div>
+        <div class="heatmap-legenda-item"><div class="heatmap-legenda-cor cor-matricula"></div> Matrícula</div>
+    </div>
+
+    <div style="display: flex; justify-content: center; width: 100%; margin: 0 auto;">
+        {{ plot_div|safe }}
+    </div>
+</div>
+{% endblock %}

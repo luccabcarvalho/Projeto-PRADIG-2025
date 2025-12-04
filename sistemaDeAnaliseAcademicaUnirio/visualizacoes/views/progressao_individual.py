@@ -3,6 +3,8 @@ from django.conf import settings
 import os
 import pandas as pd
 import plotly.graph_objects as go
+import glob
+
 
 USER_ID = 'user1'
 
@@ -74,6 +76,8 @@ def progressao_individual(request):
         'APV - Aprovado': '#006400',
         'APV- Aprovado': '#006400',
         'APV - Aprovado sem nota': '#32CD32',
+    }
+    status_excepcional = {
         'ADI - Aproveitamento': '#7CFC00',
         'ADI - Aproveitamento de créditos da disciplina': '#ADFF2F',
         'ADI - Dispensa com nota': '#228B22',
@@ -85,7 +89,70 @@ def progressao_individual(request):
         'ASC - Reprovado sem nota': '#FFA07A',
         'TRA - Trancamento de disciplina': '#8B0000',
     }
-    cores_status = {**status_aprovados, **status_reprovados}
+    cores_status = {**status_aprovados, **status_excepcional, **status_reprovados}
+
+    # --- Equivalências ---
+    equivalencias_dir = os.path.join(settings.BASE_DIR, 'visualizacoes', 'user_uploads', 'equivalencias_bsi')
+    equivalencias_files = glob.glob(os.path.join(equivalencias_dir, '*.csv'))
+    equivalencias = []
+    for eq_file in equivalencias_files:
+        df_eq = pd.read_csv(eq_file)
+        equivalencias.append(df_eq)
+    if equivalencias:
+        df_equivalencias = pd.concat(equivalencias, ignore_index=True)
+    else:
+        df_equivalencias = pd.DataFrame()
+
+    # Mapeamento: código novo (currículo novo) -> código antigo (currículo antigo)
+    def extrair_codigo(nome_disc):
+        if pd.isna(nome_disc):
+            return None
+        return nome_disc.split(' - ')[0].strip()
+
+    equival_map = {}
+    if not df_equivalencias.empty:
+        for _, row in df_equivalencias.iterrows():
+            cod_novo = extrair_codigo(row.get('NOME_DISCIPLINA', ''))
+            cod_antigo = extrair_codigo(row.get('NOME_DISC_EQUIV', ''))
+            if cod_novo and cod_antigo:
+                equival_map[cod_novo] = cod_antigo
+
+    # Processar status_excepcional: para cada disciplina com status_excepcional, se houver equivalente cursada, substituir
+    dados_aluno_proc = dados_aluno.copy()
+    linhas_remover = []
+    novas_linhas = []
+    for idx, row in dados_aluno.iterrows():
+        status = row['STATUS']
+        if status in status_excepcional:
+            cod_novo = extrair_codigo(row['COD ATIV CURRIC'])
+            cod_antigo = equival_map.get(cod_novo)
+            if cod_antigo:
+                # Procurar se o aluno cursou a disciplina equivalente (antiga)
+                mask_cursada = (
+                    (dados_aluno['COD ATIV CURRIC'].astype(str).str.strip() == cod_antigo)
+                    & (dados_aluno['STATUS'].isin(status_aprovados.keys()))
+                )
+                if mask_cursada.any():
+                    idx_cursada = dados_aluno[mask_cursada].index[0]
+                    # Substituir a linha da cursada pela da equivalente, mas mantendo o período da cursada
+                    linha_cursada = dados_aluno.loc[idx_cursada].copy()
+                    linha_cursada['COD ATIV CURRIC'] = cod_novo
+                    linha_cursada['NOME ATIV CURRIC'] = row['NOME ATIV CURRIC']
+                    linha_cursada['CARGA'] = row['CARGA']
+                    linha_cursada['DISCIPLINA'] = row['DISCIPLINA']
+                    # Atualiza status para o da cursada (aprovado)
+                    # linha_cursada['STATUS'] = linha_cursada['STATUS']
+                    novas_linhas.append((idx_cursada, linha_cursada))
+                    # Marcar para remover a linha da cursada e a da excepcional
+                    linhas_remover.extend([idx_cursada, idx])
+    # Remover duplicidades
+    linhas_remover = list(set(linhas_remover))
+    dados_aluno_proc = dados_aluno_proc.drop(index=linhas_remover)
+    # Adicionar as linhas substituídas
+    for idx_cursada, linha in novas_linhas:
+        dados_aluno_proc = pd.concat([dados_aluno_proc, pd.DataFrame([linha])], ignore_index=True)
+    # Atualizar dados_aluno para o processamento do gráfico
+    dados_aluno = dados_aluno_proc
 
     carga_aprovada_acumulada = (
         dados_aluno[dados_aluno['STATUS'].isin(status_aprovados.keys())]

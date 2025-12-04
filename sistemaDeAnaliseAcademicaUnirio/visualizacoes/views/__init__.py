@@ -1,0 +1,6 @@
+from .home import home
+from .matriz_de_progressao import matriz_de_progressao
+from .prazos_de_integralizacao import prazos_de_integralizacao
+from .progressao_individual import progressao_individual
+from .gerenciar_arquivos import gerenciar_arquivos
+from .checar_arquivos_necessarios import checar_arquivos_necessarios

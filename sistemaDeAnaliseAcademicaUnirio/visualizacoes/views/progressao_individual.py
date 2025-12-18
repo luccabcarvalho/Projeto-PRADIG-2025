@@ -92,75 +92,88 @@ def progressao_individual(request):
     cores_status = {**status_aprovados, **status_excepcional, **status_reprovados}
 
     # --- Equivalências ---
-    equivalencias_dir = os.path.join(settings.BASE_DIR, 'visualizacoes', 'user_uploads', 'equivalencias_bsi')
-    equivalencias_files = glob.glob(os.path.join(equivalencias_dir, '*.csv'))
-    equivalencias = []
-    for eq_file in equivalencias_files:
-        df_eq = pd.read_csv(eq_file)
-        equivalencias.append(df_eq)
-    if equivalencias:
-        df_equivalencias = pd.concat(equivalencias, ignore_index=True)
-    else:
-        df_equivalencias = pd.DataFrame()
+    def carregar_equivalencias():
+        """Carrega e concatena todos os arquivos de equivalências em um único DataFrame."""
+        equivalencias_dir = os.path.join(settings.BASE_DIR, 'visualizacoes', 'user_uploads', 'equivalencias_bsi')
+        equivalencias_files = glob.glob(os.path.join(equivalencias_dir, '*.csv'))
+        frames = [pd.read_csv(eq_file) for eq_file in equivalencias_files]
+        if frames:
+            return pd.concat(frames, ignore_index=True)
+        return pd.DataFrame()
 
-    # Mapeamento: código novo (currículo novo) -> código antigo (currículo antigo)
     def extrair_codigo(nome_disc):
         if pd.isna(nome_disc):
             return None
-        return nome_disc.split(' - ')[0].strip()
+        return str(nome_disc).split(' - ')[0].strip()
 
-    equival_map = {}
-    if not df_equivalencias.empty:
-        for _, row in df_equivalencias.iterrows():
-            cod_novo = extrair_codigo(row.get('NOME_DISCIPLINA', ''))
-            cod_antigo = extrair_codigo(row.get('NOME_DISC_EQUIV', ''))
-            if cod_novo and cod_antigo:
-                equival_map[cod_novo] = cod_antigo
+    def construir_mapa_equivalencias(df_equivalencias):
+        """Constrói o dicionário de equivalências: código novo -> código antigo."""
+        if df_equivalencias.empty:
+            return {}
+        cod_novos = df_equivalencias['NOME_DISCIPLINA'].map(extrair_codigo)
+        cod_antigos = df_equivalencias['NOME_DISC_EQUIV'].map(extrair_codigo)
+        return {novo: antigo for novo, antigo in zip(cod_novos, cod_antigos) if novo and antigo}
 
-    dados_aluno_proc = dados_aluno.copy()
-    linhas_remover = []
-    novas_linhas = []
+    def processar_equivalencias_aluno(dados_aluno, equival_map, status_aprovados, status_excepcional):
+        """Processa as equivalências para o aluno, ajustando cargas horárias e removendo linhas duplicadas."""
+        dados_proc = dados_aluno.copy()
+        # Identifica linhas de equivalência excepcional
+        mask_excepcional = dados_proc['STATUS'].isin(status_excepcional.keys())
+        if not mask_excepcional.any() or not equival_map:
+            return dados_proc
 
-    equivalencias_por_cursada = {}
-    for idx, row in dados_aluno.iterrows():
-        status = row['STATUS']
-        if status in status_excepcional:
-            cod_novo = extrair_codigo(row['COD ATIV CURRIC'])
-            cod_antigo = equival_map.get(cod_novo)
-            if cod_antigo:
-                mask_cursada = (
-                    (dados_aluno['COD ATIV CURRIC'].astype(str).str.strip() == cod_antigo)
-                    & (dados_aluno['STATUS'].isin(status_aprovados.keys()))
-                )
-                if mask_cursada.any():
-                    idx_cursada = dados_aluno[mask_cursada].index[0]
-                    if idx_cursada not in equivalencias_por_cursada:
-                        equivalencias_por_cursada[idx_cursada] = {
-                            'carga_total': 0,
-                            'row_excepcional': row,
-                            'indices_excepcionais': []
-                        }
-                    equivalencias_por_cursada[idx_cursada]['carga_total'] += row['CARGA']
-                    equivalencias_por_cursada[idx_cursada]['indices_excepcionais'].append(idx)
-    for idx_cursada, info in equivalencias_por_cursada.items():
-        linha_cursada = dados_aluno.loc[idx_cursada].copy()
-        nova_carga = info['carga_total']
-        linha_cursada['CARGA'] = nova_carga
-        # Atualiza o campo DISCIPLINA para refletir a nova carga horária, mantendo o nome original
-        linha_cursada['DISCIPLINA'] = (
-            str(linha_cursada['COD ATIV CURRIC']) + ' - ' +
-            linha_cursada['NOME ATIV CURRIC'] + ' (' +
-            str(nova_carga) + 'h)'
-        )
-        novas_linhas.append((idx_cursada, linha_cursada))
-        linhas_remover.append(idx_cursada)
-        linhas_remover.extend(info['indices_excepcionais'])
-    linhas_remover = list(set(linhas_remover))
-    dados_aluno_proc = dados_aluno_proc.drop(index=linhas_remover)
-    for idx_cursada, linha in novas_linhas:
-        dados_aluno_proc = pd.concat([dados_aluno_proc, pd.DataFrame([linha])], ignore_index=True)
-    # Atualizar dados_aluno para o processamento do gráfico
-    dados_aluno = dados_aluno_proc
+        # Para cada linha excepcional, verifica se existe cursada equivalente aprovada
+        cod_novos = dados_proc.loc[mask_excepcional, 'COD ATIV CURRIC'].map(extrair_codigo)
+        indices_excepcionais = dados_proc.loc[mask_excepcional].index.tolist()
+        cod_antigos = [equival_map.get(cod) for cod in cod_novos]
+
+        # Mapeia: idx_cursada -> {'carga_total': ..., 'indices_excepcionais': [...]}
+        equivalencias_por_cursada = {}
+        for idx_excepcional, cod_antigo in zip(indices_excepcionais, cod_antigos):
+            if not cod_antigo:
+                continue
+            # Busca índice da linha aprovada equivalente
+            mask_cursada = (
+                (dados_proc['COD ATIV CURRIC'].astype(str).str.strip() == cod_antigo)
+                & (dados_proc['STATUS'].isin(status_aprovados.keys()))
+            )
+            idx_cursada_list = dados_proc[mask_cursada].index.tolist()
+            if not idx_cursada_list:
+                continue
+            idx_cursada = idx_cursada_list[0]
+            if idx_cursada not in equivalencias_por_cursada:
+                equivalencias_por_cursada[idx_cursada] = {
+                    'carga_total': 0,
+                    'indices_excepcionais': []
+                }
+            equivalencias_por_cursada[idx_cursada]['carga_total'] += dados_proc.at[idx_excepcional, 'CARGA']
+            equivalencias_por_cursada[idx_cursada]['indices_excepcionais'].append(idx_excepcional)
+
+        # Atualiza linhas e remove duplicidades
+        linhas_remover = set()
+        novas_linhas = []
+        for idx_cursada, info in equivalencias_por_cursada.items():
+            linha_cursada = dados_proc.loc[idx_cursada].copy()
+            nova_carga = info['carga_total']
+            linha_cursada['CARGA'] = nova_carga
+            linha_cursada['DISCIPLINA'] = (
+                str(linha_cursada['COD ATIV CURRIC']) + ' - ' +
+                linha_cursada['NOME ATIV CURRIC'] + ' (' +
+                str(nova_carga) + 'h)'
+            )
+            novas_linhas.append((idx_cursada, linha_cursada))
+            linhas_remover.add(idx_cursada)
+            linhas_remover.update(info['indices_excepcionais'])
+
+        dados_proc = dados_proc.drop(index=list(linhas_remover))
+        for _, linha in novas_linhas:
+            dados_proc = pd.concat([dados_proc, pd.DataFrame([linha])], ignore_index=True)
+        return dados_proc
+
+    # Execução do fluxo de equivalências
+    df_equivalencias = carregar_equivalencias()
+    equival_map = construir_mapa_equivalencias(df_equivalencias)
+    dados_aluno = processar_equivalencias_aluno(dados_aluno, equival_map, status_aprovados, status_excepcional)
 
     carga_aprovada_acumulada = (
         dados_aluno[dados_aluno['STATUS'].isin(status_aprovados.keys())]

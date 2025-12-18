@@ -117,38 +117,46 @@ def progressao_individual(request):
             if cod_novo and cod_antigo:
                 equival_map[cod_novo] = cod_antigo
 
-    # Processar status_excepcional: para cada disciplina com status_excepcional, se houver equivalente cursada, substituir
     dados_aluno_proc = dados_aluno.copy()
     linhas_remover = []
     novas_linhas = []
+
+    equivalencias_por_cursada = {}
     for idx, row in dados_aluno.iterrows():
         status = row['STATUS']
         if status in status_excepcional:
             cod_novo = extrair_codigo(row['COD ATIV CURRIC'])
             cod_antigo = equival_map.get(cod_novo)
             if cod_antigo:
-                # Procurar se o aluno cursou a disciplina equivalente (antiga)
                 mask_cursada = (
                     (dados_aluno['COD ATIV CURRIC'].astype(str).str.strip() == cod_antigo)
                     & (dados_aluno['STATUS'].isin(status_aprovados.keys()))
                 )
                 if mask_cursada.any():
                     idx_cursada = dados_aluno[mask_cursada].index[0]
-                    # Substituir a linha da cursada pela da equivalente, mas mantendo o período da cursada
-                    linha_cursada = dados_aluno.loc[idx_cursada].copy()
-                    linha_cursada['COD ATIV CURRIC'] = cod_novo
-                    linha_cursada['NOME ATIV CURRIC'] = row['NOME ATIV CURRIC']
-                    linha_cursada['CARGA'] = row['CARGA']
-                    linha_cursada['DISCIPLINA'] = row['DISCIPLINA']
-                    # Atualiza status para o da cursada (aprovado)
-                    # linha_cursada['STATUS'] = linha_cursada['STATUS']
-                    novas_linhas.append((idx_cursada, linha_cursada))
-                    # Marcar para remover a linha da cursada e a da excepcional
-                    linhas_remover.extend([idx_cursada, idx])
-    # Remover duplicidades
+                    if idx_cursada not in equivalencias_por_cursada:
+                        equivalencias_por_cursada[idx_cursada] = {
+                            'carga_total': 0,
+                            'row_excepcional': row,
+                            'indices_excepcionais': []
+                        }
+                    equivalencias_por_cursada[idx_cursada]['carga_total'] += row['CARGA']
+                    equivalencias_por_cursada[idx_cursada]['indices_excepcionais'].append(idx)
+    for idx_cursada, info in equivalencias_por_cursada.items():
+        linha_cursada = dados_aluno.loc[idx_cursada].copy()
+        nova_carga = info['carga_total']
+        linha_cursada['CARGA'] = nova_carga
+        # Atualiza o campo DISCIPLINA para refletir a nova carga horária, mantendo o nome original
+        linha_cursada['DISCIPLINA'] = (
+            str(linha_cursada['COD ATIV CURRIC']) + ' - ' +
+            linha_cursada['NOME ATIV CURRIC'] + ' (' +
+            str(nova_carga) + 'h)'
+        )
+        novas_linhas.append((idx_cursada, linha_cursada))
+        linhas_remover.append(idx_cursada)
+        linhas_remover.extend(info['indices_excepcionais'])
     linhas_remover = list(set(linhas_remover))
     dados_aluno_proc = dados_aluno_proc.drop(index=linhas_remover)
-    # Adicionar as linhas substituídas
     for idx_cursada, linha in novas_linhas:
         dados_aluno_proc = pd.concat([dados_aluno_proc, pd.DataFrame([linha])], ignore_index=True)
     # Atualizar dados_aluno para o processamento do gráfico

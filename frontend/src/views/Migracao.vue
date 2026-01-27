@@ -2,7 +2,7 @@
   <v-container fluid class="historico">
     <v-row>
       <strong class="warning text-h5 text-center">
-        AVISO: este simulador é informativo. Leia os anexos oficiais para mais detalhes.
+        AVISO: Este simulador é informativo. Leia os anexos oficiais para mais detalhes.
       </strong>
     </v-row>
 
@@ -27,7 +27,6 @@
       </v-col>
     </v-row>
 
-
     <v-row class="mt-8" justify="center" v-if="grade.length">
       <v-col
         v-for="(periodo, idx) in grade"
@@ -49,7 +48,7 @@
             depressed
             :title="disciplina.nome"
           >
-            {{ disciplina.codigo }}
+            {{ sigla(disciplina.nome) }}
           </v-btn>
         </div>
       </v-col>
@@ -72,6 +71,52 @@ export default {
     };
   },
   methods: {
+    sigla(nome) {
+      if (!nome || typeof nome !== 'string') return '';
+      // Remove diacríticos e normaliza espaços
+      let s = nome
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^A-Za-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (!s) return '';
+
+      const stop = new Set([
+        'de','da','do','das','dos','e','em','para','por','a','o','os','as',
+        'ao','aos','na','no','nas','nos','um','uma','com','ou'
+      ]);
+
+      const tokens = s.split(/\s+/);
+      const initials = [];
+      const numerals = [];
+      const romanRe = /^(?=[MDCLXVI]+$)M{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/i;
+      for (const t of tokens) {
+        const lower = t.toLowerCase();
+        if (stop.has(lower)) continue;
+        // Mantém algarismos romanos como sufixo separado (I, II, III, IV, ...)
+        if (romanRe.test(t)) {
+          numerals.push(t.toUpperCase());
+        } else if (/^\d+$/.test(t)) {
+          initials.push(t[0]);
+        } else {
+          initials.push(t[0].toUpperCase());
+        }
+      }
+
+      // Base: até 3 letras das iniciais (compacto e consistente)
+      let base = initials.join('');
+      if (!base && numerals.length) {
+        return numerals.join(' ');
+      }
+      if (!base) {
+        base = s.replace(/\s+/g, '').slice(0, 3).toUpperCase();
+      }
+      base = base.slice(0, 3);
+      if (numerals.length) return `${base} ${numerals.join(' ')}`;
+      return base;
+    },
     async onChangeReforma(event) {
       const file = event.target.files?.[0];
       if (!file) return;

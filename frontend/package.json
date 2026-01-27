@@ -10,11 +10,12 @@
     "deploy": "gh-pages -d dist",
     "preview": "vite preview",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
-    "debug": "node --inspect src/main.js"
+    "debug": "node --inspect frontend/src/main.js"
   },
   "dependencies": {
     "@mdi/js": "^7.2.96",
     "axios": "^1.3.4",
+    "better-sqlite3": "^12.5.0",
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^5.3.31",
     "vue": "^3.2.45",

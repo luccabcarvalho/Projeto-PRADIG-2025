@@ -72,3 +72,21 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Shared centered card style (used by Auth and Perfil) */
+.centered-card {
+  width: 100%;
+  max-width: 32.5rem; /* 520px */
+  box-sizing: border-box;
+  margin: 0 auto; /* center horizontally */
+  min-width: 32.5rem; /* don't go below 520px on larger screens */
+}
+
+@media (max-width: 32.5rem) {
+  .centered-card {
+    min-width: 0;
+    max-width: 22.5rem; /* 360px */
+    padding: 12px;
+    margin: 0 auto;
+  }
+} 

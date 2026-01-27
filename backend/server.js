@@ -8,6 +8,15 @@ const { pipeline } = require("stream");
 const readPdf = require("./services/handlerPDFContent");
 const readPdfIntegralizacao = require("./services/handlerPDFIntegralizacaoContent");
 const readPdfMigracao = require("./services/handlerPDFMigracaoContent");
+const authService = require('./services/authService');
+const dbModule = require('./services/db');
+
+// Initialize DB and run migrations (and migrate old users.json if present)
+try {
+  dbModule.init();
+} catch (err) {
+  fastify.log.error('Failed to initialize DB: ' + err.message);
+}
 
 
 const pump = util.promisify(pipeline);
@@ -32,6 +41,43 @@ fastify.post('/upload', async (req, reply) => {
       }
     reply.send({ disciplinas })
 })
+
+fastify.post('/auth/register', async (req, reply) => {
+  try {
+    const body = await req.body;
+    const user = authService.registerUser(body);
+    reply.send({ user });
+  } catch (err) {
+    reply.status(400).send({ error: err.message });
+  }
+});
+
+fastify.post('/auth/login', async (req, reply) => {
+  try {
+    const body = await req.body;
+    // support identifier email or matricula
+    const identifier = body.email || body.matricula || body.identifier;
+    const password = body.password || body.senha;
+    const user = authService.loginUser({ identifier, password });
+    reply.send({ user });
+  } catch (err) {
+    reply.status(401).send({ error: err.message });
+  }
+});
+
+// Change password using Bearer token
+fastify.post('/auth/change-password', async (req, reply) => {
+  try {
+    const authHeader = req.headers['authorization'] || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+    const body = await req.body;
+    const { oldPassword, newPassword } = body;
+    const user = authService.changePassword({ token, oldPassword, newPassword });
+    reply.send({ user });
+  } catch (err) {
+    reply.status(400).send({ error: err.message });
+  }
+});
 
 fastify.post("/uploadIntegralizacao", async (req, reply) => {
   const data = await req.file();
@@ -63,7 +109,9 @@ fastify.post("/uploadReforma", async (req, reply) => {
   }
 })
 
-  fastify.listen({ port: 80, host: "0.0.0.0" }, (err, address) => {
+  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+  const host = process.env.HOST || '0.0.0.0';
+  fastify.listen({ port, host }, (err, address) => {
     if (err) {
       fastify.log.error(err);
       process.exit(1);

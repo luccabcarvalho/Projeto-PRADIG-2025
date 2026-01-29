@@ -7,53 +7,65 @@
     </v-row>
   
     <v-row justify="center">
-      <v-col cols="12" md="8">
+      <v-col cols="12" md="10">
         <v-alert v-if="!user" type="info" border="left" class="mb-4">Faça login para ver seu histórico e progresso automaticamente a partir da matrícula.</v-alert>
         <v-alert v-if="message" type="info" border="left" class="mb-4">{{ message }}</v-alert>
         
-        
+        <!-- Grade Curricular por Período -->
+        <div v-if="curriculoGrade.length && user" class="text-center my-6">
+          <h2 class="mb-2">Grade Curricular</h2>
+          <p v-if="user.matricula && curriculoVersion" class="text-caption mb-6">
+            Matrícula: {{ user.matricula }} | Currículo: v{{ curriculoVersion }}
+          </p>
+          
+          <v-row class="mt-6" justify="center">
+            <v-col v-for="(periodo, idx) in curriculoGrade" :key="'periodo-'+idx" cols="12" md="6" lg="4" class="pa-4">
+              <v-card class="elevation-4 periodo-card" style="min-height: 100%;">
+                <v-card-title class="text-center bg-light-blue" style="background-color: #e3f2fd;">
+                  <span class="text-h6">{{ periodo.periodo }}</span>
+                </v-card-title>
+                
+                <v-card-text class="pa-4">
+                  <div v-for="disc in periodo.disciplinas" :key="disc.codigo" class="mb-3 d-flex align-center gap-2">
+                    <v-btn
+                      :color="disc.status === 'Vencido' ? 'success' : 'grey-lighten-2'"
+                      :text-color="disc.status === 'Vencido' ? 'white' : 'black'"
+                      size="small"
+                      class="flex-shrink-0"
+                      style="min-width: 80px; font-weight: 600;"
+                      :title="`${disc.codigo} - ${disc.nome}\nStatus: ${disc.status}`"
+                    >
+                      {{ sigla(disc.nome) }}
+                    </v-btn>
+                    <span class="text-caption flex-grow-1 text-left">{{ disc.nome }}</span>
+                  </div>
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
 
-        <div v-if="curriculoGrade.length" class="text-center my-6">
-          <h3>Grade do currículo <small v-if="curriculoVersion">v{{ curriculoVersion }}</small></h3>
-          <v-row class="mt-4" justify="center">
-            <v-col v-for="(p, idx) in curriculoGrade" :key="'curr-'+idx" cols="auto" class="d-flex flex-column align-center">
-              <h5 class="mb-2">{{ p.periodo}}</h5>
-              <div v-for="disc in p.disciplinas" :key="disc.codigo" class="mb-2">cd
-                <v-btn :color="disc.status === 'Vencido' ? 'green' : 'grey'" class="w-100" style="min-width: 80px; max-width: 100px;" depressed :title="disc.nome">
-                  {{ sigla(disc.nome) }}
-                </v-btn>
+          <!-- Legenda de cores -->
+          <v-row justify="center" class="mt-8">
+            <v-col cols="auto">
+              <div class="d-flex align-center gap-4">
+                <div class="d-flex align-center gap-2">
+                  <v-btn color="success" small disabled style="min-width: 60px;"></v-btn>
+                  <span class="text-caption font-weight-600">Aprovado</span>
+                </div>
+                <div class="d-flex align-center gap-2">
+                  <v-btn color="grey-lighten-2" small disabled style="min-width: 60px;"></v-btn>
+                  <span class="text-caption font-weight-600">Não Cursado</span>
+                </div>
               </div>
             </v-col>
           </v-row>
         </div>
-      </v-col>
-    </v-row>
 
-
-    <v-row class="mt-8" justify="center">
-      <v-col
-        v-for="(periodo, idx) in (curriculoGrade.length ? curriculoGrade : grade)"
-        :key="periodo.periodo || idx"
-        cols="auto"
-        class="d-flex flex-column align-center"
-      >
-        <h4 class="mb-2 text-center">{{ periodo.periodo }} Período</h4>
-
-        <div
-          v-for="disc in periodo.disciplinas"
-          :key="disc.codigo"
-          class="mb-2"
-        >
-          <v-btn
-            :color="((disc.status || disc.situacao) === 'Vencido') ? 'green' : ((disc.status || disc.situacao) === 'Matricula/Cursando') ? 'orange' : 'grey'"
-            class="w-100"
-            style="min-width: 80px; max-width: 100px;"
-            depressed
-            :title="(disc.nome || disc.name) + ' — ' + (disc.status || disc.situacao)"
-          >
-            {{ sigla(disc.nome || (disc.name || disc.codigo)) }}
-          </v-btn>
-
+        <!-- Fallback quando não carregou -->
+        <div v-else-if="user && !curriculoGrade.length" class="mt-6 text-center">
+          <v-alert type="warning" border="left">
+            Não foi possível carregar o currículo. Verifique sua matrícula ou tente fazer upload do histórico escolar.
+          </v-alert>
         </div>
       </v-col>
     </v-row>
@@ -65,7 +77,13 @@
 <script>
 import axios from "axios";
 import instance from "@/api/instance";
-import historicoCsv from '@/docs/HistoricoEscolarSimplificadoPerformance.csv?raw';
+import historicoCsv from '@/docs/HistoricoEscolarSimplificado.csv?raw';
+
+// Importa todos os currículos disponíveis
+import curriculo20002 from '@/docs/curriculo-20002.csv?raw';
+import curriculo20052 from '@/docs/curriculo-20052.csv?raw';
+import curriculo20081 from '@/docs/curriculo-20081.csv?raw';
+import curriculo20232 from '@/docs/curriculo-20232.csv?raw';
 
 export default {
   data() {
@@ -88,36 +106,54 @@ export default {
       }
     },
 
+    /**
+     * Extrai o ano e semestre do currículo da matrícula (primeiros 5 dígitos)
+     * Ex: "20002210547" -> "20002" (para curriculo-20002.csv)
+     */
+    _extractCurriculoYearFromMatricula(matricula) {
+      if (!matricula || matricula.length < 5) return null;
+      return matricula.substring(0, 5);
+    },
+
     async loadHistoricoForUser() {
       if (!this.user || !this.user.matricula) return;
       try {
+        // 1. Extrair o ano do currículo da matrícula
+        const curriculoYear = this._extractCurriculoYearFromMatricula(this.user.matricula);
+
+        // 2. Carregar o histórico do aluno filtrado pela matrícula
         const text = historicoCsv;
         const disciplinas = this._parseHistoricoCsv(text, String(this.user.matricula));
-        console.debug('Loaded disciplinas for matricula', this.user.matricula, disciplinas.length, disciplinas.slice(0, 8));
+        
         if (!disciplinas.length) {
           this.message = 'Nenhum histórico encontrado para a matrícula ' + this.user.matricula;
           this.grade = [];
+          this.curriculoGrade = [];
           return;
         }
+        
         this.grade = this.organizarPorPeriodo(disciplinas);
         this.periodList = this.grade.map(p => p.periodo);
-        console.debug('Periods found:', this.periodList, 'counts:', this.grade.map(p => p.disciplinas.length));
-        // Carrega o ultimo curriculum CSV e constrói o curriculum-grade com status do histórico
-        const latest = this._getLatestCurriculoRaw();
-        if (latest) {
-          const currList = this._parseCurriculoCsv(latest.text);
-          this.curriculoVersion = latest.ver;
-          this.curriculoGrade = this._buildCurriculoProgress(currList, disciplinas);
-          console.debug('Curriculo carregado:', this.curriculoVersion, 'periodos:', this.curriculoGrade.map(p => p.periodo));
-        } else {
-          this.curriculoVersion = null;
-          this.curriculoGrade = [];
+        
+        // 3. Carregar o currículo específico do aluno (baseado no ano da matrícula)
+        // Se não encontrar, _getCurriculoByYear já busca alternativas automaticamente
+        if (curriculoYear) {
+          const curriculoRaw = this._getCurriculoByYear(curriculoYear);
+          if (curriculoRaw) {
+            const currList = this._parseCurriculoCsv(curriculoRaw.text);
+            this.curriculoVersion = curriculoRaw.ver;
+            // 4. Construir grade com status baseado no histórico
+            this.curriculoGrade = this._buildCurriculoProgress(currList, disciplinas);
+          } else {
+            this.curriculoGrade = [];
+          }
         }
 
         this.message = null; 
       } catch (err) {
-        console.error(err);
-        this.message = 'Erro ao carregar histórico';
+        console.error('Erro ao carregar histórico:', err);
+        this.message = 'Erro ao carregar histórico: ' + err.message;
+        this.curriculoGrade = [];
       }
     },
 
@@ -309,8 +345,53 @@ export default {
       for (const [key, r] of byCodePeriod.entries()) {
         out.push({ codigo: r.codigo.trim(), nome: r.nome || r.codigo.trim(), situacao: mapSituacao(r.situacaoRaw), periodo: r.periodo });
       }
-      console.debug('Rows total:', rows.length, 'After dedupe per (code|period):', out.length);
+      
       return out;
+    },
+
+    /**
+     * Carrega o currículo específico pelo ano+semestre
+     * Ex: year = "20072" procura por curriculo-20072.csv
+     * Se não encontrar, procura pelo currículo mais recente anterior
+     */
+    _getCurriculoByYear(year) {
+      // Mapa de currículos importados
+      const curriculosDisponiveis = {
+        '20002': { text: curriculo20002, ver: '20002' },
+        '20052': { text: curriculo20052, ver: '20052' },
+        '20081': { text: curriculo20081, ver: '20081' },
+        '20232': { text: curriculo20232, ver: '20232' },
+      };
+      
+      // Tentar encontrar exatamente
+      if (curriculosDisponiveis[year]) {
+        return curriculosDisponiveis[year];
+      }
+      
+      // Se não encontrou, procurar pelo mais recente anterior
+      const yearNum = parseInt(year, 10);
+      const disponiveisOrdenados = Object.keys(curriculosDisponiveis)
+        .map(k => ({ year: k, num: parseInt(k, 10) }))
+        .filter(k => k.num <= yearNum)
+        .sort((a, b) => b.num - a.num);
+      
+      if (disponiveisOrdenados.length > 0) {
+        const melhorOpcao = disponiveisOrdenados[0].year;
+        return curriculosDisponiveis[melhorOpcao];
+      }
+      
+      // Última tentativa: usar o mais recente disponível
+      const todosOrdenados = Object.keys(curriculosDisponiveis)
+        .map(k => ({ year: k, num: parseInt(k, 10) }))
+        .sort((a, b) => b.num - a.num);
+      
+      if (todosOrdenados.length > 0) {
+        const ultimoRecurso = todosOrdenados[0].year;
+        return curriculosDisponiveis[ultimoRecurso];
+      }
+      
+      console.error('❌ Nenhum currículo disponível');
+      return null;
     },
 
     // Carrega o arquivo de currículo mais recente embutido pelo Vite (build-time)
@@ -353,11 +434,19 @@ export default {
       const idxCred = idxOf(['creditos','creditos']);
       const idxTipo = idxOf(['tipo disciplina','tipo','tipo_disciplina']);
 
-      const out = [];
+      // Usar Map para evitar duplicatas por código
+      const dedup = new Map();
+      
       for (let i = 1; i < lines.length; i++) {
         const cols = this._splitCsvLine(lines[i]);
         const codigo = idxCod >= 0 ? (cols[idxCod] || '').trim() : null;
         if (!codigo) continue;
+        
+        const codUpper = codigo.toUpperCase();
+        
+        // Se já tem essa disciplina, pula (deduplicação)
+        if (dedup.has(codUpper)) continue;
+        
         const nome = idxNome >= 0 ? (cols[idxNome] || '').trim() : '';
         const rawPeriodo = idxPeriodo >= 0 ? (cols[idxPeriodo] || '').trim() : '';
         let periodo = 'Não informado';
@@ -367,29 +456,77 @@ export default {
         const creditos = idxCred >= 0 ? parseFloat((cols[idxCred] || '').replace(',', '.')) || null : null;
         const tipo = idxTipo >= 0 ? (cols[idxTipo] || '').trim() : null;
 
-        out.push({ codigo: codigo.toUpperCase(), nome, periodo, creditos, tipo });
+        dedup.set(codUpper, { codigo: codUpper, nome, periodo, creditos, tipo });
       }
 
+      const out = Array.from(dedup.values());
+      
       return out;
     },
 
     _buildCurriculoProgress(curriculoList, userDisciplinas) {
       const statusByCode = {};
+      
+      // Mapear status do histórico por código de disciplina
+      const aprovados = [];
       for (const d of userDisciplinas) {
-        statusByCode[(d.codigo || '').toUpperCase()] = d.situacao || 'Não Vencido';
+        const cod = (d.codigo || '').toUpperCase();
+        statusByCode[cod] = d.situacao || 'Não Vencido';
+        if (d.situacao === 'Vencido') {
+          aprovados.push({ cod, nome: d.nome });
+        }
       }
 
       const periodMap = {};
+      const encontrados = new Set();
+      
       for (const c of curriculoList) {
         const periodo = c.periodo || 'Não informado';
         if (!periodMap[periodo]) periodMap[periodo] = [];
-        const status = statusByCode[(c.codigo || '').toUpperCase()] || 'Não Vencido';
-        periodMap[periodo].push({ codigo: c.codigo, nome: c.nome, creditos: c.creditos, tipo: c.tipo, status });
+        
+        const codUpper = (c.codigo || '').toUpperCase();
+        const status = statusByCode[codUpper] || 'Não Vencido';
+        
+        if (status === 'Vencido') {
+          encontrados.add(codUpper);
+        }
+        
+        periodMap[periodo].push({ 
+          codigo: c.codigo, 
+          nome: c.nome, 
+          creditos: c.creditos, 
+          tipo: c.tipo, 
+          status 
+        });
+      }
+
+      // Adicionar disciplinas aprovadas que não estão no currículo
+      const adicionais = [];
+      for (const ap of aprovados) {
+        if (!encontrados.has(ap.cod)) {
+          adicionais.push({ 
+            codigo: ap.cod, 
+            nome: ap.nome, 
+            creditos: null, 
+            tipo: 'Optativa/Complementar', 
+            status: 'Vencido' 
+          });
+        }
+      }
+      
+      // Se houver disciplinas adicionais, adicionar um período especial
+      if (adicionais.length > 0) {
+        periodMap['Optativas/Complementares'] = adicionais;
       }
 
       return Object.keys(periodMap)
         .sort((a,b) => {
-          const ma = (a||'').match(/\d+/); const mb = (b||'').match(/\d+/);
+          // Ordenar períodos numericamente, com "Optativas/Complementares" por último
+          if (a === 'Optativas/Complementares') return 1;
+          if (b === 'Optativas/Complementares') return -1;
+          
+          const ma = (a||'').match(/\d+/); 
+          const mb = (b||'').match(/\d+/);
           if (ma && mb) return parseInt(ma[0],10) - parseInt(mb[0],10);
           if (ma) return -1;
           if (mb) return 1;
@@ -442,7 +579,28 @@ export default {
   min-width: 50vw;
   margin-bottom: 24px;
 }
+
 .warning {
   color: #ef5350;
+}
+
+.periodo-card {
+  border-top: 4px solid #1976d2;
+}
+
+.gap-2 {
+  gap: 8px;
+}
+
+.gap-4 {
+  gap: 16px;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.bg-light-blue {
+  background-color: #e3f2fd;
 }
 </style>

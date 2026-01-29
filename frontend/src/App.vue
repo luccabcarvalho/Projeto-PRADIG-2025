@@ -50,7 +50,7 @@ onBeforeUnmount(() => {
           <RouterLink to="/progresso">Progresso</RouterLink>
         </li>
         <li v-if="!user" class="ml-4"><RouterLink to="/auth">Entrar / Cadastrar</RouterLink></li>
-        <li class="ml-4">
+        <li v-if="user" class="ml-4">
             <RouterLink :to="{ name: 'perfil' }" class="mr-2">{{ user.name }}</RouterLink>   
         </li>
         <li v-if="user" class="ml-4">

@@ -29,7 +29,7 @@
               <v-form ref="registerForm" @submit.prevent="submitRegister" lazy-validation>
                 <v-text-field label="Nome" v-model="register.name" variant="outlined" density="comfortable" :rules="[rules.required]" prepend-inner-icon="mdi-account" required />
                 <v-text-field label="Email" v-model="register.email" type="email" variant="outlined" density="comfortable" :rules="[rules.required, rules.email]" prepend-inner-icon="mdi-email" required />
-                <v-text-field label="Matrícula" v-model="register.matricula" variant="outlined" density="comfortable" :rules="[rules.required]" prepend-inner-icon="mdi-card-account-details" required />
+                <v-text-field label="Matrícula" v-model="register.matricula" variant="outlined" density="comfortable" :rules="[rules.required, rules.matricula]" prepend-inner-icon="mdi-card-account-details" required />
                 <v-text-field label="Senha" v-model="register.password" :type="showPassword ? 'text' : 'password'" variant="outlined" density="comfortable" :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'" @click:append-inner="showPassword = !showPassword" :rules="[rules.required, rules.min8]" prepend-inner-icon="mdi-lock" required />
                 <v-btn color="primary" class="mt-4" block @click="submitRegister">Cadastrar</v-btn>
               </v-form>
@@ -59,6 +59,7 @@ export default {
         required: v => !!v || 'Campo obrigatório',
         email: v => /\S+@\S+\.\S+/.test(v) || 'Email inválido',
         min8: v => (v && v.length >= 8) || 'Use ao menos 8 caracteres',
+        matricula: v => (v && /^\d{11}$/.test(v)) || 'Matrícula deve conter exatamente 11 números',
       },
     };
   },

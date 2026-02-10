@@ -28,9 +28,24 @@
 
             <h4>Alterar senha</h4>
             <v-form ref="pwdForm" lazy-validation>
-              <v-text-field label="Senha atual" v-model="oldPassword" type="password" :rules="[rules.required]" required />
-              <v-text-field label="Nova senha" v-model="newPassword" type="password" :rules="[rules.required, rules.min8]" required />
-              <v-text-field label="Confirme a nova senha" v-model="confirmPassword" type="password" :rules="[rules.required, matchPassword]" required />
+              <div class="password-input-group">
+                <v-text-field label="Senha atual" v-model="oldPassword" :type="showOldPassword ? 'text' : 'password'" variant="outlined" density="comfortable" :rules="[rules.required]" required />
+                <button type="button" class="eye-btn" @click="showOldPassword = !showOldPassword" :title="showOldPassword ? 'Ocultar' : 'Mostrar'">
+                  <img :src="showOldPassword ? '/src/assets/eyes-open.png' : '/src/assets/eyes-closed.png'" :alt="showOldPassword ? 'Ocultar' : 'Mostrar'" class="eye-img" />
+                </button>
+              </div>
+              <div class="password-input-group">
+                <v-text-field label="Nova senha" v-model="newPassword" :type="showNewPassword ? 'text' : 'password'" variant="outlined" density="comfortable" :rules="[rules.required, rules.min8]" required />
+                <button type="button" class="eye-btn" @click="showNewPassword = !showNewPassword" :title="showNewPassword ? 'Ocultar' : 'Mostrar'">
+                  <img :src="showNewPassword ? '/src/assets/eyes-open.png' : '/src/assets/eyes-closed.png'" :alt="showNewPassword ? 'Ocultar' : 'Mostrar'" class="eye-img" />
+                </button>
+              </div>
+              <div class="password-input-group">
+                <v-text-field label="Confirme a nova senha" v-model="confirmPassword" :type="showConfirmPassword ? 'text' : 'password'" variant="outlined" density="comfortable" :rules="[rules.required, matchPassword]" required />
+                <button type="button" class="eye-btn" @click="showConfirmPassword = !showConfirmPassword" :title="showConfirmPassword ? 'Ocultar' : 'Mostrar'">
+                  <img :src="showConfirmPassword ? '/src/assets/eyes-open.png' : '/src/assets/eyes-closed.png'" :alt="showConfirmPassword ? 'Ocultar' : 'Mostrar'" class="eye-img" />
+                </button>
+              </div>
               <v-btn color="primary" class="mt-4" :loading="loading" @click="submitChangePassword">Alterar senha</v-btn>
             </v-form>
 
@@ -59,6 +74,9 @@ export default {
       message: null,
       messageType: 'info',
       loading: false,
+      showOldPassword: false,
+      showNewPassword: false,
+      showConfirmPassword: false,
       rules: {
         required: v => !!v || 'Campo obrigatório',
         min8: v => (v && v.length >= 8) || 'Use ao menos 8 caracteres',
@@ -139,5 +157,32 @@ export default {
 </script>
 
 <style scoped>
-.perfil { margin-top: 24px; }
+.perfil {
+  margin-top: 24px;
+}
+
+.password-input-group {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.eye-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eye-img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
 </style>

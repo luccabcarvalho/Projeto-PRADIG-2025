@@ -1,3 +1,6 @@
+// Load environment variables
+require('dotenv').config();
+
 const Fastify = require("fastify");
 const fs = require("fs");
 const path = require("path");
@@ -11,20 +14,22 @@ const readPdfMigracao = require("./services/handlerPDFMigracaoContent");
 const authService = require('./services/authService');
 const dbModule = require('./services/db');
 
-// Initialize DB and run migrations (and migrate old users.json if present)
-try {
-  dbModule.init();
-} catch (err) {
-  fastify.log.error('Failed to initialize DB: ' + err.message);
-}
-
-
 const pump = util.promisify(pipeline);
-
 
 const fastify = Fastify({ logger: true });
 fastify.register(fastifyCors, { origin: "*" });
 fastify.register(fastifyMultipart);
+
+// Initialize database
+fastify.register(async function(fastify) {
+  try {
+    await dbModule.init();
+    console.log('Database initialized successfully');
+  } catch (err) {
+    fastify.log.error('Failed to initialize DB: ' + err.message);
+    throw err;
+  }
+});
 
 fastify.get('/', function (req, reply) {
     reply.send({ hello: 'opa' })
@@ -45,7 +50,7 @@ fastify.post('/upload', async (req, reply) => {
 fastify.post('/auth/register', async (req, reply) => {
   try {
     const body = await req.body;
-    const user = authService.registerUser(body);
+    const user = await authService.registerUser(body);
     reply.send({ user });
   } catch (err) {
     reply.status(400).send({ error: err.message });
@@ -58,7 +63,7 @@ fastify.post('/auth/login', async (req, reply) => {
     // support identifier email or matricula
     const identifier = body.email || body.matricula || body.identifier;
     const password = body.password || body.senha;
-    const user = authService.loginUser({ identifier, password });
+    const user = await authService.loginUser({ identifier, password });
     reply.send({ user });
   } catch (err) {
     reply.status(401).send({ error: err.message });
@@ -72,7 +77,7 @@ fastify.post('/auth/change-password', async (req, reply) => {
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
     const body = await req.body;
     const { oldPassword, newPassword } = body;
-    const user = authService.changePassword({ token, oldPassword, newPassword });
+    const user = await authService.changePassword({ token, oldPassword, newPassword });
     reply.send({ user });
   } catch (err) {
     reply.status(400).send({ error: err.message });

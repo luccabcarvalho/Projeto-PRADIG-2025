@@ -151,8 +151,7 @@ export default {
 
         this.message = null; 
       } catch (err) {
-        console.error('Erro ao carregar histórico:', err);
-        this.message = 'Erro ao carregar histórico: ' + err.message;
+        this.message = 'Erro ao carregar histórico';
         this.curriculoGrade = [];
       }
     },
@@ -222,7 +221,6 @@ export default {
           const disciplinas = this._parseHistoricoCsv(text);
           this.grade = this.organizarPorPeriodo(disciplinas);
         } catch (e) {
-          console.error(e);
           alert('Erro ao processar CSV');
           this.grade = [];
         }

@@ -7,6 +7,7 @@
     "dev": "node server.js",
     "migrate": "node -e \"require('./services/db').init()\"",
     "test-auth": "node test-auth.js",
+    "test-db": "node test-db.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "debug": "node --inspect server.js"
   },
@@ -15,8 +16,9 @@
   "dependencies": {
     "@fastify/cors": "^11.1.0",
     "@fastify/multipart": "^9.0.3",
-    "better-sqlite3": "^12.5.0",
+    "dotenv": "^17.2.4",
     "fastify": "^5.5.0",
+    "mssql": "^12.2.0",
     "pdf-parse": "^1.1.1",
     "pdf2json": "^3.2.1"
   },

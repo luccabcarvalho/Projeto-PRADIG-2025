@@ -1,53 +1,107 @@
-const Database = require('better-sqlite3');
-const path = require('path');
-const fs = require('fs');
+const sql = require('mssql');
 
-const DB_DIR = path.resolve(__dirname, '..', 'data');
-const DB_FILE = path.resolve(DB_DIR, 'samg.db');
-const USERS_JSON = path.resolve(__dirname, '..', 'users.json');
-
-function ensureDir() {
-  if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
-}
-
-function init() {
-  ensureDir();
-  const db = new Database(DB_FILE);
-  db.pragma('journal_mode = WAL');
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      email TEXT UNIQUE NOT NULL,
-      matricula TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL,
-      token TEXT,
-      createdAt TEXT
-    );
-  `);
-
-  // Migrate users.json if present
-  if (fs.existsSync(USERS_JSON)) {
-    try {
-      const raw = fs.readFileSync(USERS_JSON, 'utf-8');
-      const users = JSON.parse(raw || '[]');
-      const insert = db.prepare('INSERT OR IGNORE INTO users (id, name, email, matricula, password, token, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)');
-      const now = new Date().toISOString();
-      const txn = db.transaction((rows) => {
-        for (const u of rows) {
-          insert.run(u.id, u.name, u.email, u.matricula, u.password, u.token || null, now);
-        }
-      });
-      txn(users);
-      // Optionally rename the old file as backup
-      try { fs.renameSync(USERS_JSON, USERS_JSON + '.bak'); } catch (e) { /* ignore */ }
-    } catch (err) {
-      console.error('Failed to migrate users.json:', err.message);
+// Build config with support for Windows Authentication or SQL Auth
+const buildConfig = () => {
+  const config = {
+    server: process.env.DB_SERVER || 'localhost',
+    database: process.env.DB_NAME || 'samg',
+    options: {
+      encrypt: process.env.DB_ENCRYPT === 'true' || false,
+      trustServerCertificate: true,
+      port: parseInt(process.env.DB_PORT || '1433')
     }
+  };
+
+  // Determine authentication type based on DB_USER
+  const dbUser = (process.env.DB_USER || '').trim();
+  const isWindowsAuth = !dbUser || dbUser.toLowerCase() === 'windows';
+
+  if (isWindowsAuth && process.env.WINDOWS_USER) {
+    // Windows authentication with NTLM (if WINDOWS_USER is specified)
+    config.options.integratedSecurity = true;
+    config.authentication = {
+      type: 'ntlm',
+      options: {
+        domain: process.env.WINDOWS_DOMAIN || '.',
+        userName: process.env.WINDOWS_USER,
+        password: process.env.WINDOWS_PASSWORD || ''
+      }
+    };
+  } else if (isWindowsAuth) {
+    // Windows authentication (integratedSecurity only, no explicit credentials)
+    config.options.integratedSecurity = true;
+  } else {
+    // SQL Server authentication (with username and password)
+    config.authentication = {
+      type: 'default',
+      options: {
+        userName: dbUser,
+        password: process.env.DB_PASSWORD || ''
+      }
+    };
   }
 
-  return db;
+  return config;
+};
+
+const config = buildConfig();
+
+// Debug: Log config authentication info
+console.log('DB Config:', {
+  server: config.server,
+  database: config.database,
+  port: config.options.port,
+  integratedSecurity: config.options.integratedSecurity,
+  authentication: config.authentication ? config.authentication.type : 'Windows (integratedSecurity)'
+});
+
+let connectionPool = null;
+
+async function init() {
+  try {
+    connectionPool = new sql.ConnectionPool(config);
+    await connectionPool.connect();
+    console.log('SQL Server connection established');
+
+    const request = connectionPool.request();
+    
+    // Create Alunos table if it doesn't exist
+    await request.query(`
+      IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Alunos' and xtype='U')
+      BEGIN
+        CREATE TABLE Alunos (
+          id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+          name NVARCHAR(255) NOT NULL,
+          email NVARCHAR(255) UNIQUE NOT NULL,
+          matricula NVARCHAR(255) UNIQUE NOT NULL,
+          password NVARCHAR(255) NOT NULL,
+          token NVARCHAR(255),
+          createdAt DATETIME DEFAULT GETDATE()
+        );
+      END
+    `);
+    console.log('Alunos table verified/created');
+
+    return connectionPool;
+  } catch (err) {
+    console.error('Database initialization error:', err);
+    throw err;
+  }
 }
 
-module.exports = { init };
+async function getConnection() {
+  if (!connectionPool) {
+    await init();
+  }
+  return connectionPool;
+}
+
+async function close() {
+  if (connectionPool) {
+    await connectionPool.close();
+    connectionPool = null;
+  }
+}
+
+module.exports = { init, getConnection, close };
+

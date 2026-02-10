@@ -19,7 +19,7 @@
           <v-card-text>
             <div v-if="tab === 0">
               <v-form ref="loginForm" @submit.prevent="submitLogin" lazy-validation>
-                <v-text-field label="Email" v-model="login.email" type="email" variant="outlined" density="comfortable" :rules="[rules.required, rules.email]" prepend-inner-icon="mdi-email" autofocus required />
+                <v-text-field label="Matrícula" v-model="login.matricula" variant="outlined" density="comfortable" :rules="[rules.required, rules.matricula]" prepend-inner-icon="mdi-card-account-details" autofocus required />
                 <v-text-field label="Senha" v-model="login.password" :type="showPassword ? 'text' : 'password'" variant="outlined" density="comfortable" :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'" @click:append-inner="showPassword = !showPassword" :rules="[rules.required]" prepend-inner-icon="mdi-lock" required />
                 <v-btn color="primary" class="mt-4" block @click="submitLogin">Entrar</v-btn>
               </v-form>
@@ -50,7 +50,7 @@ export default {
   data() {
     return {
       tab: 0,
-      login: { email: '', password: '' },
+      login: { matricula: '', password: '' },
       register: { name: '', email: '', matricula: '', password: '' },
       message: null,
       messageType: 'info',
@@ -72,7 +72,7 @@ export default {
         this.messageType = 'success';
         // switch to login tab
         this.tab = 0;
-        this.login.email = this.register.email;
+        this.login.matricula = this.register.matricula;
       } catch (err) {
         this.message = err.response?.data?.error || 'Erro no cadastro';
         this.messageType = 'error';

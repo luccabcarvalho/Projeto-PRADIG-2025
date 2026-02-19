@@ -70,7 +70,7 @@ export default {
         const { data } = await instance.post('auth/register', this.register);
         this.message = 'Cadastro realizado com sucesso.';
         this.messageType = 'success';
-        // switch to login tab
+        
         this.tab = 0;
         this.login.matricula = this.register.matricula;
       } catch (err) {
@@ -84,9 +84,10 @@ export default {
         const { data } = await instance.post('auth/login', this.login);
         this.message = 'Login efetuado com sucesso.';
         this.messageType = 'success';
-        // store minimal session (token)
+        
         localStorage.setItem('samg_user', JSON.stringify(data.user));
-        // notify other parts of the app (same tab) and redirect to progresso
+        
+
         window.dispatchEvent(new CustomEvent('samg_user_changed', { detail: data.user }));
         this.$router.push({ name: 'progresso' });
       } catch (err) {
@@ -103,7 +104,7 @@ export default {
   margin-top: 0;
 }
 
-/* Login card sizing and responsiveness */
+
 .auth-card {
   width: 100%;
   max-width: 32.5rem; 

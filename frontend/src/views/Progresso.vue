@@ -11,7 +11,6 @@
         <v-alert v-if="!user" type="info" border="left" class="mb-4">Faça login para ver seu histórico e progresso automaticamente a partir da matrícula.</v-alert>
         <v-alert v-if="message" type="info" border="left" class="mb-4">{{ message }}</v-alert>
         
-        <!-- Grade Curricular por Período -->
         <div v-if="curriculoGrade.length && user" class="text-center my-6">
           <h2 class="mb-2">Grade Curricular</h2>
           <p v-if="user.matricula && curriculoVersion" class="text-caption mb-6">
@@ -44,7 +43,6 @@
             </v-col>
           </v-row>
 
-          <!-- Legenda de cores -->
           <v-row justify="center" class="mt-8">
             <v-col cols="auto">
               <div class="d-flex align-center gap-4">
@@ -61,7 +59,6 @@
           </v-row>
         </div>
 
-        <!-- Fallback quando não carregou -->
         <div v-else-if="user && !curriculoGrade.length" class="mt-6 text-center">
           <v-alert type="warning" border="left">
             Não foi possível carregar o currículo. Verifique sua matrícula ou tente fazer upload do histórico escolar.
@@ -106,10 +103,6 @@ export default {
       }
     },
 
-    /**
-     * Extrai o ano e semestre do currículo da matrícula (primeiros 5 dígitos)
-     * Ex: "20002210547" -> "20002" (para curriculo-20002.csv)
-     */
     _extractCurriculoYearFromMatricula(matricula) {
       if (!matricula || matricula.length < 5) return null;
       return matricula.substring(0, 5);
@@ -118,10 +111,7 @@ export default {
     async loadHistoricoForUser() {
       if (!this.user || !this.user.matricula) return;
       try {
-        // 1. Extrair o ano do currículo da matrícula
         const curriculoYear = this._extractCurriculoYearFromMatricula(this.user.matricula);
-
-        // 2. Carregar o histórico do aluno filtrado pela matrícula
         const text = historicoCsv;
         const disciplinas = this._parseHistoricoCsv(text, String(this.user.matricula));
         
@@ -135,20 +125,16 @@ export default {
         this.grade = this.organizarPorPeriodo(disciplinas);
         this.periodList = this.grade.map(p => p.periodo);
         
-        // 3. Carregar o currículo específico do aluno (baseado no ano da matrícula)
-        // Se não encontrar, _getCurriculoByYear já busca alternativas automaticamente
         if (curriculoYear) {
           const curriculoRaw = this._getCurriculoByYear(curriculoYear);
           if (curriculoRaw) {
             const currList = this._parseCurriculoCsv(curriculoRaw.text);
             this.curriculoVersion = curriculoRaw.ver;
-            // 4. Construir grade com status baseado no histórico
             this.curriculoGrade = this._buildCurriculoProgress(currList, disciplinas);
           } else {
             this.curriculoGrade = [];
           }
         }
-
         this.message = null; 
       } catch (err) {
         this.message = 'Erro ao carregar histórico';
@@ -163,7 +149,6 @@ export default {
     },
     sigla(nome) {
       if (!nome || typeof nome !== 'string') return '';
-      // Remove diacríticos e normaliza espaços
       let s = nome
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
@@ -185,7 +170,6 @@ export default {
       for (const t of tokens) {
         const lower = t.toLowerCase();
         if (stop.has(lower)) continue;
-        // Inclui algarismos romanos inteiros como token (I, II, III, IV, ...)
         if (romanRe.test(t)) {
           numerals.push(t.toUpperCase());
         } else if (/^\d+$/.test(t)) {
@@ -195,25 +179,20 @@ export default {
         }
       }
 
-      // Base: até 3 letras das iniciais (mantém compactação padrão)
       let base = initials.join('');
       if (!base && numerals.length) {
-        // Se só há algarismo romano, retorna-o
         return numerals.join(' ');
       }
       if (!base) {
-        // Fallback: primeiras letras do nome bruto
         base = s.replace(/\s+/g, '').slice(0, 3).toUpperCase();
       }
       base = base.slice(0, 3);
-      // Alg. romano aparece separado: "GA II"
       if (numerals.length) return `${base} ${numerals.join(' ')}`;
       return base;
     },
     async uploadPdf(event) {
       const file = event.target.files[0];
       if (!file) return;
-      // Se for CSV, parse no frontend
       const name = (file.name || '').toLowerCase();
       if (name.endsWith('.csv') || file.type === 'text/csv') {
         try {
@@ -226,22 +205,7 @@ export default {
         }
         return;
       }
-
-      // Caso contrário, assume PDF e envia ao backend
-      const formData = new FormData();
-      formData.append("pdf", file);
-
-      try {
-        const response = await instance.post("uploadIntegralizacao", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        this.grade = this.organizarPorPeriodo(response.data.disciplinas);
-      } catch (err) {
-        alert("Erro ao processar PDF");
-        this.grade = [];
-      }
     },
-
     _readFileAsText(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -252,7 +216,6 @@ export default {
     },
 
     _splitCsvLine(line) {
-      // Split on commas not inside quotes
       const cols = line.split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/);
       return cols.map(c => {
         let v = c.trim();
@@ -284,8 +247,6 @@ export default {
       const rows = [];
       for (let i = 1; i < lines.length; i++) {
         const cols = this._splitCsvLine(lines[i]);
-
-        // If filtering by matricula, skip rows that don't match
         if (matricula && idxMatricula >= 0) {
           const rowMat = (cols[idxMatricula] || '').trim();
           if (String(rowMat) !== String(matricula)) continue;
@@ -297,8 +258,6 @@ export default {
         const situacaoRaw = idxSituacao >= 0 ? (cols[idxSituacao] || '').trim() : '';
         const periodoRaw = idxPeriodo >= 0 ? (cols[idxPeriodo] || '').trim() : '';
         const anoRaw = idxAno >= 0 ? (cols[idxAno] || '').trim() : '';
-
-        // Normalize PERIODO: extrai número e formata como "N°" (trata "1" e "1°"). Caso não haja número, mantém o texto bruto.
         let periodo = 'Não informado';
         const rawPeriodo = (periodoRaw || '').trim();
         const matchNum = rawPeriodo.match(/(\d+)/);
@@ -310,8 +269,6 @@ export default {
 
         rows.push({ codigo, nome, situacaoRaw, periodo, ano: parseInt(anoRaw, 10) || null });
       }
-
-      // Deduplicação por (codigo + periodo): mantém múltiplos registros do mesmo curso em períodos diferentes.
       const byCodePeriod = new Map();
       for (const r of rows) {
         const key = `${r.codigo}|${r.periodo}`;
@@ -330,7 +287,6 @@ export default {
         }
       }
 
-      // Mapeia situação textual para os rótulos usados no frontend
       const mapSituacao = (raw) => {
         if (!raw) return 'Não Vencido';
         if (/apv|aprovad/i.test(raw)) return 'Vencido';
@@ -338,7 +294,6 @@ export default {
         return 'Não Vencido';
       };
 
-      // Converte para array plano esperado pela organizarPorPeriodo
       const out = [];
       for (const [key, r] of byCodePeriod.entries()) {
         out.push({ codigo: r.codigo.trim(), nome: r.nome || r.codigo.trim(), situacao: mapSituacao(r.situacaoRaw), periodo: r.periodo });
@@ -347,13 +302,7 @@ export default {
       return out;
     },
 
-    /**
-     * Carrega o currículo específico pelo ano+semestre
-     * Ex: year = "20072" procura por curriculo-20072.csv
-     * Se não encontrar, procura pelo currículo mais recente anterior
-     */
     _getCurriculoByYear(year) {
-      // Mapa de currículos importados
       const curriculosDisponiveis = {
         '20002': { text: curriculo20002, ver: '20002' },
         '20052': { text: curriculo20052, ver: '20052' },
@@ -361,12 +310,9 @@ export default {
         '20232': { text: curriculo20232, ver: '20232' },
       };
       
-      // Tentar encontrar exatamente
       if (curriculosDisponiveis[year]) {
         return curriculosDisponiveis[year];
       }
-      
-      // Se não encontrou, procurar pelo mais recente anterior
       const yearNum = parseInt(year, 10);
       const disponiveisOrdenados = Object.keys(curriculosDisponiveis)
         .map(k => ({ year: k, num: parseInt(k, 10) }))
@@ -377,8 +323,6 @@ export default {
         const melhorOpcao = disponiveisOrdenados[0].year;
         return curriculosDisponiveis[melhorOpcao];
       }
-      
-      // Última tentativa: usar o mais recente disponível
       const todosOrdenados = Object.keys(curriculosDisponiveis)
         .map(k => ({ year: k, num: parseInt(k, 10) }))
         .sort((a, b) => b.num - a.num);
@@ -392,7 +336,6 @@ export default {
       return null;
     },
 
-    // Carrega o arquivo de currículo mais recente embutido pelo Vite (build-time)
     _getLatestCurriculoRaw() {
       const modules = import.meta.globEager('../docs/curriculo*.csv?raw');
       const candidates = Object.keys(modules).filter(p => /curriculo-?(\d+)\.csv$/i.test(p));
@@ -432,7 +375,6 @@ export default {
       const idxCred = idxOf(['creditos','creditos']);
       const idxTipo = idxOf(['tipo disciplina','tipo','tipo_disciplina']);
 
-      // Usar Map para evitar duplicatas por código
       const dedup = new Map();
       
       for (let i = 1; i < lines.length; i++) {
@@ -441,8 +383,6 @@ export default {
         if (!codigo) continue;
         
         const codUpper = codigo.toUpperCase();
-        
-        // Se já tem essa disciplina, pula (deduplicação)
         if (dedup.has(codUpper)) continue;
         
         const nome = idxNome >= 0 ? (cols[idxNome] || '').trim() : '';
@@ -458,14 +398,11 @@ export default {
       }
 
       const out = Array.from(dedup.values());
-      
       return out;
     },
 
     _buildCurriculoProgress(curriculoList, userDisciplinas) {
       const statusByCode = {};
-      
-      // Mapear status do histórico por código de disciplina
       const aprovados = [];
       for (const d of userDisciplinas) {
         const cod = (d.codigo || '').toUpperCase();
@@ -477,7 +414,6 @@ export default {
 
       const periodMap = {};
       const encontrados = new Set();
-      
       for (const c of curriculoList) {
         const periodo = c.periodo || 'Não informado';
         if (!periodMap[periodo]) periodMap[periodo] = [];
@@ -498,7 +434,6 @@ export default {
         });
       }
 
-      // Adicionar disciplinas aprovadas que não estão no currículo
       const adicionais = [];
       for (const ap of aprovados) {
         if (!encontrados.has(ap.cod)) {
@@ -511,18 +446,14 @@ export default {
           });
         }
       }
-      
-      // Se houver disciplinas adicionais, adicionar um período especial
       if (adicionais.length > 0) {
         periodMap['Optativas/Complementares'] = adicionais;
       }
 
       return Object.keys(periodMap)
         .sort((a,b) => {
-          // Ordenar períodos numericamente, com "Optativas/Complementares" por último
           if (a === 'Optativas/Complementares') return 1;
           if (b === 'Optativas/Complementares') return -1;
-          
           const ma = (a||'').match(/\d+/); 
           const mb = (b||'').match(/\d+/);
           if (ma && mb) return parseInt(ma[0],10) - parseInt(mb[0],10);
@@ -534,32 +465,28 @@ export default {
     },
 
     organizarPorPeriodo(disciplinas) {
-  const periodos = {};
-
-  disciplinas.forEach((disc) => {
-    const periodo = disc.periodo !== undefined && disc.periodo !== null
-      ? disc.periodo
-      : "Não informado";
-
-    if (!periodos[periodo]) periodos[periodo] = [];
-    periodos[periodo].push(disc);
-  });
-
-  return Object.keys(periodos)
-    .sort((a, b) => {
-      const ma = (a || '').match(/\d+/);
-      const mb = (b || '').match(/\d+/);
-      if (ma && mb) return parseInt(ma[0], 10) - parseInt(mb[0], 10);
-      if (ma) return -1;
-      if (mb) return 1;
-      return a.localeCompare(b);
-    })
-    .map((periodo) => ({
-      periodo,
-      disciplinas: periodos[periodo],
-    }));
-
-  },
+      const periodos = {};
+      disciplinas.forEach((disc) => {
+        const periodo = disc.periodo !== undefined && disc.periodo !== null
+          ? disc.periodo
+          : "Não informado";
+        if (!periodos[periodo]) periodos[periodo] = [];
+        periodos[periodo].push(disc);
+      });
+      return Object.keys(periodos)
+        .sort((a, b) => {
+          const ma = (a || '').match(/\d+/);
+          const mb = (b || '').match(/\d+/);
+          if (ma && mb) return parseInt(ma[0], 10) - parseInt(mb[0], 10);
+          if (ma) return -1;
+          if (mb) return 1;
+          return a.localeCompare(b);
+        })
+        .map((periodo) => ({
+          periodo,
+          disciplinas: periodos[periodo],
+        }));
+    },
 
   },
   mounted() {

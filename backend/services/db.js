@@ -46,26 +46,17 @@ const buildConfig = () => {
 
 const config = buildConfig();
 
-// Debug: Log config authentication info
-console.log('DB Config:', {
-  server: config.server,
-  database: config.database,
-  port: config.options.port,
-  integratedSecurity: config.options.integratedSecurity,
-  authentication: config.authentication ? config.authentication.type : 'Windows (integratedSecurity)'
-});
-
 let connectionPool = null;
 
 async function init() {
   try {
     connectionPool = new sql.ConnectionPool(config);
     await connectionPool.connect();
-    console.log('SQL Server connection established');
+    console.log('SQL Server conectado com sucesso!');
 
     const request = connectionPool.request();
     
-    // Create Alunos table if it doesn't exist
+    // Cria tabela Alunos se não existir
     await request.query(`
       IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Alunos' and xtype='U')
       BEGIN
@@ -76,15 +67,17 @@ async function init() {
           matricula NVARCHAR(255) UNIQUE NOT NULL,
           password NVARCHAR(255) NOT NULL,
           token NVARCHAR(255),
-          createdAt DATETIME DEFAULT GETDATE()
+          tipo_usuario NVARCHAR(50) DEFAULT 'aluno'
         );
       END
     `);
-    console.log('Alunos table verified/created');
+
+    
+    console.log('Tabela Alunos ok');
 
     return connectionPool;
   } catch (err) {
-    console.error('Database initialization error:', err);
+    console.error('Erro ao inicializar o banco de dados:', err);
     throw err;
   }
 }

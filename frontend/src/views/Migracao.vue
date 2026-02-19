@@ -65,15 +65,14 @@ import instance from "@/api/instance";
 export default {
   data() {
     return {
-      reforma: [], // registros do mapa (readPdfMigracao)
-      integralizacao: [], // retorno do /uploadIntegralizacao
-      grade: [], // [{ periodo, disciplinas: [{ codigo, nome, periodo, situacao }] }]
+      reforma: [],
+      integralizacao: [],
+      grade: [],
     };
   },
   methods: {
     sigla(nome) {
       if (!nome || typeof nome !== 'string') return '';
-      // Remove diacríticos e normaliza espaços
       let s = nome
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
@@ -95,7 +94,6 @@ export default {
       for (const t of tokens) {
         const lower = t.toLowerCase();
         if (stop.has(lower)) continue;
-        // Mantém algarismos romanos como sufixo separado (I, II, III, IV, ...)
         if (romanRe.test(t)) {
           numerals.push(t.toUpperCase());
         } else if (/^\d+$/.test(t)) {
@@ -105,7 +103,6 @@ export default {
         }
       }
 
-      // Base: até 3 letras das iniciais (compacto e consistente)
       let base = initials.join('');
       if (!base && numerals.length) {
         return numerals.join(' ');
@@ -126,7 +123,6 @@ export default {
         const { data } = await instance.post("uploadReforma", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        // data.disciplinas = [ { atual: {...}, proposta: {...}, tipoAlteracao } ]
         this.reforma = Array.isArray(data.disciplinas) ? data.disciplinas : [];
         this._recomputeGrade();
       } catch (e) {
@@ -142,7 +138,6 @@ export default {
         const { data } = await instance.post("uploadIntegralizacao", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        // Esperado: data.disciplinas = [ { periodo, disciplinas: [ { codigo, nome, situacao, periodo } ] } ... ]
         this.integralizacao = Array.isArray(data.disciplinas) ? data.disciplinas : [];
         this._recomputeGrade();
       } catch (e) {
@@ -150,13 +145,11 @@ export default {
       }
     },
     _recomputeGrade() {
-      // Precisa da Reforma para montar as propostas; a Integralização marca o status
       if (!this.reforma.length) {
         this.grade = [];
         return;
       }
 
-      // Mapa código -> situacao a partir do PDF de integralização
       const situacaoPorCodigo = new Map();
       for (const bloco of this.integralizacao) {
         const lista = bloco?.disciplinas || [];
@@ -165,7 +158,6 @@ export default {
         }
       }
 
-      // Deduplicar propostas por código e montar lista com status
       const porPeriodo = new Map();
       const vistos = new Set();
       for (const reg of this.reforma) {
@@ -187,7 +179,6 @@ export default {
         porPeriodo.get(periodo).push(item);
       }
 
-      // Ordena períodos numericamente quando possível
       const chaves = Array.from(porPeriodo.keys());
       chaves.sort((a, b) => {
         const na = parseInt(a);

@@ -114,6 +114,94 @@ fastify.post("/uploadReforma", async (req, reply) => {
   }
 })
 
+// Função auxiliar para obter sessão do token
+function getSessionFromToken(token) {
+  return authService.getSessionByToken ? authService.getSessionByToken(token) : null;
+}
+
+// Endpoint para upload de currículo (ADM)
+fastify.post("/admin/upload-curriculo", async (req, reply) => {
+  try {
+    const authHeader = req.headers['authorization'] || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+    
+    const session = getSessionFromToken(token);
+    if (!session) {
+      return reply.status(401).send({ error: 'Não autenticado' });
+    }
+    if (session.tipoUsuario !== 'adm') {
+      return reply.status(403).send({ error: 'Apenas ADM pode fazer upload' });
+    }
+
+    const data = await req.file();
+    const filename = `curriculo-${data.filename}`;
+    const filepath = path.resolve(__dirname, './data', filename);
+    
+    if (!fs.existsSync(path.dirname(filepath))) {
+      fs.mkdirSync(path.dirname(filepath), { recursive: true });
+    }
+    
+    await pump(data.file, fs.createWriteStream(filepath));
+    
+    const pool = await dbModule.getConnection();
+    const anoSemestre = data.filename.replace(/\.csv$/i, '');
+    
+    await pool.request()
+      .input('anoSemestre', anoSemestre)
+      .input('caminho', filepath)
+      .input('usuarioId', session.userId)
+      .query(`
+        IF EXISTS (SELECT 1 FROM Curriculos WHERE ano_semestre = @anoSemestre)
+          UPDATE Curriculos SET arquivo_caminho = @caminho, uploadedAt = GETDATE() WHERE ano_semestre = @anoSemestre
+        ELSE
+          INSERT INTO Curriculos (ano_semestre, arquivo_caminho, uploadedBy) VALUES (@anoSemestre, @caminho, @usuarioId)
+      `);
+    
+    reply.send({ success: true, mensagem: `Currículo ${anoSemestre} enviado com sucesso` });
+  } catch (err) {
+    fastify.log.error(err);
+    reply.status(500).send({ error: 'Erro ao fazer upload do currículo' });
+  }
+});
+
+// Endpoint para upload de histórico escolar (ADM)
+fastify.post("/admin/upload-historico", async (req, reply) => {
+  try {
+    const authHeader = req.headers['authorization'] || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+    
+    const session = getSessionFromToken(token);
+    if (!session) {
+      return reply.status(401).send({ error: 'Não autenticado' });
+    }
+    if (session.tipoUsuario !== 'adm') {
+      return reply.status(403).send({ error: 'Apenas ADM pode fazer upload' });
+    }
+
+    const data = await req.file();
+    const filename = `historico-${Date.now()}-${data.filename}`;
+    const filepath = path.resolve(__dirname, './data', filename);
+    
+    if (!fs.existsSync(path.dirname(filepath))) {
+      fs.mkdirSync(path.dirname(filepath), { recursive: true });
+    }
+    
+    await pump(data.file, fs.createWriteStream(filepath));
+    
+    const pool = await dbModule.getConnection();
+    
+    await pool.request()
+      .input('caminho', filepath)
+      .input('usuarioId', session.userId)
+      .query(`INSERT INTO Historicos (arquivo_caminho, uploadedBy) VALUES (@caminho, @usuarioId)`);
+    
+    reply.send({ success: true, mensagem: 'Histórico escolar enviado com sucesso' });
+  } catch (err) {
+    fastify.log.error(err);
+    reply.status(500).send({ error: 'Erro ao fazer upload do histórico' });
+  }
+});
+
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
   const host = process.env.HOST || '0.0.0.0';
   fastify.listen({ port, host }, (err, address) => {

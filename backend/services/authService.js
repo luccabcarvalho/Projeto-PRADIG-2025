@@ -13,15 +13,16 @@ function generateToken() {
   return crypto.randomBytes(24).toString('hex');
 }
 
-function storeSession(token, userId, email, name, matricula) {
+function storeSession(token, userId, email, name, matricula, tipoUsuario = 'aluno') {
   activeSessions.set(token, {
     userId,
     email,
     name,
     matricula,
+    tipoUsuario,
     createdAt: Date.now()
   });
-  // Auto-cleanup after 24 hours
+  // Limpeza de sessão 24h
   setTimeout(() => {
     activeSessions.delete(token);
   }, 24 * 60 * 60 * 1000);
@@ -39,18 +40,19 @@ async function findByEmailOrMatricula(identifier) {
       .query(`SELECT * FROM Alunos WHERE email = @identifier OR matricula = @identifier`);
     return result.recordset[0] || null;
   } catch (err) {
-    console.error('Database error:', err);
+    console.error('Erro no database:', err);
     throw err;
   }
 }
 
-async function registerUser({ name, email, matricula, password }) {
+async function registerUser({ name, email, matricula, password, tipoUsuario = 'aluno' }) {
   if (!email || !password || !name || !matricula) throw new Error('Todos os campos são obrigatórios');
+  //if (!['aluno', 'adm'].includes(tipoUsuario)) throw new Error('Tipo de usuário inválido');
   
   try {
     const pool = await dbModule.getConnection();
     
-    // Check if already exists
+    
     const checkResult = await pool.request()
       .input('email', email)
       .input('matricula', matricula)
@@ -71,15 +73,15 @@ async function registerUser({ name, email, matricula, password }) {
       .input('email', email)
       .input('matricula', matricula)
       .input('password', pwd)
-      .query(`INSERT INTO Alunos (name, email, matricula, password) OUTPUT INSERTED.id VALUES (@name, @email, @matricula, @password)`);
+      .input('tipoUsuario', tipoUsuario)
+      .query(`INSERT INTO Alunos (name, email, matricula, password, tipo_usuario) OUTPUT INSERTED.id VALUES (@name, @email, @matricula, @password, @tipoUsuario)`);
     
     const id = result.recordset[0].id;
-    return { id, name, email, matricula };
+    return { id, name, email, matricula, tipoUsuario };
   } catch (err) {
     throw err;
   }
 }
-
 async function loginUser({ identifier, password }) {
   if (!identifier || !password) throw new Error('Credenciais incompletas');
   
@@ -96,30 +98,30 @@ async function loginUser({ identifier, password }) {
     if (pwd !== user.password) throw new Error('Senha inválida');
     
     const token = generateToken();
-    storeSession(token, user.id, user.email, user.name, user.matricula);
+    const tipoUsuario = user.tipo_usuario || 'aluno';
+    storeSession(token, user.id, user.email, user.name, user.matricula, tipoUsuario);
     
-    return { id: user.id, name: user.name, email: user.email, matricula: user.matricula, token };
+    return { id: user.id, name: user.name, email: user.email, matricula: user.matricula, tipoUsuario, token };
   } catch (err) {
     throw err;
   }
 }
 
+
 async function findByToken(token) {
-  // Token-based authentication não é usado
   throw new Error('Token-based authentication não implementado');
 }
 
 async function changePassword({ token, oldPassword, newPassword }) {
   if (!token || !oldPassword || !newPassword) throw new Error('Dados incompletos');
   
-  try {
-    // Validate token
+  try {   
     const session = getSessionByToken(token);
     if (!session) throw new Error('Sessão expirada. Por favor, faça login novamente.');
     
     const pool = await dbModule.getConnection();
     
-    // Verify old password
+    
     const result = await pool.request()
       .input('userId', session.userId)
       .query(`SELECT password FROM Alunos WHERE id = @userId`);
@@ -130,7 +132,6 @@ async function changePassword({ token, oldPassword, newPassword }) {
     const hashedOldPassword = hashPassword(oldPassword);
     if (hashedOldPassword !== user.password) throw new Error('Senha atual inválida');
     
-    // Update password
     const hashedNewPassword = hashPassword(newPassword);
     await pool.request()
       .input('userId', session.userId)

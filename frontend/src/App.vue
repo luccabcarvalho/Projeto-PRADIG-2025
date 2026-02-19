@@ -44,12 +44,15 @@ onBeforeUnmount(() => {
     <v-app-bar class="pl-4 app-bar">
       <ul class="d-flex ma-0 navigation">
         <li>
-          <RouterLink to="/">Migração</RouterLink>
+          <RouterLink to="/migracao">Migração</RouterLink>
         </li>
         <li class="ml-4">
           <RouterLink to="/progresso">Progresso</RouterLink>
         </li>
-        <li v-if="!user" class="ml-4"><RouterLink to="/auth">Entrar / Cadastrar</RouterLink></li>
+        <li v-if="user && user.tipoUsuario === 'adm'" class="ml-4">
+          <RouterLink to="/admin">Administração</RouterLink>
+        </li>
+        <li v-if="!user" class="ml-4"><RouterLink to="/">Entrar / Cadastrar</RouterLink></li>
         <li v-if="user" class="ml-4">
             <RouterLink :to="{ name: 'perfil' }" class="mr-2">{{ user.name }}</RouterLink>   
         </li>
@@ -120,7 +123,6 @@ nav a:first-of-type {
   align-items: center;
 }
 
-/* separador entre itens visíveis (funciona corretamente com v-if/v-for) */
 .navigation li + li {
   border-left: 1px solid black;
 }

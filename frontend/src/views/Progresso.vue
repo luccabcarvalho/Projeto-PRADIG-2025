@@ -76,7 +76,7 @@ import axios from "axios";
 import instance from "@/api/instance";
 import historicoCsv from '@/docs/HistoricoEscolarSimplificado.csv?raw';
 
-// Importa todos os currículos disponíveis
+// Importando todos os currículos disponíveis
 import curriculo20002 from '@/docs/curriculo-20002.csv?raw';
 import curriculo20052 from '@/docs/curriculo-20052.csv?raw';
 import curriculo20081 from '@/docs/curriculo-20081.csv?raw';
@@ -103,7 +103,7 @@ export default {
       }
     },
 
-    _extractCurriculoYearFromMatricula(matricula) {
+    extrairAnoCurriculoMatricula(matricula) {
       if (!matricula || matricula.length < 5) return null;
       return matricula.substring(0, 5);
     },
@@ -111,9 +111,9 @@ export default {
     async loadHistoricoForUser() {
       if (!this.user || !this.user.matricula) return;
       try {
-        const curriculoYear = this._extractCurriculoYearFromMatricula(this.user.matricula);
+        const curriculoYear = this.extrairAnoCurriculoMatricula(this.user.matricula);
         const text = historicoCsv;
-        const disciplinas = this._parseHistoricoCsv(text, String(this.user.matricula));
+        const disciplinas = this.parseHistoricoCsv(text, String(this.user.matricula));
         
         if (!disciplinas.length) {
           this.message = 'Nenhum histórico encontrado para a matrícula ' + this.user.matricula;
@@ -126,11 +126,11 @@ export default {
         this.periodList = this.grade.map(p => p.periodo);
         
         if (curriculoYear) {
-          const curriculoRaw = this._getCurriculoByYear(curriculoYear);
+          const curriculoRaw = this.getCurriculoPorAno(curriculoYear);
           if (curriculoRaw) {
-            const currList = this._parseCurriculoCsv(curriculoRaw.text);
+            const currList = this.parseCurriculoCsv(curriculoRaw.text);
             this.curriculoVersion = curriculoRaw.ver;
-            this.curriculoGrade = this._buildCurriculoProgress(currList, disciplinas);
+            this.curriculoGrade = this.buildCurriculoProgresso(currList, disciplinas);
           } else {
             this.curriculoGrade = [];
           }
@@ -143,7 +143,6 @@ export default {
     },
 
     onSamgUserChanged(e) {
-      // reload when other parts of the app (or other tabs) update the logged user
       this.loadUser();
       this.loadHistoricoForUser();
     },
@@ -197,7 +196,7 @@ export default {
       if (name.endsWith('.csv') || file.type === 'text/csv') {
         try {
           const text = await this._readFileAsText(file);
-          const disciplinas = this._parseHistoricoCsv(text);
+          const disciplinas = this.parseHistoricoCsv(text);
           this.grade = this.organizarPorPeriodo(disciplinas);
         } catch (e) {
           alert('Erro ao processar CSV');
@@ -215,7 +214,7 @@ export default {
       });
     },
 
-    _splitCsvLine(line) {
+    splitLinhaCsv(line) {
       const cols = line.split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/);
       return cols.map(c => {
         let v = c.trim();
@@ -224,10 +223,10 @@ export default {
       });
     },
 
-    _parseHistoricoCsv(text, matricula = null) {
+    parseHistoricoCsv(text, matricula = null) {
       const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
       if (!lines.length) return [];
-      const header = this._splitCsvLine(lines[0]).map(h => h.toLowerCase());
+      const header = this.splitLinhaCsv(lines[0]).map(h => h.toLowerCase());
 
       const idxOf = (names) => {
         for (const n of names) {
@@ -246,7 +245,7 @@ export default {
 
       const rows = [];
       for (let i = 1; i < lines.length; i++) {
-        const cols = this._splitCsvLine(lines[i]);
+        const cols = this.splitLinhaCsv(lines[i]);
         if (matricula && idxMatricula >= 0) {
           const rowMat = (cols[idxMatricula] || '').trim();
           if (String(rowMat) !== String(matricula)) continue;
@@ -302,7 +301,7 @@ export default {
       return out;
     },
 
-    _getCurriculoByYear(year) {
+    getCurriculoPorAno(ano) {
       const curriculosDisponiveis = {
         '20002': { text: curriculo20002, ver: '20002' },
         '20052': { text: curriculo20052, ver: '20052' },
@@ -310,10 +309,10 @@ export default {
         '20232': { text: curriculo20232, ver: '20232' },
       };
       
-      if (curriculosDisponiveis[year]) {
-        return curriculosDisponiveis[year];
+      if (curriculosDisponiveis[ano]) {
+        return curriculosDisponiveis[ano];
       }
-      const yearNum = parseInt(year, 10);
+      const yearNum = parseInt(ano, 10);
       const disponiveisOrdenados = Object.keys(curriculosDisponiveis)
         .map(k => ({ year: k, num: parseInt(k, 10) }))
         .filter(k => k.num <= yearNum)
@@ -332,11 +331,11 @@ export default {
         return curriculosDisponiveis[ultimoRecurso];
       }
       
-      console.error('❌ Nenhum currículo disponível');
+      console.error('Nenhum currículo disponível');
       return null;
     },
 
-    _getLatestCurriculoRaw() {
+    getUltimoCurriculo() {
       const modules = import.meta.globEager('../docs/curriculo*.csv?raw');
       const candidates = Object.keys(modules).filter(p => /curriculo-?(\d+)\.csv$/i.test(p));
       if (!candidates.length) return null;
@@ -356,10 +355,10 @@ export default {
       return { text, ver };
     },
 
-    _parseCurriculoCsv(text) {
+    parseCurriculoCsv(text) {
       const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
       if (!lines.length) return [];
-      const header = this._splitCsvLine(lines[0]).map(h => h.toLowerCase());
+      const header = this.splitLinhaCsv(lines[0]).map(h => h.toLowerCase());
 
       const idxOf = (names) => {
         for (const n of names) {
@@ -378,7 +377,7 @@ export default {
       const dedup = new Map();
       
       for (let i = 1; i < lines.length; i++) {
-        const cols = this._splitCsvLine(lines[i]);
+        const cols = this.splitLinhaCsv(lines[i]);
         const codigo = idxCod >= 0 ? (cols[idxCod] || '').trim() : null;
         if (!codigo) continue;
         
@@ -401,7 +400,7 @@ export default {
       return out;
     },
 
-    _buildCurriculoProgress(curriculoList, userDisciplinas) {
+    buildCurriculoProgresso(curriculoList, userDisciplinas) {
       const statusByCode = {};
       const aprovados = [];
       for (const d of userDisciplinas) {

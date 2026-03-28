@@ -1,6 +1,6 @@
 <template>
   <v-container fluid class="progresso">
-    <v-row>
+    <v-row justify="center">
       <strong class="warning text-h5 text-center">
         AVISO: Este simulador é informativo. Leia os anexos oficiais para mais detalhes.
       </strong>
@@ -8,27 +8,90 @@
   
     <v-row justify="center">
       <v-col cols="12" md="10">
-        <v-alert v-if="!user" type="info" border="left" class="mb-4">Faça login para ver seu histórico e progresso automaticamente a partir da matrícula.</v-alert>
-        <v-alert v-if="message" type="info" border="left" class="mb-4">{{ message }}</v-alert>
+        <v-alert v-if="!user" type="info" border: left class="mb-4">Faça login para ver seu histórico e progresso automaticamente.</v-alert>
+        <v-alert v-if="message" type="info" border: left class="mb-4">{{ message }}</v-alert>
         
         <div v-if="curriculoGrade.length && user" class="text-center my-6">
           <h2 class="mb-2">Grade Curricular</h2>
           <p v-if="user.matricula && curriculoVersion" class="text-caption mb-6">
             Matrícula: {{ user.matricula }} | Currículo: v{{ curriculoVersion }}
           </p>
+
+          <v-row class="mb-4" justify="center">
+            <v-col cols="6" sm="3">
+              <v-card variant="outlined" class="pa-3 text-center">
+                <div class="text-caption">Obrigatórias</div>
+                <div class="text-h6 font-weight-bold">{{ curriculoStats.total }}</div>
+              </v-card>
+            </v-col>
+            <v-col cols="6" sm="3">
+              <v-card variant="outlined" class="pa-3 text-center">
+                <div class="text-caption">Concluídas</div>
+                <div class="text-h6 font-weight-bold text-success">{{ curriculoStats.vencidas }}</div>
+              </v-card>
+            </v-col>
+            <v-col cols="6" sm="3">
+              <v-card variant="outlined" class="pa-3 text-center">
+                <div class="text-caption">Restantes</div>
+                <div class="text-h6 font-weight-bold text-warning">{{ curriculoStats.pendentes }}</div>
+              </v-card>
+            </v-col>
+            <v-col cols="6" sm="3">
+              <v-card variant="outlined" class="pa-3 text-center">
+                <div class="text-caption">Progresso</div>
+                <div class="text-h6 font-weight-bold">{{ curriculoStats.percentual }}%</div>
+              </v-card>
+            </v-col>
+          </v-row>
+
+          <v-row justify="center" class="mb-2">
+            <v-col cols="12" sm="auto" class="d-flex justify-center">
+              <v-switch
+                v-model="showOnlyPendentes"
+                color="warning"
+                hide-details
+                inset
+                label="Mostrar apenas pendentes"
+              />
+            </v-col>
+            <v-col cols="12" sm="auto" class="d-flex justify-center">
+              <v-switch
+                v-model="showOnlyObrigatorias"
+                color="primary"
+                hide-details
+                inset
+                label="Mostrar apenas obrigatórias"
+              />
+            </v-col>
+          </v-row>
           
           <v-row class="mt-6" justify="center">
-            <v-col v-for="(periodo, idx) in curriculoGrade" :key="'periodo-'+idx" cols="12" md="6" lg="4" class="pa-4">
+            <v-col v-for="(periodo, idx) in filteredCurriculoGrade" :key="'periodo-'+idx" cols="12" md="6" lg="4" class="pa-4">
               <v-card class="elevation-4 periodo-card" style="min-height: 100%;">
                 <v-card-title class="text-center bg-light-blue" style="background-color: #e3f2fd;">
-                  <span class="text-h6">{{ periodo.periodo }}</span>
+                  <div class="w-100">
+                    <span class="text-h6 d-block">{{ periodo.periodo }} período</span>
+                    <span class="text-caption">{{ periodo.vencidas }}/{{ periodo.total }} obrigatórias concluídas</span>
+                  </div>
                 </v-card-title>
                 
                 <v-card-text class="pa-4">
-                  <div v-for="disc in periodo.disciplinas" :key="disc.codigo" class="mb-3 d-flex align-center gap-2">
+                  <v-progress-linear
+                    :model-value="periodo.percentual"
+                    color="success"
+                    height="8"
+                    rounded
+                    class="mb-4"
+                  />
+                  <div
+                    v-for="disc in periodo.disciplinas"
+                    :key="disc.codigo"
+                    class="mb-3 d-flex align-center gap-2"
+                    :class="{ 'disc-nao-obrigatoria': !disc.obrigatoria }"
+                  >
                     <v-btn
-                      :color="disc.status === 'Vencido' ? 'success' : 'grey-lighten-2'"
-                      :text-color="disc.status === 'Vencido' ? 'white' : 'black'"
+                      :color="statusColor(disc.status)"
+                      :text-color="statusTextColor(disc.status)"
                       size="small"
                       class="flex-shrink-0"
                       style="min-width: 80px; font-weight: 600;"
@@ -54,6 +117,10 @@
                   <v-btn color="grey-lighten-2" small disabled style="min-width: 60px;"></v-btn>
                   <span class="text-caption font-weight-600">Não Cursado</span>
                 </div>
+                <div class="d-flex align-center gap-2">
+                  <v-btn color="info" small disabled style="min-width: 60px;"></v-btn>
+                  <span class="text-caption font-weight-600">Cursando</span>
+                </div>
               </div>
             </v-col>
           </v-row>
@@ -74,13 +141,21 @@
 <script>
 import axios from "axios";
 import instance from "@/api/instance";
-import historicoCsv from '@/docs/HistoricoEscolarSimplificado.csv?raw';
 
-// Importando todos os currículos disponíveis
-import curriculo20002 from '@/docs/curriculo-20002.csv?raw';
-import curriculo20052 from '@/docs/curriculo-20052.csv?raw';
-import curriculo20081 from '@/docs/curriculo-20081.csv?raw';
-import curriculo20232 from '@/docs/curriculo-20232.csv?raw';
+// Importa todos os CSVs de docs e subpastas
+const csvDocs = import.meta.glob('../docs/**/*.csv', { query: '?raw', import: 'default', eager: true });
+function getCsvDocsDisponiveis() {
+  const csvDisponiveis = {};
+  for (const path in csvDocs) {
+    // Extrai o nome do arquivo sem extensão
+    const nome = path.split('/').pop().replace(/\.csv$/i, '');
+    csvDisponiveis[nome] = csvDocs[path];
+  }
+  return csvDisponiveis;
+}
+
+const csvDisponiveis = getCsvDocsDisponiveis();
+const historicoCsv = csvDisponiveis.HistoricoEscolarSimplificado || '';
 
 export default {
   data() {
@@ -91,7 +166,57 @@ export default {
       periodList: [],
       curriculoVersion: null,
       curriculoGrade: [],
+      showOnlyPendentes: false,
+      showOnlyObrigatorias: false,
     };
+  },
+  computed: {
+    curriculoStats() {
+      const disciplinas = this.curriculoGrade
+        .flatMap(p => p.disciplinas || [])
+        .filter(d => d.obrigatoria);
+      const total = disciplinas.length;
+      const vencidas = disciplinas.filter(d => d.status === 'Vencido').length;
+      const pendentes = Math.max(total - vencidas, 0);
+      const percentual = total ? Math.round((vencidas / total) * 100) : 0;
+      return { total, vencidas, pendentes, percentual };
+    },
+    filteredCurriculoGrade() {
+      const order = {
+        'Não Vencido': 0,
+        'Matricula/Cursando': 1,
+        'Vencido': 2,
+      };
+
+      return this.curriculoGrade
+        .map((periodo) => {
+          const disciplinasOrdenadas = [...(periodo.disciplinas || [])].sort((a, b) => {
+            if (a.obrigatoria !== b.obrigatoria) return a.obrigatoria ? -1 : 1;
+            const ao = order[a.status] ?? 99;
+            const bo = order[b.status] ?? 99;
+            if (ao !== bo) return ao - bo;
+            return (a.nome || '').localeCompare(b.nome || '');
+          });
+
+          let disciplinas = disciplinasOrdenadas;
+          if (this.showOnlyPendentes) disciplinas = disciplinas.filter(d => d.status !== 'Vencido');
+          if (this.showOnlyObrigatorias) disciplinas = disciplinas.filter(d => d.obrigatoria);
+
+          const obrigatoriasPeriodo = (periodo.disciplinas || []).filter(d => d.obrigatoria);
+          const total = obrigatoriasPeriodo.length;
+          const vencidas = obrigatoriasPeriodo.filter(d => d.status === 'Vencido').length;
+          const percentual = total ? Math.round((vencidas / total) * 100) : 0;
+
+          return {
+            periodo: periodo.periodo,
+            disciplinas,
+            total,
+            vencidas,
+            percentual,
+          };
+        })
+        .filter(p => p.disciplinas.length > 0);
+    },
   },
   methods: {
     loadUser() {
@@ -103,21 +228,68 @@ export default {
       }
     },
 
-    extrairAnoCurriculoMatricula(matricula) {
-      if (!matricula || matricula.length < 5) return null;
-      return matricula.substring(0, 5);
+
+    extrairVersaoCurriculoHistorico(text, matricula = null) {
+      const lines = String(text || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (!lines.length) return null;
+
+      const header = this.splitLinhaCsv(lines[0]).map(h =>
+        String(h || '')
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase()
+          .trim()
+      );
+
+      const idxOf = (names) => {
+        for (const n of names) {
+          const i = header.findIndex(h => h.includes(n));
+          if (i >= 0) return i;
+        }
+        return -1;
+      };
+
+      const idxVersao = idxOf(['num versao', 'num_versao', 'versao curriculo', 'versao']);
+      const idxMatricula = idxOf(['matr aluno', 'matr_aluno', 'matricula']);
+      if (idxVersao < 0) return null;
+
+      const freq = new Map();
+      for (let i = 1; i < lines.length; i++) {
+        const cols = this.splitLinhaCsv(lines[i]);
+
+        if (matricula && idxMatricula >= 0) {
+          const rowMat = String(cols[idxMatricula] || '').trim();
+          if (String(rowMat) !== String(matricula)) continue;
+        }
+
+        const raw = String(cols[idxVersao] || '').trim();
+        const versao = raw.replace(/\D/g, '');
+        if (!versao) continue;
+        freq.set(versao, (freq.get(versao) || 0) + 1);
+      }
+
+      if (!freq.size) return null;
+      return [...freq.entries()]
+        .sort((a, b) => (b[1] - a[1]) || (parseInt(b[0], 10) - parseInt(a[0], 10)))[0][0];
     },
 
     async loadHistoricoForUser() {
       if (!this.user || !this.user.matricula) return;
       try {
-        const curriculoYear = this.extrairAnoCurriculoMatricula(this.user.matricula);
         const text = historicoCsv;
-        const disciplinas = this.parseHistoricoCsv(text, String(this.user.matricula));
+        const matricula = String(this.user.matricula);
+        const curriculoYear = this.extrairVersaoCurriculoHistorico(text, matricula);
+        const disciplinas = this.parseHistoricoCsv(text, matricula);
         
         if (!disciplinas.length) {
           this.message = 'Nenhum histórico encontrado para a matrícula ' + this.user.matricula;
           this.grade = [];
+          this.curriculoGrade = [];
+          return;
+        }
+
+        if (!curriculoYear) {
+          this.message = 'Não foi possível identificar a versão do currículo (NUM VERSAO) no histórico.';
           this.curriculoGrade = [];
           return;
         }
@@ -145,6 +317,38 @@ export default {
     onSamgUserChanged(e) {
       this.loadUser();
       this.loadHistoricoForUser();
+    },
+    statusColor(status) {
+      if (status === 'Vencido') return 'success';
+      if (status === 'Matricula/Cursando') return 'info';
+      return 'grey-lighten-2';
+    },
+    statusTextColor(status) {
+      if (status === 'Vencido' || status === 'Matricula/Cursando') return 'white';
+      return 'black';
+    },
+    normalizarTipoCategoria(tipo) {
+      const normalized = String(tipo || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+
+      if (normalized.includes('obrig')) return 'obrigatoria';
+      if (normalized.includes('elet')) return 'eletiva';
+      if (normalized.includes('optat')) return 'optativa';
+      if (normalized.includes('complement')) return 'complementar';
+      return 'outros';
+    },
+    tipoCategoriaLabel(tipoCategoria) {
+      const map = {
+        obrigatoria: 'Obrigatória',
+        eletiva: 'Eletiva',
+        optativa: 'Optativa',
+        complementar: 'Complementar',
+        outros: 'Outros',
+      };
+      return map[tipoCategoria] || 'Outros';
     },
     sigla(nome) {
       if (!nome || typeof nome !== 'string') return '';
@@ -302,13 +506,19 @@ export default {
     },
 
     getCurriculoPorAno(ano) {
-      const curriculosDisponiveis = {
-        '20002': { text: curriculo20002, ver: '20002' },
-        '20052': { text: curriculo20052, ver: '20052' },
-        '20081': { text: curriculo20081, ver: '20081' },
-        '20232': { text: curriculo20232, ver: '20232' },
-      };
+      const curriculosDisponiveis = Object.entries(csvDisponiveis).reduce((acc, [nomeArquivo, text]) => {
+        const match = nomeArquivo.match(/^curriculo-?(\d+)$/i);
+        if (!match) return acc;
+        const ver = match[1];
+        acc[ver] = { text, ver };
+        return acc;
+      }, {});
       
+      if (!Object.keys(curriculosDisponiveis).length) {
+        console.error('Nenhum currículo disponível');
+        return null;
+      }
+
       if (curriculosDisponiveis[ano]) {
         return curriculosDisponiveis[ano];
       }
@@ -336,22 +546,20 @@ export default {
     },
 
     getUltimoCurriculo() {
-      const modules = import.meta.globEager('../docs/curriculo*.csv?raw');
-      const candidates = Object.keys(modules).filter(p => /curriculo-?(\d+)\.csv$/i.test(p));
+      const candidates = Object.keys(csvDisponiveis).filter(nome => /^curriculo-?(\d+)$/i.test(nome));
       if (!candidates.length) return null;
 
       let best = null;
       let bestNum = -Infinity;
-      for (const p of candidates) {
-        const m = p.match(/curriculo-?(\d+)\.csv$/i);
+      for (const nome of candidates) {
+        const m = nome.match(/^curriculo-?(\d+)$/i);
         if (!m) continue;
         const num = parseInt(m[1], 10);
-        if (num > bestNum) { bestNum = num; best = p; }
+        if (num > bestNum) { bestNum = num; best = nome; }
       }
       if (!best) return null;
-      const raw = modules[best];
-      const text = (typeof raw === 'string') ? raw : (raw.default || raw);
-      const ver = best.match(/curriculo-?(\d+)\.csv$/i)?.[1] || best;
+      const text = csvDisponiveis[best];
+      const ver = best.match(/^curriculo-?(\d+)$/i)?.[1] || best;
       return { text, ver };
     },
 
@@ -392,8 +600,18 @@ export default {
         else if (rawPeriodo) periodo = rawPeriodo;
         const creditos = idxCred >= 0 ? parseFloat((cols[idxCred] || '').replace(',', '.')) || null : null;
         const tipo = idxTipo >= 0 ? (cols[idxTipo] || '').trim() : null;
+        const tipoCategoria = this.normalizarTipoCategoria(tipo);
 
-        dedup.set(codUpper, { codigo: codUpper, nome, periodo, creditos, tipo });
+        dedup.set(codUpper, {
+          codigo: codUpper,
+          nome,
+          periodo,
+          creditos,
+          tipo,
+          tipoCategoria,
+          tipoLabel: this.tipoCategoriaLabel(tipoCategoria),
+          obrigatoria: tipoCategoria === 'obrigatoria',
+        });
       }
 
       const out = Array.from(dedup.values());
@@ -402,17 +620,12 @@ export default {
 
     buildCurriculoProgresso(curriculoList, userDisciplinas) {
       const statusByCode = {};
-      const aprovados = [];
       for (const d of userDisciplinas) {
         const cod = (d.codigo || '').toUpperCase();
         statusByCode[cod] = d.situacao || 'Não Vencido';
-        if (d.situacao === 'Vencido') {
-          aprovados.push({ cod, nome: d.nome });
-        }
       }
 
       const periodMap = {};
-      const encontrados = new Set();
       for (const c of curriculoList) {
         const periodo = c.periodo || 'Não informado';
         if (!periodMap[periodo]) periodMap[periodo] = [];
@@ -420,33 +633,16 @@ export default {
         const codUpper = (c.codigo || '').toUpperCase();
         const status = statusByCode[codUpper] || 'Não Vencido';
         
-        if (status === 'Vencido') {
-          encontrados.add(codUpper);
-        }
-        
         periodMap[periodo].push({ 
           codigo: c.codigo, 
           nome: c.nome, 
           creditos: c.creditos, 
-          tipo: c.tipo, 
+          tipo: c.tipo,
+          tipoCategoria: c.tipoCategoria,
+          tipoLabel: c.tipoLabel,
+          obrigatoria: c.obrigatoria,
           status 
         });
-      }
-
-      const adicionais = [];
-      for (const ap of aprovados) {
-        if (!encontrados.has(ap.cod)) {
-          adicionais.push({ 
-            codigo: ap.cod, 
-            nome: ap.nome, 
-            creditos: null, 
-            tipo: 'Optativa/Complementar', 
-            status: 'Vencido' 
-          });
-        }
-      }
-      if (adicionais.length > 0) {
-        periodMap['Optativas/Complementares'] = adicionais;
       }
 
       return Object.keys(periodMap)
@@ -522,6 +718,10 @@ export default {
 
 .text-left {
   text-align: left;
+}
+
+.disc-nao-obrigatoria {
+  opacity: 0.75;
 }
 
 .bg-light-blue {

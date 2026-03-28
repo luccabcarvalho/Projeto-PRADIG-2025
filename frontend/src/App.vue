@@ -74,7 +74,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 header {
-  line-height: 1.5;
+  line-height: 1;
   max-height: 100vh;
 }
 
@@ -134,7 +134,7 @@ nav a:first-of-type {
 
 .navigation a{
   color: black;
-  font-size: 18px;
+  font-size: 13px;
   font-weight: 400;
   text-decoration: underline;
 }

@@ -1,0 +1,341 @@
+COD_CURSO;NOME_UNIDADE;NUM_VERSAO;DESCR_ESTRUTURA;NOME_DISCIPLINA;NOME_DISC_EQUIV;TIPO_EQUIVALENCIA;BLOCO
+
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;01. Fundamentação Mat. da Ciência da Computação - 240 Horas;TIN0105 - INTRODUÇÃO À LÓGICA COMPUTACIONAL;TIN0005 - Introdução à Lógica Computacional;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;01. Fundamentação Mat. da Ciência da Computação - 240 Horas;TIN0109 - ESTRUTURAS DISCRETAS;TIN0009 - Estruturas Discretas;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;01. Fundamentação Mat. da Ciência da Computação - 240 Horas;TIN0118 - ANÁLISE DE ALGORITMOS;TIN0018 - Análise de Algoritmos;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;01. Fundamentação Mat. da Ciência da Computação - 240 Horas;TIN0119 - LINGUAGENS FORMAIS E AUTÔMATOS;TIN0019 - Linguagens Formais e Autômatos;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;02. Programação e Estruturas de Dados - 300 Horas;TIN0011 - TÉCNICAS DE PROGRAMAÇÃO II;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;02. Programação e Estruturas de Dados - 300 Horas;TIN0107 - TÉCNICAS DE PROGRAMAÇÃO-I;TIN0007 - TÉCNICAS DE PROGRAMAÇÃO I;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;02. Programação e Estruturas de Dados - 300 Horas;TIN0114 - ESTRUTURAS DE DADOS-I;TIN0014 - Estruturas de Dados;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;02. Programação e Estruturas de Dados - 300 Horas;TIN0168 - ESTRUTURAS DE DADOS II;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;03. Sistemas de Informação - 180 Horas;TIN0106 - DESENVOLVIMENTO DE PÁGINAS WEB;TIN0006 - Programas Utilitários Básicos;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;03. Sistemas de Informação - 180 Horas;TIN0110 - INTERAÇÃO HUMANO-COMPUTADOR;TIN0010 - Produtividade Pessoal com Sistemas de Informação;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;03. Sistemas de Informação - 180 Horas;TIN0112 - FUNDAMENTOS DE SISTEMAS DE INFORMAÇÃO;TIN0012 - Modelagem de Sistemas;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;04.Arquitetura de Comp ,Sistemas Oper. e Redes - 240 Horas;TIN0108 - ORGANIZAÇÃO DE COMPUTADORES;TIN0008 - Organização de Computadores;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;04.Arquitetura de Comp ,Sistemas Oper. e Redes - 240 Horas;TIN0116 - SISTEMAS OPERACIONAIS;TIN0016 - Sistemas Operacionais;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;04.Arquitetura de Comp ,Sistemas Oper. e Redes - 240 Horas;TIN0123 - REDES DE COMPUTADORES-I;TIN0023 - Redes de Computadores;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;04.Arquitetura de Comp ,Sistemas Oper. e Redes - 240 Horas;TIN0126 - REDES DE COMPUTADORES II;TIN0026 - Distribuição e Concorrência;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;05. Engenharia de Software - 300 Horas;TIN0115 - ANÁLISE DE SISTEMAS;TIN0015 - Análise e Projeto de Sistemas;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;05. Engenharia de Software - 300 Horas;TIN0121 - PROGRAMAÇÃO MODULAR;TIN0021 - Programação Modular;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;05. Engenharia de Software - 300 Horas;TIN0122 - PROCESSOS DE SOFTWARE;TIN0022 - Construção de Sistemas;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;05. Engenharia de Software - 300 Horas;TIN0132 - GERÊNCIA DE PROJETOS EM INFORMÁTICA;TIN0032 - Gerência de Projetos em Informática;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;05. Engenharia de Software - 300 Horas;TIN0171 - PROJETO E CONSTRUÇÃO DE SISTEMAS;TIN0028 - Projeto e Construção de Sistemas com Ambiente de Programação;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;06. Banco de Dados - 180 Horas;TIN0120 - BANCO DE DADOS-I;TIN0020 - Sistema de Banco de Dados;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;06. Banco de Dados - 180 Horas;TIN0125 - PROJETO E CONSTRUÇÃO DE SISTEMAS COMSGBD;TIN0025 - Projeto e Construção de Sistemas com SGDB;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;06. Banco de Dados - 180 Horas;TIN0169 - BANCO DE DADOS II;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;07. Ciências Administrativas - 180 Horas;TIN0013 - Análise Empresarial e Administrativa;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;07. Ciências Administrativas - 180 Horas;TIN0117 - ADMINISTRAÇÃO FINANCEIRA;TIN0017 - Administração Financeira;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;07. Ciências Administrativas - 180 Horas;TIN0130 - EMPREENDEDORISMO;TIN0030 - Empresa de Informática;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;HDI0142 - Língua Brasileira de Sinais;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;HDI0164 - Culturas Afro Brasileiras em Sala de Aula;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;SER0012 - EDUCAÇÃO AMBIENTAL E CIDADANIA;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0128 - INFORMÁTICA NA EDUCAÇÃO;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0135 - ADMINISTRAÇÃO DE BANCO DE DADOS;TIN0035 - Administração de Banco de Dados;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0136 - GERÊNCIA DE DADOS EM AMBIENTES DISTRIBUÍDOS E PARALELOS;TIN0036 - Banco de Dados Distribuídos e Datawarehousing;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0137 - TÓPICOS AVANÇADOS EM BANCO DE DADOS-I;TIN0037 - Tópicos Avançados em Banco de Dados;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0138 - COMUNICAÇÃO E SEGURANÇA DE DADOS;TIN0038 - Comunicação e Segurança de Dados;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0141 - TÓPICOS AVANÇADOS EM REDES DE COMPUTADORES-I;TIN0041 - Tópicos Avançados em Redes de Computadores;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0142 - PROGRAMAÇÃO LINEAR;TIN0042 - Programação Linear;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0143 - FLUXOS EM REDES;TIN0043 - Fluxo em Redes;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0144 - ALGORITMOS PARA PROBLEMAS COMBINATÓRIOS;TIN0044 - Algoritmos para Problemas Combinatórios;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0145 - TÓPICOS AVANÇADOS EM ALGORITMOS-I;TIN0045 - Tópicos Avançados em Algoritmos;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0146 - COMPILADORES;TIN0042 - Programação Linear;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0147 - FUNDAMENTOS DE REPRESENTAÇÃO DE CONHECIMENTO E RACIOCÍNIO;TIN0047 - Inteligência Artificial;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0148 - SISTEMAS MULTIMÍDIA;TIN0048 - Sistemas Multimídia;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0149 - COMPUTAÇÃO GRÁFICA E PROCESSAMENTO DE IMAGENS;TIN0049 - Computação Gráfica e Processamento de Imagem;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0150 - AMBIENTE OPERACIONAL UNIX;TIN0050 - Ambiente Operacional Unix;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0158 - DESENVOLVIMENTO DE SERVIDOR WEB;TIN0058 - Desenvolvimento de Software para Web;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0159 - SISTEMAS COLABORATIVOS;TIN0059 - Groupware - Tecnologias de Apoio à Colaboração;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0160 - GESTÃO DE PROCESSOS DE NEGÓCIOS;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0161 - TÓPICOS AVANÇADOS EM ENGENHARIA DE SOFTWARE-I;TIN0061 - Tópicos Avançados em Engenharia de Software;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0162 - TÓPICOS AVANÇADOS EM BANCO DE DADOS II;TIN0062 - Tópicos Avançados em Bancos de dados 2;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0163 - TÓPICOS AVANÇADOS EM BANCO DE DADOS III;TIN0063 - Tópicos Avançados em Banco de Dados 3;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0164 - TÓPICOS AVANÇADOS EM REDES DE COMPUTADORES II;TIN0064 - Tópicos Avançados em Redes de Computadores 2;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0165 - TÓPICOS AVANÇADOS EM REDES DE COMPUTADORES III;TIN0065 - Tópicos Avançados em Redes de Computadores 3;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0166 - TÓPICOS AVANÇADOS EM ENGENHARIA DE SOFTWARE II;TIN0066 - Tópicos Avançados em Engenharia de Software 2;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TIN0172 - INTELIGÊNCIA ARTIFICIAL;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TUT0004 - TUTORIA COMPUTAÇÃO I;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TUT0005 - TUTORIA COMPUTAÇÃO II;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TUT0013 - TUTORIA PORTUGUÊS_II;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TUT0014 - TUTORIA PORTUGUÊS III;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TUT0015 - TUTORIA MATEMÁTICA I;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TUT0016 - TUTORIA MATEMÁTICA II;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TUT0017 - TUTORIA MATEMÁTICA III;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;08. Outras Áreas da Computação - OPTATIVAS - 480 Horas;TUT0018 - TUTORIA MATEMÁTICA IV;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;09. Matemática e Estatística -330 Horas;TME0015 - Álgebra Linear;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;09. Matemática e Estatística -330 Horas;TME0101 - MATEMÁTICA BÁSICA;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;09. Matemática e Estatística -330 Horas;TME0112 - CÁLCULO DIFERENCIAL E INTEGRAL-I;TME0012 - Cálculo Diferencial e Integral I;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;09. Matemática e Estatística -330 Horas;TME0113 - CÁLCULO DIFERENCIAL E INTEGRAL II;TME0013 - Cálculo  Diferencial e Integral II;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;09. Matemática e Estatística -330 Horas;TME0114 - PROBABILIDADE;TME0014 - Probabilidade e Estatística;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;09. Matemática e Estatística -330 Horas;TME0115 - ESTATÍSTICA;TME0014 - Probabilidade e Estatística;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;HDP0502 - DIREITO E ÉTICA PROFISSIONAL;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;HHI0033 - História da Ciência e da Tecnologia;FCS0037 - ÉTICA II;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;HTD0051 - Expressão Oral e Escrita;DID0038 - MONOGRAFIA I;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;HTD0051 - Expressão Oral e Escrita;DID0039 - MONOGRAFIA II;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;HTD0052 - LEITURA E PRODUÇÃO DE TEXTOS;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0005 - Introdução à Lógica Computacional;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0006 - Programas Utilitários Básicos;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0007 - TÉCNICAS DE PROGRAMAÇÃO I;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0008 - Organização de Computadores;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0009 - Estruturas Discretas;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0010 - Produtividade Pessoal com Sistemas de Informação;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0011 - TÉCNICAS DE PROGRAMAÇÃO II;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0012 - Modelagem de Sistemas;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0013 - Análise Empresarial e Administrativa;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0014 - Estruturas de Dados;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0015 - Análise e Projeto de Sistemas;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0016 - Sistemas Operacionais;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0017 - Administração Financeira;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0018 - Análise de Algoritmos;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0019 - Linguagens Formais e Autômatos;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0020 - Sistema de Banco de Dados;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0021 - Programação Modular;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0022 - Construção de Sistemas;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0023 - Redes de Computadores;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0024 - Seminários sobre Optativas e Eletivas;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0025 - Projeto e Construção de Sistemas com SGDB;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0026 - Distribuição e Concorrência;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0027 - Iniciação à Pesquisa I;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0028 - Projeto e Construção de Sistemas com Ambiente de Programação;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0030 - Empresa de Informática;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0031 - Projeto de Graduação I;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0032 - Gerência de Projetos em Informática;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0033 - Projeto de Graduação II;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TIN0051 - Estudo de Domínios de Aplicação 1;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TME0012 - Cálculo Diferencial e Integral I;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TME0013 - Cálculo  Diferencial e Integral II;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TME0014 - Probabilidade e Estatística;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;1. Disciplinas obrigatórias;TME0015 - Álgebra Linear;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.1-VISÃO SISTÊMICA (SISTEMAS DE INFORMAÇÃO) 330H;TIN0206 - Fundamentos de Sistemas de Informação;TIN0112 - FUNDAMENTOS DE SISTEMAS DE INFORMAÇÃO;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.1-VISÃO SISTÊMICA (SISTEMAS DE INFORMAÇÃO) 330H;TIN0207 - Informação e Sociedade;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.1-VISÃO SISTÊMICA (SISTEMAS DE INFORMAÇÃO) 330H;TIN0208 - Interação Humano-Computador;TIN0110 - INTERAÇÃO HUMANO-COMPUTADOR;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.1-VISÃO SISTÊMICA (SISTEMAS DE INFORMAÇÃO) 330H;TIN0209 - Projeto Integrador I;TIN0107 - TÉCNICAS DE PROGRAMAÇÃO-I;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.1-VISÃO SISTÊMICA (SISTEMAS DE INFORMAÇÃO) 330H;TIN0210 - Projeto Integrador II;TIN0125 - PROJETO E CONSTRUÇÃO DE SISTEMAS COMSGBD;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.1-VISÃO SISTÊMICA (SISTEMAS DE INFORMAÇÃO) 330H;TIN0211 - Metodologia Científica e Tecnológica;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.2-VISÃO SISTÊMICA (FUNDAMENTOS DE MATEMÁTICA) 360H;TMQ0007 - Probabilidade;TME0114 - PROBABILIDADE;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.2-VISÃO SISTÊMICA (FUNDAMENTOS DE MATEMÁTICA) 360H;TMQ0008 - Estatística;TME0115 - ESTATÍSTICA;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.2-VISÃO SISTÊMICA (FUNDAMENTOS DE MATEMÁTICA) 360H;TMT0043 - Fundamentos de Cálculo;TME0101 - MATEMÁTICA BÁSICA;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.2-VISÃO SISTÊMICA (FUNDAMENTOS DE MATEMÁTICA) 360H;TMT0044 - Álgebra Linear;TME0015 - Álgebra Linear;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.2-VISÃO SISTÊMICA (FUNDAMENTOS DE MATEMÁTICA) 360H;TMT0045 - Cálculo Diferencial e Integral I;TME0112 - CÁLCULO DIFERENCIAL E INTEGRAL-I;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.2-VISÃO SISTÊMICA (FUNDAMENTOS DE MATEMÁTICA) 360H;TMT0046 - Cálculo Diferencial e Integral II;TME0113 - CÁLCULO DIFERENCIAL E INTEGRAL II;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.3-GESTÃO DE SI E TI (EMPREENDEDORISMO E INOVAÇÃO) 240H;TIN0218 - Fundamentos de Gestão Organizacional;TIN0013 - Análise Empresarial e Administrativa;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.3-GESTÃO DE SI E TI (EMPREENDEDORISMO E INOVAÇÃO) 240H;TIN0219 - GESTÃO DE PROCESSOS DE NEGÓCIOS;TIN0160 - GESTÃO DE PROCESSOS DE NEGÓCIOS;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.3-GESTÃO DE SI E TI (EMPREENDEDORISMO E INOVAÇÃO) 240H;TIN0220 - Governança de Tecnologia da Informação;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.3-GESTÃO DE SI E TI (EMPREENDEDORISMO E INOVAÇÃO) 240H;TIN0221 - Empreendedorismo e Inovação;TIN0130 - EMPREENDEDORISMO;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.4-DESENVOLV.DE SOFTWARE PARA SI (PROGR. E ALGORITMOS) 360H;TIN0222 - Algoritmos e Programação;TIN0107 - TÉCNICAS DE PROGRAMAÇÃO-I;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.4-DESENVOLV.DE SOFTWARE PARA SI (PROGR. E ALGORITMOS) 360H;TIN0223 - Introdução à Lógica Computacional;TIN0105 - INTRODUÇÃO À LÓGICA COMPUTACIONAL;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.4-DESENVOLV.DE SOFTWARE PARA SI (PROGR. E ALGORITMOS) 360H;TIN0224 - Técnicas de Programação;TIN0011 - TÉCNICAS DE PROGRAMAÇÃO II;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.4-DESENVOLV.DE SOFTWARE PARA SI (PROGR. E ALGORITMOS) 360H;TIN0225 - Estruturas de Dados;TIN0114 - ESTRUTURAS DE DADOS-I;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.4-DESENVOLV.DE SOFTWARE PARA SI (PROGR. E ALGORITMOS) 360H;TIN0226 - Linguagens e Paradigmas de Programação;TIN0119 - LINGUAGENS FORMAIS E AUTÔMATOS;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.4-DESENVOLV.DE SOFTWARE PARA SI (PROGR. E ALGORITMOS) 360H;TIN0227 - Projeto e Análise de Algoritmos;TIN0118 - ANÁLISE DE ALGORITMOS;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.5-DESENVOLV. DE SOFTWARE PARA SI (ENGENH. SOFTWARE) 240H;TIN0228 - Análise e Projeto de Sistemas;TIN0115 - ANÁLISE DE SISTEMAS;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.5-DESENVOLV. DE SOFTWARE PARA SI (ENGENH. SOFTWARE) 240H;TIN0229 - Engenharia de Software I;TIN0171 - PROJETO E CONSTRUÇÃO DE SISTEMAS;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.5-DESENVOLV. DE SOFTWARE PARA SI (ENGENH. SOFTWARE) 240H;TIN0230 - Engenharia de Software II;TIN0121 - PROGRAMAÇÃO MODULAR;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.5-DESENVOLV. DE SOFTWARE PARA SI (ENGENH. SOFTWARE) 240H;TIN0231 - Gerência de Projetos;TIN0132 - GERÊNCIA DE PROJETOS EM INFORMÁTICA;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.6-ENGENHARIA DE DADOS E INFORMAÇÃO 180H;TIN0232 - Modelagem da Informação;TIN0120 - BANCO DE DADOS-I;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.6-ENGENHARIA DE DADOS E INFORMAÇÃO 180H;TIN0233 - Armazenamento e Gestão de Dados;TIN0169 - BANCO DE DADOS II;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.6-ENGENHARIA DE DADOS E INFORMAÇÃO 180H;TIN0234 - Ciência de Dados;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.7-INFRAESTRUTURA EM SI 180H;TIN0235 - Arquitetura de Computadores;TIN0108 - ORGANIZAÇÃO DE COMPUTADORES;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.7-INFRAESTRUTURA EM SI 180H;TIN0236 - Sistemas Operacionais;TIN0116 - SISTEMAS OPERACIONAIS;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;1.7-INFRAESTRUTURA EM SI 180H;TIN0237 - Redes de Computadores;TIN0123 - REDES DE COMPUTADORES-I;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;10. Comunicação - 60 Horas;HTD0058 - TEORIAS E PRÁTICAS DISCURSIVAS NA ESFERA ACADÊMICA;HTD0051 - Expressão Oral e Escrita;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;11.1. Atividades Complementares - 360 Horas;TIN0054 - Atividades Curriculares de Extensão-1;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;11.1. Atividades Complementares - 360 Horas;TIN0055 - Atividades Curriculares de Extensão-2;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;11.1. Atividades Complementares - 360 Horas;TIN0056 - Atividades Curriculares de Extensão-3;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;11.1. Atividades Complementares - 360 Horas;TIN0057 - Atividades Curriculares de Extensão-4;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;11.2. Formação Complementar;TIN0151 - FORMAÇÃO COMPLEMENTAR-I;TIN0051 - Estudo de Domínios de Aplicação 1;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;11.2. Formação Complementar;TIN0152 - FORMAÇÃO COMPLEMENTAR II;TIN0052 - Estudo de Domínios de Aplicação II;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;11.2. Formação Complementar;TIN0153 - FORMAÇÃO COMPLEMENTAR III;TIN0053 - Estudo de Domínios de Aplicação III;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;11.2. Formação Complementar;TIN0154 - FORMAÇÃO COMPLEMENTAR IV;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;11.3. Trabalho de Conclusão Final de Curso - 150 Horas;TIN0131 - PROJETO DE GRADUAÇÃO-I;TIN0031 - Projeto de Graduação I;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2008/1;11.3. Trabalho de Conclusão Final de Curso - 150 Horas;TIN0133 - PROJETO DE GRADUAÇÃO II;TIN0033 - Projeto de Graduação II;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0029 - Iniciação à Pesquisa II;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0034 - Banco de Dados em Ambiente Cliente-Servidor;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0035 - Administração de Banco de Dados;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0036 - Banco de Dados Distribuídos e Datawarehousing;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0037 - Tópicos Avançados em Banco de Dados;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0038 - Comunicação e Segurança de Dados;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0039 - Projeto e Gerência de Redes Locais;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0040 - Calibragem e Análise de Desempenho;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0041 - Tópicos Avançados em Redes de Computadores;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0042 - Programação Linear;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0043 - Fluxo em Redes;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0044 - Algoritmos para Problemas Combinatórios;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0045 - Tópicos Avançados em Algoritmos;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0046 - Compiladores;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0047 - Inteligência Artificial;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0048 - Sistemas Multimídia;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0049 - Computação Gráfica e Processamento de Imagem;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0050 - Ambiente Operacional Unix;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0052 - Estudo de Domínios de Aplicação II;FCS0036 - ÉTICA I;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0053 - Estudo de Domínios de Aplicação III;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0058 - Desenvolvimento de Software para Web;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0059 - Groupware - Tecnologias de Apoio à Colaboração;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0060 - Desenvolvimento Baseado em Componentes;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0061 - Tópicos Avançados em Engenharia de Software;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0062 - Tópicos Avançados em Bancos de dados 2;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0063 - Tópicos Avançados em Banco de Dados 3;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0064 - Tópicos Avançados em Redes de Computadores 2;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0065 - Tópicos Avançados em Redes de Computadores 3;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0066 - Tópicos Avançados em Engenharia de Software 2;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;2. Disciplinas optativas;TIN0067 - Tópicos Avançados em Engenaharia de Software III;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.1-VISÃO SISTÊMICA (SISTEMAS DE INFORMAÇÃO);TIN0106 - DESENVOLVIMENTO DE PÁGINAS WEB;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.1-VISÃO SISTÊMICA (SISTEMAS DE INFORMAÇÃO);TIN0159 - SISTEMAS COLABORATIVOS;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.1-VISÃO SISTÊMICA (SISTEMAS DE INFORMAÇÃO);TIN0238 - Acessibilidade;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.1-VISÃO SISTÊMICA (SISTEMAS DE INFORMAÇÃO);TIN0239 - Cibercultura;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.1-VISÃO SISTÊMICA (SISTEMAS DE INFORMAÇÃO);TIN0240 - Ciência de Redes;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.1-VISÃO SISTÊMICA (SISTEMAS DE INFORMAÇÃO);TIN0241 - Informática na Educação;TIN0128 - INFORMÁTICA NA EDUCAÇÃO;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.1-VISÃO SISTÊMICA (SISTEMAS DE INFORMAÇÃO);TIN0242 - Novas Formas de Economia;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.1-VISÃO SISTÊMICA (SISTEMAS DE INFORMAÇÃO);TIN0243 - Pensamento Computacional;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.1-VISÃO SISTÊMICA (SISTEMAS DE INFORMAÇÃO);TIN0244 - Pensamento Sistêmico;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.1-VISÃO SISTÊMICA (SISTEMAS DE INFORMAÇÃO);TIN0245 - Projeto de Aplicação de Sistemas de Informação em um Contexto Específico;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.1-VISÃO SISTÊMICA (SISTEMAS DE INFORMAÇÃO);TIN0246 - Teorias e Práticas de Sistemas de Informação;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.1-VISÃO SISTÊMICA (SISTEMAS DE INFORMAÇÃO);TIN0247 - Tópicos em Informática na Educação;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.2-GESTÃO DE SI E TI (EMPREENDEDORISMO E INOVAÇÃO);TIN0248 - Tópicos em Gestão de Processos de Negócio;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.2-GESTÃO DE SI E TI (EMPREENDEDORISMO E INOVAÇÃO);TIN0249 - Tópicos em Gestão do Conhecimento;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.2-GESTÃO DE SI E TI (EMPREENDEDORISMO E INOVAÇÃO);TIN0250 - Tópicos em Inovação Tecnológica;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.2-GESTÃO DE SI E TI (EMPREENDEDORISMO E INOVAÇÃO);TIN0251 - Tópicos em Propriedade Intelectual;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0142 - PROGRAMAÇÃO LINEAR;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0144 - ALGORITMOS PARA PROBLEMAS COMBINATÓRIOS;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0147 - FUNDAMENTOS DE REPRESENTAÇÃO DE CONHECIMENTO E RACIOCÍNIO;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0252 - Algoritmos para Ciência de Dados;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0253 - Análise Multiparadigma de Algoritmos;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0254 - Aplicações de Pesquisa Operacional;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0255 - Aprendizagem Profunda;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0256 - Estruturas de Dados Avançadas;TIN0168 - ESTRUTURAS DE DADOS II;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0257 - Estruturas Discretas com Algoritmos;TIN0109 - ESTRUTURAS DISCRETAS;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0258 - Estudo de Problemas de Otimização Combinatória;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0259 - Fluxos em Redes;TIN0143 - FLUXOS EM REDES;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0260 - Heurísticas Inteligentes: Técnicas e Aplicações;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0261 - Introdução à Inteligência Artificial;TIN0172 - INTELIGÊNCIA ARTIFICIAL;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0262 - Introdução Algorítmica a Grafos;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0263 - Modelagem e Ontologias;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0264 - Processamento Baseado em Restrições;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0265 - Técnicas de Programação Avançada;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0266 - Tópicos em Algoritmos;TIN0145 - TÓPICOS AVANÇADOS EM ALGORITMOS-I;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0267 - Tópicos em Aplicações de Lógica e Raciocínio Automatizado;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0268 - Tópicos em Aprendizagem de Máquina;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0269 - Tópicos em Engenharia de Ontologias;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.3-DESENVOLV.DE SOFTWARE PARA SI (PROGRAM. E ALGORITMOS);TIN0270 - Tópicos em Processamento de Linguagem Natural;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.4-DESENVOLV.DE SOFTWARE PARA SI (ENGENHARIA DE SOFTWARE);TIN0271 - Desenvolvimento de Servidor Web;TIN0158 - DESENVOLVIMENTO DE SERVIDOR WEB;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.4-DESENVOLV.DE SOFTWARE PARA SI (ENGENHARIA DE SOFTWARE);TIN0272 - Engenharia de Sistemas Complexos;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.4-DESENVOLV.DE SOFTWARE PARA SI (ENGENHARIA DE SOFTWARE);TIN0273 - Interfaces Móveis;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.4-DESENVOLV.DE SOFTWARE PARA SI (ENGENHARIA DE SOFTWARE);TIN0274 - Projeto de Jogos Digitais;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.4-DESENVOLV.DE SOFTWARE PARA SI (ENGENHARIA DE SOFTWARE);TIN0275 - Tópicos em Arquitetura de Software;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.4-DESENVOLV.DE SOFTWARE PARA SI (ENGENHARIA DE SOFTWARE);TIN0276 - Tópicos em Aspectos Humanos, Econômicos e Sociais de Software;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.4-DESENVOLV.DE SOFTWARE PARA SI (ENGENHARIA DE SOFTWARE);TIN0277 - Tópicos em Construção de Software;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.4-DESENVOLV.DE SOFTWARE PARA SI (ENGENHARIA DE SOFTWARE);TIN0278 - Tópicos em Engenharia de Requisitos;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.4-DESENVOLV.DE SOFTWARE PARA SI (ENGENHARIA DE SOFTWARE);TIN0279 - Tópicos em Engenharia de Software Experimental;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.4-DESENVOLV.DE SOFTWARE PARA SI (ENGENHARIA DE SOFTWARE);TIN0280 - Tópicos em Gerência de Configuração de Software;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.4-DESENVOLV.DE SOFTWARE PARA SI (ENGENHARIA DE SOFTWARE);TIN0281 - Tópicos em Gerência de Projetos;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.4-DESENVOLV.DE SOFTWARE PARA SI (ENGENHARIA DE SOFTWARE);TIN0282 - Tópicos em Manutenção de Software;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.4-DESENVOLV.DE SOFTWARE PARA SI (ENGENHARIA DE SOFTWARE);TIN0283 - Tópicos em Modelagem de Software;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.4-DESENVOLV.DE SOFTWARE PARA SI (ENGENHARIA DE SOFTWARE);TIN0284 - Tópicos em Processos de Software;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.4-DESENVOLV.DE SOFTWARE PARA SI (ENGENHARIA DE SOFTWARE);TIN0285 - Tópicos em Projeto de Software;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.4-DESENVOLV.DE SOFTWARE PARA SI (ENGENHARIA DE SOFTWARE);TIN0286 - Tópicos em Qualidade de Software;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.4-DESENVOLV.DE SOFTWARE PARA SI (ENGENHARIA DE SOFTWARE);TIN0287 - Tópicos em Sistemas Colaborativos;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.4-DESENVOLV.DE SOFTWARE PARA SI (ENGENHARIA DE SOFTWARE);TIN0288 - Tópicos em Verificação, Validação e Testes de Software;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.5-ENGENHARIA DE DADOS E INFORMAÇÃO;TIN0135 - ADMINISTRAÇÃO DE BANCO DE DADOS;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.5-ENGENHARIA DE DADOS E INFORMAÇÃO;TIN0289 - Banco de Dados Distribuídos;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.5-ENGENHARIA DE DADOS E INFORMAÇÃO;TIN0290 - Banco de Dados Não Convencionais;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.5-ENGENHARIA DE DADOS E INFORMAÇÃO;TIN0291 - Projeto de Aplicações com Dados Abertos;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.5-ENGENHARIA DE DADOS E INFORMAÇÃO;TIN0292 - Recuperação de Informação;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.5-ENGENHARIA DE DADOS E INFORMAÇÃO;TIN0293 - Séries Temporais;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.5-ENGENHARIA DE DADOS E INFORMAÇÃO;TIN0294 - Descoberta de Conhecimento em Dados;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.5-ENGENHARIA DE DADOS E INFORMAÇÃO;TIN0295 - Processamento e Mineração de Texto;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.5-ENGENHARIA DE DADOS E INFORMAÇÃO;TIN0296 - Projetos de Ciência de Dados para o Bem-Estar Social;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.6-INFRAESTRUTURA EM SI;TIN0150 - AMBIENTE OPERACIONAL UNIX;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.6-INFRAESTRUTURA EM SI;TIN0297 - Automação;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.6-INFRAESTRUTURA EM SI;TIN0298 - Ferramentas de Modelagem e Simulação para Avaliação de Desempenho;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.6-INFRAESTRUTURA EM SI;TIN0299 - Gerenciamento de Redes e Serviços;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.6-INFRAESTRUTURA EM SI;TIN0300 - Modelos de Sistemas de Computação e Comunicação;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.6-INFRAESTRUTURA EM SI;TIN0301 - Redes Móveis e Computação Ubíqua;TIN0126 - REDES DE COMPUTADORES II;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.6-INFRAESTRUTURA EM SI;TIN0302 - Segurança de Tecnologia da Informação;TIN0138 - COMUNICAÇÃO E SEGURANÇA DE DADOS;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.6-INFRAESTRUTURA EM SI;TIN0303 - Serviços de Rede e Multimídia;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.6-INFRAESTRUTURA EM SI;TIN0304 - Simulação Estocástica;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.6-INFRAESTRUTURA EM SI;TIN0305 - Sistemas Distribuídos;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.7-DESENVOLVIMENTO PESSOAL E PROFISSIONAL;HDI0142 - Língua Brasileira de Sinais;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.7-DESENVOLVIMENTO PESSOAL E PROFISSIONAL;HDI0164 - Culturas Afro Brasileiras em Sala de Aula;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.7-DESENVOLVIMENTO PESSOAL E PROFISSIONAL;SER0012 - EDUCAÇÃO AMBIENTAL E CIDADANIA;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.8-FORMAÇÃO COMPLEMENTAR;TIN0151 - FORMAÇÃO COMPLEMENTAR-I;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;2.8-FORMAÇÃO COMPLEMENTAR;TIN0152 - FORMAÇÃO COMPLEMENTAR II;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;3-ATIVIDADES DE EXTENSÃO 300H;TIN0306 - Atividades de Extensão I;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;3-ATIVIDADES DE EXTENSÃO 300H;TIN0307 - Atividades de Extensão II;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;3. Atividades Complementares;TIN0054 - Atividades Curriculares de Extensão-1;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;3. Atividades Complementares;TIN0055 - Atividades Curriculares de Extensão-2;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;3. Atividades Complementares;TIN0056 - Atividades Curriculares de Extensão-3;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2005/2;3. Atividades Complementares;TIN0057 - Atividades Curriculares de Extensão-4;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;5-TRABALHO DE CONCLUSÃO DE CURSO 120H;TIN0308 - Projeto de Graduação I;TIN0131 - PROJETO DE GRADUAÇÃO-I;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2023/2;5-TRABALHO DE CONCLUSÃO DE CURSO 120H;TIN0309 - Projeto de Graduação II;TIN0133 - PROJETO DE GRADUAÇÃO II;Disciplina Vencida;BLOCO 1
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;HDP0502 - DIREITO E ÉTICA PROFISSIONAL;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;HHI0033 - História da Ciência e da Tecnologia;FCS0037 - ÉTICA II;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;HTD0051 - Expressão Oral e Escrita;DID0038 - MONOGRAFIA I;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;HTD0051 - Expressão Oral e Escrita;DID0039 - MONOGRAFIA II;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;HTD0052 - LEITURA E PRODUÇÃO DE TEXTOS;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0005 - Introdução à Lógica Computacional;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0006 - Programas Utilitários Básicos;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0007 - TÉCNICAS DE PROGRAMAÇÃO I;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0008 - Organização de Computadores;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0009 - Estruturas Discretas;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0010 - Produtividade Pessoal com Sistemas de Informação;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0011 - TÉCNICAS DE PROGRAMAÇÃO II;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0012 - Modelagem de Sistemas;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0013 - Análise Empresarial e Administrativa;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0014 - Estruturas de Dados;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0015 - Análise e Projeto de Sistemas;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0016 - Sistemas Operacionais;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0017 - Administração Financeira;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0018 - Análise de Algoritmos;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0019 - Linguagens Formais e Autômatos;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0020 - Sistema de Banco de Dados;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0021 - Programação Modular;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0022 - Construção de Sistemas;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0023 - Redes de Computadores;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0024 - Seminários sobre Optativas e Eletivas;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0026 - Distribuição e Concorrência;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0027 - Iniciação à Pesquisa I;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0028 - Projeto e Construção de Sistemas com Ambiente de Programação;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0029 - Iniciação à Pesquisa II;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0030 - Empresa de Informática;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0031 - Projeto de Graduação I;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0032 - Gerência de Projetos em Informática;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0033 - Projeto de Graduação II;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0051 - Estudo de Domínios de Aplicação 1;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0052 - Estudo de Domínios de Aplicação II;FCS0036 - ÉTICA I;Disciplina Vencida;BLOCO 5
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0053 - Estudo de Domínios de Aplicação III;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0054 - Atividades Curriculares de Extensão-1;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0055 - Atividades Curriculares de Extensão-2;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0056 - Atividades Curriculares de Extensão-3;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TIN0057 - Atividades Curriculares de Extensão-4;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TME0012 - Cálculo Diferencial e Integral I;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TME0013 - Cálculo  Diferencial e Integral II;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TME0014 - Probabilidade e Estatística;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas obrigatórias;TME0015 - Álgebra Linear;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0025 - Projeto e Construção de Sistemas com SGDB;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0034 - Banco de Dados em Ambiente Cliente-Servidor;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0035 - Administração de Banco de Dados;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0036 - Banco de Dados Distribuídos e Datawarehousing;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0037 - Tópicos Avançados em Banco de Dados;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0038 - Comunicação e Segurança de Dados;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0039 - Projeto e Gerência de Redes Locais;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0040 - Calibragem e Análise de Desempenho;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0041 - Tópicos Avançados em Redes de Computadores;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0042 - Programação Linear;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0043 - Fluxo em Redes;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0044 - Algoritmos para Problemas Combinatórios;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0045 - Tópicos Avançados em Algoritmos;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0046 - Compiladores;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0047 - Inteligência Artificial;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0048 - Sistemas Multimídia;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0049 - Computação Gráfica e Processamento de Imagem;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0050 - Ambiente Operacional Unix;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0058 - Desenvolvimento de Software para Web;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0059 - Groupware - Tecnologias de Apoio à Colaboração;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0060 - Desenvolvimento Baseado em Componentes;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0061 - Tópicos Avançados em Engenharia de Software;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0062 - Tópicos Avançados em Bancos de dados 2;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0063 - Tópicos Avançados em Banco de Dados 3;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0064 - Tópicos Avançados em Redes de Computadores 2;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0065 - Tópicos Avançados em Redes de Computadores 3;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0066 - Tópicos Avançados em Engenharia de Software 2;;;
+210;Sistemas de Informação - Bacharelado - Turno Integral (V/N);2000/2;Disciplinas optativas;TIN0067 - Tópicos Avançados em Engenaharia de Software III;;;

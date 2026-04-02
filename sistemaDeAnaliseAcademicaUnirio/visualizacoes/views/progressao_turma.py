@@ -8,11 +8,11 @@ USER_ID = 'user1'
 
 
 def progressao_turma(request):
-    USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID)
+    USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID) # Definindo caminhos dos arquivos
     alunos_path = os.path.join(USER_DIR, 'alunosPorCurso.csv')
     historico_path = os.path.join(USER_DIR, 'historicoEscolar.csv')
 
-    df_historico = pd.read_csv(historico_path)
+    df_historico = pd.read_csv(historico_path) 
     df_alunos = pd.read_csv(alunos_path)
 
     df_historico['PERIODO_NUM'] = df_historico['PERIODO'].str.extract(r'(\d)')[

@@ -113,11 +113,11 @@
             <div class="filtros-bar">
                 <div style="display:flex; align-items:center; gap:1.2em; flex:0 1 auto; min-width:0;">
                     <div class="filtro-item">
-                        <label for="matr_aluno">Turma:</label>
-                        <select name="matr_aluno" id="matr_aluno">
+                        <label for="turma">Turma:</label>
+                        <select name="turma" id="turma">
                             <option value="">Selecione</option>
-                            {% for aluno in alunos_options %}
-                                <option value="{{ aluno.id }}" {% if selected_id == aluno.id %}selected{% endif %}>{{ aluno.label }}</option>
+                            {% for turma in turmas_options %}
+                                <option value="{{ turma.id }}" {% if selected_id == turma.id %}selected{% endif %}>{{ turma.label }}</option>
                             {% endfor %}
                         </select>
                     </div>

@@ -114,6 +114,8 @@ nav a:first-of-type {
   height: 100%;
   align-items: center;
   display: flex;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .navigation li {
@@ -121,6 +123,7 @@ nav a:first-of-type {
   height: 100%;
   display: flex;
   align-items: center;
+  white-space: nowrap;
 }
 
 .navigation li + li {
@@ -169,7 +172,7 @@ nav a:first-of-type {
 
 .app-bar { position: relative; }
 
-@media (min-width: 768px) {
+@media (min-width: 1200px) {
   .non-mobile {
     display: block !important;
     position: absolute !important;
@@ -183,8 +186,42 @@ nav a:first-of-type {
   }
 }
 
+@media (max-width: 1199px) {
+  .app-bar {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
 
-@media (max-width: 767px) {
+  .navigation {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    max-width: 100%;
+  }
+
+  .navigation li {
+    padding: 12px 8px 0 8px;
+  }
+
+  .navigation a {
+    font-size: 12px;
+  }
+
+  .navigation li + li {
+    border-left: 0;
+  }
+
+  .mobile {
+    display: block !important;
+    font-size: 12px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 38vw;
+    padding: 0 8px;
+  }
+
   .non-mobile {
     display: none;
   }

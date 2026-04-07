@@ -134,7 +134,7 @@
         </div>
 
         <div v-else-if="user && !curriculoGrade.length" class="mt-6 text-center">
-          <v-alert type="warning" border="left">
+          <v-alert type="warning" border: left>
             Não foi possível carregar o currículo. Verifique sua matrícula ou tente fazer upload do histórico escolar.
           </v-alert>
         </div>
@@ -227,6 +227,9 @@ export default {
     },
   },
   methods: {
+    async yieldToUI() {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    },
     loadUser() {
       try {
         const raw = localStorage.getItem('samg_user');
@@ -284,7 +287,7 @@ export default {
     async loadHistoricoForUser() {
       this.loading = true;
       await this.$nextTick();
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await this.yieldToUI();
       try {
         if (!this.user || !this.user.matricula) {
           this.grade = [];
@@ -296,7 +299,7 @@ export default {
         const text = historicoCsv;
         const matricula = String(this.user.matricula);
         const curriculoYear = this.extrairVersaoCurriculoHistorico(text, matricula);
-        const disciplinas = this.parseHistoricoCsv(text, matricula);
+        const disciplinas = await this.parseHistoricoCsv(text, matricula);
         
         if (!disciplinas.length) {
           this.message = 'Nenhum histórico encontrado para a matrícula ' + this.user.matricula;
@@ -311,15 +314,15 @@ export default {
           return;
         }
         
-        this.grade = this.organizarPorPeriodo(disciplinas);
+        this.grade = await this.organizarPorPeriodo(disciplinas);
         this.periodList = this.grade.map(p => p.periodo);
         
         if (curriculoYear) {
           const curriculoRaw = this.getCurriculoPorAno(curriculoYear);
           if (curriculoRaw) {
-            const currList = this.parseCurriculoCsv(curriculoRaw.text);
+            const currList = await this.parseCurriculoCsv(curriculoRaw.text);
             this.curriculoVersion = curriculoRaw.ver;
-            this.curriculoGrade = this.buildCurriculoProgresso(currList, disciplinas);
+            this.curriculoGrade = await this.buildCurriculoProgresso(currList, disciplinas);
           } else {
             this.curriculoGrade = [];
           }
@@ -419,8 +422,8 @@ export default {
       if (name.endsWith('.csv') || file.type === 'text/csv') {
         try {
           const text = await this._readFileAsText(file);
-          const disciplinas = this.parseHistoricoCsv(text);
-          this.grade = this.organizarPorPeriodo(disciplinas);
+          const disciplinas = await this.parseHistoricoCsv(text);
+          this.grade = await this.organizarPorPeriodo(disciplinas);
         } catch (e) {
           alert('Erro ao processar CSV');
           this.grade = [];
@@ -446,7 +449,7 @@ export default {
       });
     },
 
-    parseHistoricoCsv(text, matricula = null) {
+    async parseHistoricoCsv(text, matricula = null) {
       const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
       if (!lines.length) return [];
       const header = this.splitLinhaCsv(lines[0]).map(h => h.toLowerCase());
@@ -468,6 +471,7 @@ export default {
 
       const rows = [];
       for (let i = 1; i < lines.length; i++) {
+        if (i % 500 === 0) await this.yieldToUI();
         const cols = this.splitLinhaCsv(lines[i]);
         if (matricula && idxMatricula >= 0) {
           const rowMat = (cols[idxMatricula] || '').trim();
@@ -492,7 +496,9 @@ export default {
         rows.push({ codigo, nome, situacaoRaw, periodo, ano: parseInt(anoRaw, 10) || null });
       }
       const byCodePeriod = new Map();
-      for (const r of rows) {
+      for (let i = 0; i < rows.length; i++) {
+        if (i % 500 === 0) await this.yieldToUI();
+        const r = rows[i];
         const key = `${r.codigo}|${r.periodo}`;
         const exist = byCodePeriod.get(key);
         if (!exist) {
@@ -517,7 +523,10 @@ export default {
       };
 
       const out = [];
+      let outIndex = 0;
       for (const [key, r] of byCodePeriod.entries()) {
+        outIndex++;
+        if (outIndex % 500 === 0) await this.yieldToUI();
         out.push({ codigo: r.codigo.trim(), nome: r.nome || r.codigo.trim(), situacao: mapSituacao(r.situacaoRaw), periodo: r.periodo });
       }
       
@@ -582,7 +591,7 @@ export default {
       return { text, ver };
     },
 
-    parseCurriculoCsv(text) {
+    async parseCurriculoCsv(text) {
       const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
       if (!lines.length) return [];
       const header = this.splitLinhaCsv(lines[0]).map(h => h.toLowerCase());
@@ -604,6 +613,7 @@ export default {
       const dedup = new Map();
       
       for (let i = 1; i < lines.length; i++) {
+        if (i % 500 === 0) await this.yieldToUI();
         const cols = this.splitLinhaCsv(lines[i]);
         const codigo = idxCod >= 0 ? (cols[idxCod] || '').trim() : null;
         if (!codigo) continue;
@@ -637,15 +647,19 @@ export default {
       return out;
     },
 
-    buildCurriculoProgresso(curriculoList, userDisciplinas) {
+    async buildCurriculoProgresso(curriculoList, userDisciplinas) {
       const statusByCode = {};
-      for (const d of userDisciplinas) {
+      for (let i = 0; i < userDisciplinas.length; i++) {
+        if (i % 500 === 0) await this.yieldToUI();
+        const d = userDisciplinas[i];
         const cod = (d.codigo || '').toUpperCase();
         statusByCode[cod] = d.situacao || 'Não Vencido';
       }
 
       const periodMap = {};
-      for (const c of curriculoList) {
+      for (let i = 0; i < curriculoList.length; i++) {
+        if (i % 500 === 0) await this.yieldToUI();
+        const c = curriculoList[i];
         const periodo = c.periodo || 'Não informado';
         if (!periodMap[periodo]) periodMap[periodo] = [];
         
@@ -678,15 +692,17 @@ export default {
         .map(p => ({ periodo: p, disciplinas: periodMap[p] }));
     },
 
-    organizarPorPeriodo(disciplinas) {
+    async organizarPorPeriodo(disciplinas) {
       const periodos = {};
-      disciplinas.forEach((disc) => {
+      for (let i = 0; i < disciplinas.length; i++) {
+        if (i % 500 === 0) await this.yieldToUI();
+        const disc = disciplinas[i];
         const periodo = disc.periodo !== undefined && disc.periodo !== null
           ? disc.periodo
           : "Não informado";
         if (!periodos[periodo]) periodos[periodo] = [];
         periodos[periodo].push(disc);
-      });
+      }
       return Object.keys(periodos)
         .sort((a, b) => {
           const ma = (a || '').match(/\d+/);

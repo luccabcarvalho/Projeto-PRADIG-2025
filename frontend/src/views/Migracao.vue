@@ -178,6 +178,9 @@ export default {
     },
   },
   methods: {
+    async yieldToUI() {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    },
     loadUser() {
       try {
         const raw = localStorage.getItem('samg_user');
@@ -285,7 +288,7 @@ export default {
       if (!freq.size) return null;
       return [...freq.entries()].sort((a, b) => b[1] - a[1])[0][0];
     },
-    parseHistoricoAluno(text, matricula) {
+    async parseHistoricoAluno(text, matricula) {
       const lines = String(text || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
       if (!lines.length) return { aprovadas: new Set() };
 
@@ -304,6 +307,7 @@ export default {
 
       const aprovadas = new Set();
       for (let i = 1; i < lines.length; i++) {
+        if (i % 500 === 0) await this.yieldToUI();
         const cols = this.splitLinhaCsv(lines[i]);
         if (idxMatricula >= 0) {
           const rowMat = String(cols[idxMatricula] || '').trim();
@@ -318,7 +322,7 @@ export default {
 
       return { aprovadas };
     },
-    parseCurriculoCsv(text) {
+    async parseCurriculoCsv(text) {
       const lines = String(text || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
       if (!lines.length) return [];
 
@@ -338,6 +342,7 @@ export default {
 
       const dedup = new Map();
       for (let i = 1; i < lines.length; i++) {
+        if (i % 500 === 0) await this.yieldToUI();
         const cols = this.splitLinhaCsv(lines[i]);
         const codigo = String(cols[idxCod] || '').trim().toUpperCase();
         if (!codigo || dedup.has(codigo)) continue;
@@ -355,7 +360,7 @@ export default {
 
       return [...dedup.values()];
     },
-    parseEquivalenciasCsv(text, versaoDestino) {
+    async parseEquivalenciasCsv(text, versaoDestino) {
       const out = new Map();
       const lines = String(text || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
       if (!lines.length) return out;
@@ -375,6 +380,7 @@ export default {
       const versaoDestinoNormalizada = this.normalizarVersao(versaoDestino);
 
       for (let i = 1; i < lines.length; i++) {
+        if (i % 500 === 0) await this.yieldToUI();
         const cols = this.splitLinhaCsv(lines[i], ';');
         const versaoLinha = String(cols[idxVersao] || '').trim();
         if (this.normalizarVersao(versaoLinha) !== versaoDestinoNormalizada) continue;
@@ -406,10 +412,12 @@ export default {
       if (!versoes.length) return null;
       return curriculos[versoes[0].raw];
     },
-    buildGradeMigracao(curriculoNovoList, aprovadas, equivalenciasMap) {
+    async buildGradeMigracao(curriculoNovoList, aprovadas, equivalenciasMap) {
       const porPeriodo = new Map();
 
-      for (const disciplina of curriculoNovoList) {
+      for (let i = 0; i < curriculoNovoList.length; i++) {
+        if (i % 250 === 0) await this.yieldToUI();
+        const disciplina = curriculoNovoList[i];
         const codigo = disciplina.codigo;
         const equivalencias = [...(equivalenciasMap.get(codigo) || new Set())];
         const equivalenciasConcluidas = equivalencias.filter(cod => aprovadas.has(cod));
@@ -471,7 +479,7 @@ export default {
     
         const matricula = String(this.user.matricula);
         const versaoAtual = this.extrairVersaoCurriculoHistorico(historicoCsv, matricula);
-        const { aprovadas } = this.parseHistoricoAluno(historicoCsv, matricula);
+        const { aprovadas } = await this.parseHistoricoAluno(historicoCsv, matricula);
 
         if (!aprovadas.size) {
           this.message = `Nenhum histórico encontrado para a matrícula ${matricula}.`;
@@ -486,14 +494,14 @@ export default {
           return;
         }
 
-        const curriculoNovoList = this.parseCurriculoCsv(curriculoDestino.text);
+        const curriculoNovoList = await this.parseCurriculoCsv(curriculoDestino.text);
         const equivalenciasMap = equivalenciasCsv
-          ? this.parseEquivalenciasCsv(equivalenciasCsv, curriculoDestino.ver)
+          ? await this.parseEquivalenciasCsv(equivalenciasCsv, curriculoDestino.ver)
           : new Map();
 
         this.curriculoAtual = versaoAtual;
         this.curriculoNovo = curriculoDestino.ver;
-        this.grade = this.buildGradeMigracao(curriculoNovoList, aprovadas, equivalenciasMap);
+        this.grade = await this.buildGradeMigracao(curriculoNovoList, aprovadas, equivalenciasMap);
         this.message = null;
     
       } finally {
@@ -518,6 +526,10 @@ export default {
 </script>
 
 <style lang="css" scoped>
+
+.fill-screen {
+  min-height: calc(100vh - 120px);
+}
 
 .historico {
   min-width: 50vw;

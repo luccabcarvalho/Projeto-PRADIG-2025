@@ -5,13 +5,24 @@
         AVISO: Este simulador é informativo. Leia os anexos oficiais para mais detalhes.
       </strong>
     </v-row>
-
-    <v-row justify="center">
+    <v-row v-if="loading" class="fill-screen" align: center justify="center">
+      <v-col cols="auto" class="text-center">
+        <v-progress-circular
+        class="migracao-loading-spinner"
+        color="primary" 
+        indeterminate 
+        size="32"/>
+        
+        <div class="text-caption mt-3">Carregando migração...</div>
+      </v-col>
+    </v-row>
+    <template v-else>
+        <v-row justify="center">
       <v-col cols="12" md="10">
-        <v-alert v-if="!isLogado" type="info" border="left" class="mb-4">
+        <v-alert v-if="!isLogado" type="info" border:left class="mb-4">
           Faça login para ver sua migração curricular automaticamente.
         </v-alert>
-        <v-alert v-if="message" type="info" border="left" class="mb-4">{{ message }}</v-alert>
+        <v-alert v-if="message" type="info" border:left class="mb-4">{{ message }}</v-alert>
       </v-col>
     </v-row>
 
@@ -106,8 +117,11 @@
     <v-row v-else-if="user" class="mt-8" justify="center">
       <em>Não foi possível montar a migração com os dados atuais.</em>
     </v-row>
+    </template>
   </v-container>
-</template>
+    </template>
+
+    
 
 <script>
 const csvDocs = import.meta.glob('../docs/**/*.csv', { query: '?raw', import: 'default', eager: true });
@@ -142,6 +156,7 @@ export default {
       message: null,
       curriculoAtual: null,
       curriculoNovo: null,
+      loading: true,
     };
   },
   computed: {
@@ -437,45 +452,55 @@ export default {
           };
         });
     },
-    loadMigracao() {
-      if (!this.user || !this.user.matricula) {
-        this.grade = [];
-        return;
+    async loadMigracao() {
+      this.loading = true;
+      await this.$nextTick();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      try {
+        if (!this.user || !this.user.matricula) {
+          this.grade = [];
+          this.message = null;
+          return;
+        }
+
+        if (!historicoCsv) {
+          this.message = 'Histórico escolar não disponível para consulta.';
+          this.grade = [];
+          return;
+        }
+    
+        const matricula = String(this.user.matricula);
+        const versaoAtual = this.extrairVersaoCurriculoHistorico(historicoCsv, matricula);
+        const { aprovadas } = this.parseHistoricoAluno(historicoCsv, matricula);
+
+        if (!aprovadas.size) {
+          this.message = `Nenhum histórico encontrado para a matrícula ${matricula}.`;
+          this.grade = [];
+          return;
+        }
+
+        const curriculoDestino = this.getUltimoCurriculo();
+        if (!curriculoDestino) {
+          this.message = 'Nenhum currículo novo disponível.';
+          this.grade = [];
+          return;
+        }
+
+        const curriculoNovoList = this.parseCurriculoCsv(curriculoDestino.text);
+        const equivalenciasMap = equivalenciasCsv
+          ? this.parseEquivalenciasCsv(equivalenciasCsv, curriculoDestino.ver)
+          : new Map();
+
+        this.curriculoAtual = versaoAtual;
+        this.curriculoNovo = curriculoDestino.ver;
+        this.grade = this.buildGradeMigracao(curriculoNovoList, aprovadas, equivalenciasMap);
+        this.message = null;
+    
+      } finally {
+        this.loading = false;
       }
-
-      if (!historicoCsv) {
-        this.message = 'Histórico escolar não disponível para consulta.';
-        this.grade = [];
-        return;
-      }
-
-      const matricula = String(this.user.matricula);
-      const versaoAtual = this.extrairVersaoCurriculoHistorico(historicoCsv, matricula);
-      const { aprovadas } = this.parseHistoricoAluno(historicoCsv, matricula);
-
-      if (!aprovadas.size) {
-        this.message = `Nenhum histórico encontrado para a matrícula ${matricula}.`;
-        this.grade = [];
-        return;
-      }
-
-      const curriculoDestino = this.getUltimoCurriculo();
-      if (!curriculoDestino) {
-        this.message = 'Nenhum currículo novo disponível.';
-        this.grade = [];
-        return;
-      }
-
-      const curriculoNovoList = this.parseCurriculoCsv(curriculoDestino.text);
-      const equivalenciasMap = equivalenciasCsv
-        ? this.parseEquivalenciasCsv(equivalenciasCsv, curriculoDestino.ver)
-        : new Map();
-
-      this.curriculoAtual = versaoAtual;
-      this.curriculoNovo = curriculoDestino.ver;
-      this.grade = this.buildGradeMigracao(curriculoNovoList, aprovadas, equivalenciasMap);
-      this.message = null;
     },
+    
   },
   created() {
     this.loadUser();
@@ -493,14 +518,27 @@ export default {
 </script>
 
 <style lang="css" scoped>
+
 .historico {
   min-width: 50vw;
   margin-bottom: 24px;
+}
+.v-progress-circular {
+  margin: 1rem;
+}
+
+:deep(.migracao-loading-spinner.v-progress-circular--indeterminate) {
+  animation: progress-circular-rotate 1.4s linear infinite !important;
+}
+
+:deep(.migracao-loading-spinner.v-progress-circular--indeterminate .v-progress-circular__overlay) {
+  animation: progress-circular-dash 1.4s ease-in-out infinite !important;
 }
 
 .warning {
   color: #ef5350;
 }
+
 
 .periodo-card {
   border-top: 4px solid #1976d2;

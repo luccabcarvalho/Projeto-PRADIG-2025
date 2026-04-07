@@ -5,8 +5,15 @@
         AVISO: Este simulador é informativo. Leia os anexos oficiais para mais detalhes.
       </strong>
     </v-row>
+
+    <v-row v-if="loading" class="fill-screen" align: center justify="center">
+      <v-col cols="auto" class="text-center">
+        <v-progress-circular class="progresso-loading-spinner" indeterminate color="primary" size="32" width="5" />
+        <div class="text-caption mt-3">Carregando progresso...</div>
+      </v-col>
+    </v-row>
   
-    <v-row justify="center">
+    <v-row v-else justify="center">
       <v-col cols="12" md="10">
         <v-alert v-if="!user" type="info" border: left class="mb-4">Faça login para ver seu histórico e progresso automaticamente.</v-alert>
         <v-alert v-if="message" type="info" border: left class="mb-4">{{ message }}</v-alert>
@@ -168,6 +175,7 @@ export default {
       curriculoGrade: [],
       showOnlyPendentes: false,
       showOnlyObrigatorias: false,
+      loading: true,
     };
   },
   computed: {
@@ -274,8 +282,17 @@ export default {
     },
 
     async loadHistoricoForUser() {
-      if (!this.user || !this.user.matricula) return;
+      this.loading = true;
+      await this.$nextTick();
+      await new Promise((resolve) => setTimeout(resolve, 0));
       try {
+        if (!this.user || !this.user.matricula) {
+          this.grade = [];
+          this.curriculoGrade = [];
+          this.message = null;
+          return;
+        }
+
         const text = historicoCsv;
         const matricula = String(this.user.matricula);
         const curriculoYear = this.extrairVersaoCurriculoHistorico(text, matricula);
@@ -311,6 +328,8 @@ export default {
       } catch (err) {
         this.message = 'Erro ao carregar histórico';
         this.curriculoGrade = [];
+      } finally {
+        this.loading = false;
       }
     },
 
@@ -702,6 +721,18 @@ export default {
 
 .warning {
   color: #ef5350;
+}
+
+.fill-screen {
+  min-height: calc(100vh - 120px);
+}
+
+:deep(.progresso-loading-spinner.v-progress-circular--indeterminate) {
+  animation: progress-circular-rotate 1.4s linear infinite !important;
+}
+
+:deep(.progresso-loading-spinner.v-progress-circular--indeterminate .v-progress-circular__overlay) {
+  animation: progress-circular-dash 1.4s ease-in-out infinite !important;
 }
 
 .periodo-card {

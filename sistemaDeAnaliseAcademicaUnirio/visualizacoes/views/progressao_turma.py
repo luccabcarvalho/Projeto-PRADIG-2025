@@ -26,46 +26,42 @@ def progressao_turma(request):
     else:
         turma = df_alunos['TURMA'].iloc[0] # Se o parâmetro não for válido, seleciona a primeira turma disponível
 
-    dados_turma = df_historico[df_historico['TURMA'] == turma].copy() # PAREI DE MEXER AQUI
+    matriculas_turma = df_alunos[df_alunos['TURMA'] == turma]['ID PESSOA'] # Filtra os alunos das turmas selecionadas
+    dados_turma = df_historico[df_historico['ID PESSOA'].isin(matriculas_turma)].copy() # O isin filtra o histórico, deixxando apenas ... entendeu né?
     if dados_turma.empty:
-        alunos_options = [
-            {'id': str(turma), 'label': f"{turma} - {nome_pessoa}"}
-            for turma, nome_pessoa in df_historico[['MATR ALUNO', 'NOME PESSOA']].drop_duplicates().values
+        turmas_options = [ # Cria as opções de turmas para o dropdown
+            {'id': t, 'label': t}
+            for t in df_alunos['TURMA'].unique()
         ]
         mensagem = "Não há dados disponíveis para o aluno selecionado."
-        return render(request, 'progressao_turma.html', {
+        return render(request, 'progressao_turma.html', { # Renderiza a template com a mensagem de erro e as opções de turmas
             'plot_div': '',
-            'alunos_options': alunos_options,
+            'turmas_options': turmas_options,
             'selected_id': str(turma),
             'mensagem': mensagem,
         })
 
-    dados_turma['STATUS'] = dados_turma['DESCR SITUACAO'].str.strip()
-    dados_turma['CARGA'] = dados_turma['TOTAL CARGA HORARIA']
-    dados_turma['DISCIPLINA'] = (
-        dados_turma['COD ATIV CURRIC'].astype(str) + ' - ' +
-        dados_turma['NOME ATIV CURRIC'] + ' (' +
-        dados_turma['CARGA'].astype(str) + 'h)'
-    )
+    dados_turma['STATUS'] = dados_turma['DESCR SITUACAO'].str.strip() # Limpa os espaços em branco dos status para garantir que a comparação funcione corretamente
+    dados_turma['CARGA'] = dados_turma['TOTAL CARGA HORARIA'] # Cria uma nova coluna para a carga horária, que vai ser usada para calcular carga acumulada
 
-    def ordenar_periodo(periodo):
+    def ordenar_periodo(periodo): # Função para ordenar os períodos corretamente, convertendo o formato "ANO - PERIODO" em um número que possa ser ordenado
         ano, per = periodo.split(' - ')
         return int(ano) * 10 + (1 if '1' in per else 2)
 
-    periodos = sorted(dados_turma['ANO_PERIODO'].unique(), key=ordenar_periodo)
+    periodos = sorted(dados_turma['ANO_PERIODO'].unique(), key=ordenar_periodo) # Ordena os períodos usando a função de ordenação personalizada
     if not periodos:
-        alunos_options = [
-            {'id': str(turma), 'label': f"{turma} - {nome_pessoa}"}
-            for turma, nome_pessoa in df_historico[['TURMA', 'NOME PESSOA']].drop_duplicates().values
+        turmas_options = [
+            {'id': t, 'label': t}
+            for t in df_alunos['TURMA'].unique()
         ]
         mensagem = "Não há dados disponíveis para o aluno selecionado."
         return render(request, 'progressao_turma.html', {
             'plot_div': '',
-            'alunos_options': alunos_options,
+            'turmas_options': turmas_options,
             'selected_id': str(turma),
             'mensagem': mensagem,
         })
-
+    
     status_aprovados = {
         'APV - Aprovado': '#006400',
         'APV- Aprovado': '#006400',
@@ -75,97 +71,29 @@ def progressao_turma(request):
         'ADI - Dispensa com nota': '#228B22',
         'DIS - Dispensa sem nota': '#32CD32',
     }
-    status_reprovados = {
-        'REP - Reprovado por nota/conceito': '#8B0000',
-        'REF - Reprovado por falta': '#CD5C5C',
-        'ASC - Reprovado sem nota': '#FFA07A',
-        'TRA - Trancamento de disciplina': '#8B0000',
-    }
-    cores_status = {**status_aprovados, **status_reprovados}
 
-    carga_aprovada_acumulada = (
-        dados_turma[dados_turma['STATUS'].isin(status_aprovados.keys())]
-        .groupby('ANO_PERIODO')['CARGA']
-        .sum()
-        .reindex(periodos, fill_value=0)
-        .cumsum()
-        .shift(fill_value=0)
-    )
+    linhas = []
+    dados_aprovados = dados_turma[dados_turma['STATUS'].isin(status_aprovados.keys())] # Filtra os dados para incluir apenas os status de aprovação
 
-    linhas = []  # Cria uma lista para armazenar as linhas do gráfico
-    # Percorre os status de reprovação e armazena cada parte do par em uma variável
-    for status, cor in status_reprovados.items():
-        # Filtra os dados da turma para cada status
-        dados_status = dados_turma[dados_turma['STATUS'] == status]
-        if dados_status.empty:
-            continue
-        # Y é o valor da soma das cargas horárias agrupadas por período, garantindo que todos os períodos estejam presentes.
-        y = dados_status.groupby('ANO_PERIODO')['CARGA'].sum().reindex(periodos, fill_value=0)
-        hover = (  # Cria o texto de hover para cada ponto, combinando nome da disciplina e status
-            dados_status.assign(
-                # Cria uma nova coluna texto que combina nome da disciplina + status
-                texto=lambda df: df['DISCIPLINA'] +
-                "<br>Status: " + df['STATUS']
-            )
-            .groupby('ANO_PERIODO')['texto']
-            .apply("<br>".join)  # Agrupa e quebra linha
-            .reindex(periodos, fill_value="Nenhuma disciplina")
-            .tolist()
+    for matr, dados_aluno in dados_aprovados.groupby('ID PESSOA'): # Agrupa os dados por matrícula do aluno para criar uma linha para cada aluno
+        nome = dados_aluno['NOME PESSOA'].iloc[0] # Obtém o nome do aluno para usar na legenda do gráfico
+        carga_acumulada = (
+            dados_aluno.groupby('ANO_PERIODO')['CARGA'].sum().reindex(periodos, fill_value=0).cumsum() # Agrupa por período, soma a carga horária, reindexa para garantir que todos os períodos estejam presentes e calcula a carga acumulada
         )
         linha = go.Scatter(  # Não existe nada como "go.Lines", o padrão é go.Scatter com mode='lines'
             x=periodos,
-            y=y,
+            y=carga_acumulada,
             mode='lines+markers',  # Mantenha a linha com marcadores
-            name=status,
-            line=dict(color=cor),  # Cor da linha
-            hoverinfo='text',
-            hovertext=hover
+            name=f"{matr} - {nome}",
             )
         linhas.append(linha)  # Adiciona a linha à lista de linhas do gráfico
-
-    # Cria uma cópia da carga acumulada para usar como base das barras
-    base_aprovada = carga_aprovada_acumulada.copy()
-    for status, cor in status_aprovados.items():  # Loop no status de aprovação
-        dados_status = dados_turma[dados_turma['STATUS'] == status]
-        if dados_status.empty:
-            continue
-        y = dados_status.groupby('ANO_PERIODO')[
-            'CARGA'].sum().reindex(periodos, fill_value=0)
-        hover = (
-            dados_status
-            .assign(
-                # Cria uma nova coluna texto que combina nome da disciplina + status
-                texto=lambda df: df['DISCIPLINA'] +
-                "<br>Status: " + df['STATUS']
-            )
-            .groupby('ANO_PERIODO')['texto']
-            .apply("<br>".join)  # Agrupa e quebra linha
-            .reindex(periodos, fill_value="Nenhuma disciplina")
-            .tolist()
-        )
-        linha = go.Scatter(  # Não existe nada como "go.Lines", o padrão é go.Scatter com mode='lines'
-            x=periodos,
-            y=y,
-            mode='lines+markers',  # Mantenha a linha com marcadores
-            name=status,
-            line=dict(color=cor),  # Cor da linha
-            hoverinfo='text',
-            hovertext=hover
-            )
-        linhas.append(linha)
-
     if not linhas:
-        turmas_options = [
-            {'id': str(turma),
-             'label': f"{turma} - {nome_pessoa}"}
-            for turma, nome_pessoa in df_historico[['TURMA', 'NOME PESSOA']].drop_duplicates().values
-        ]
-        mensagem = "Não há dados disponíveis para a turma selecionada."
-        return render(request, 'progressao_turma.html', {
+         turmas_options = [{'id': t, 'label': t} for t in df_alunos['TURMA'].unique()]
+         return render(request, 'progressao_turma.html', {
             'plot_div': '',
             'turmas_options': turmas_options,
             'selected_id': str(turma),
-            'mensagem': mensagem,
+            'mensagem': "Não há dados disponíveis para a turma selecionada.",
         })
 
     carga_referencia = 3240
@@ -190,9 +118,9 @@ def progressao_turma(request):
         width=1800
     )
 
-    turmas_options = [  # Cria as opções de turmas para o dropdown
-        {'id': str(turma), 'label': f"{turma} - {nome_pessoa}"}
-        for turma, nome_pessoa in df_historico[['TURMA', 'NOME PESSOA']].drop_duplicates().values
+    turmas_options = [
+        {'id': t, 'label': t}
+        for t in df_alunos['TURMA'].unique()
     ]
 
     # Converte a figura para HTML para ser renderizada na template

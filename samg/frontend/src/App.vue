@@ -41,38 +41,111 @@ onBeforeUnmount(() => {
 
 <template>
   <v-layout>
-    <v-app-bar class="pl-4 app-bar">
-      <ul class="d-flex ma-0 navigation">
-        <li>
-          <RouterLink to="/migracao">Migração</RouterLink>
-        </li>
-        <li class="ml-4">
-          <RouterLink to="/progresso">Progresso</RouterLink>
-        </li>
-        <li v-if="user && user.tipoUsuario === 'adm'" class="ml-4">
-          <RouterLink to="/admin">Administração</RouterLink>
-        </li>
-        <li v-if="!user" class="ml-4"><RouterLink to="/">Entrar / Cadastrar</RouterLink></li>
-        <li v-if="user" class="ml-4">
-            <RouterLink :to="{ name: 'perfil' }" class="mr-2">{{ user.name }}</RouterLink>   
-        </li>
-        <li v-if="user" class="ml-4">
-          <v-btn text small color="red" @click="logout">Sair</v-btn>
-        </li>
-      </ul>
-      <v-spacer></v-spacer>
-      
-      <v-card-title class="non-mobile">Sistema de Apoio à Migração de Grade de BSI (SAMG BSI)</v-card-title>
-      <v-card-title class="mobile">SAMG BSI</v-card-title>
-      <v-spacer></v-spacer>
+    <v-app-bar
+      flat="border"
+      height="72"
+      class="px-4"
+      position: relative
+      color="#2356a8"
+    >
+      <div class="d-flex align-center ga-2">
+        <v-btn variant="text" to="/migracao">Migração</v-btn>
+        <v-btn variant="text" to="/progresso">Progresso</v-btn>
+
+        <v-btn
+          v-if="user && user.tipoUsuario === 'adm'"
+          variant="text"
+          to="/admin"
+        >
+          Administração
+        </v-btn>
+      </div>
+
+      <v-spacer />
+
+      <div class="app-title">
+        <span class="non-mobile">Sistema de Apoio à Migração de Grade de BSI (SAMG BSI)</span>
+        <span class="mobile">SAMG BSI</span>
+      </div>
+
+      <v-spacer />
+
+      <div class="d-flex align-center ga-2">
+        <v-btn
+          v-if="!user"
+          variant="text"
+          class="auth-btn"
+          to="/"
+        >
+          Entrar / Cadastrar
+        </v-btn>
+
+        <v-menu v-if="user">
+          <template #activator="{ props }">
+            <v-btn
+              v-bind="props"
+              variant="text"
+              prepend-icon="mdi-account-circle-outline"
+            >
+              {{ user.name }}
+            </v-btn>
+          </template>
+
+          <v-list>
+            <v-list-item :to="{ name: 'perfil' }" title="Meu perfil" />
+            <v-list-item @click="logout" title="Sair" base-color="error" />
+          </v-list>
+        </v-menu>
+      </div>
     </v-app-bar>
+
     <v-main>
       <RouterView />
     </v-main>
   </v-layout>
 </template>
 
+
 <style scoped>
+.app-title {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  position: static;
+  min-width: 0;
+  max-width: 44vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobile {
+  display: none;
+  position: relative;
+}
+
+@media (max-width: 960px) {
+  .non-mobile {
+    display: none;
+  }
+
+  .mobile {
+    display: inline;
+  }
+
+  .app-title {
+    font-size: 0.95rem;
+    max-width: 34vw;
+  }
+
+  .auth-btn {
+    min-width: auto !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    font-size: 0.8rem !important;
+  }
+}
 header {
   line-height: 1;
   max-height: 100vh;
@@ -170,15 +243,9 @@ nav a:first-of-type {
   }
 }
 
-.app-bar { position: relative; }
-
-@media (min-width: 1200px) {
+@media (min-width5: 1200px) {
   .non-mobile {
-    display: block !important;
-    position: absolute !important;
-    right: 16px;
-    top: 8px;
-    z-index: 10;
+    display: inline;
   }
 
   .mobile {
@@ -218,7 +285,7 @@ nav a:first-of-type {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 38vw;
+    max-width: 100%;
     padding: 0 8px;
   }
 

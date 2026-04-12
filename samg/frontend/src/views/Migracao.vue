@@ -65,10 +65,10 @@
         <v-row class="mt-6" justify="center">
           <v-col v-for="(periodo, idx) in grade" :key="idx" cols="12" md="6" lg="4" class="pa-4">
             <v-card class="elevation-4 periodo-card" style="min-height: 100%;">
-              <v-card-title class="text-center bg-light-blue" style="background-color: #e3f2fd;">
+              <v-card-title class="text-center" style="background-color: #2356a8;">
                 <div class="w-100">
-                  <span class="text-h6 d-block">{{ periodo.periodo }}º período</span>
-                  <span class="text-caption">{{ periodo.vencidas }}/{{ periodo.total }} concluídas</span>
+                  <span class="text-h6 d-block periodo-card-title-text">{{ periodo.periodo }}º período</span>
+                  <span class="text-caption periodo-card-title-text">{{ periodo.vencidas }}/{{ periodo.total }} concluídas</span>
                 </div>
               </v-card-title>
 
@@ -553,7 +553,7 @@ export default {
 
 
 .periodo-card {
-  border-top: 4px solid #1976d2;
+  border-top: 4px solid #2356a8;
 }
 
 .gap-2 {
@@ -566,5 +566,9 @@ export default {
 
 .bg-light-blue {
   background-color: #e3f2fd;
+}
+
+.periodo-card-title-text {
+  color: #fff;
 }
 </style>

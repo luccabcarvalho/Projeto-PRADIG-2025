@@ -80,11 +80,31 @@ def progressao_turma(request):
         carga_acumulada = (
             dados_aluno.groupby('ANO_PERIODO')['CARGA'].sum().reindex(periodos, fill_value=0).cumsum() # Agrupa por período, soma a carga horária, reindexa para garantir que todos os períodos estejam presentes e calcula a carga acumulada
         )
+        
+        x_linha = periodos # Cria cópia dos valores para poder modificar caso o aluno tenha se formado
+        y_linha = carga_acumulada.values
+        marker_color = None
+        hovertemplate = '<b>%{customdata}</b><br>Período: %{x}<br>Carga H.: %{y}h<extra></extra>' # Hover aprimorado
+        
+        idx_formacao = (carga_acumulada >= 3240).argmax() # Verdadeiro se o discente atingir ou passar de 3240 horas, falso se não atingir. Argmax retorna o índice do primeiro verdadeiro, ou seja, o período em que o discente se formou.
+        if carga_acumulada.iloc[idx_formacao] >= 3240:  # Verificar se realmente encontrou formação
+            x_linha = periodos[:idx_formacao + 1] # Limita os dados até o período de formação
+            y_linha = carga_acumulada.values[:idx_formacao + 1]
+            marker_color = ['rgba(100,100,100,0.5)'] * (len(x_linha) - 1) + ['red'] # Transforma todos os pontos em cinza e o último em vermelho
+            hovertemplate = '<b>%{customdata}</b><br>Período: %{x}<br>Carga H.: %{y}h<extra></extra>'
+        
+        customdata = [nome] * len(y_linha) # Cria uma lista com o nome do aluno para cada ponto na linha
+        if marker_color:  # Se formou, adicionar "(Discente formado)" no último elemento
+            customdata[-1] = f"{nome} (Discente formado)"
+            
         linha = go.Scatter(  # Não existe nada como "go.Lines", o padrão é go.Scatter com mode='lines'
-            x=periodos,
-            y=carga_acumulada,
-            mode='lines+markers',  # Mantenha a linha com marcadores
+            x=x_linha,
+            y=y_linha,
+            mode='lines+markers',
             name=f"{matr} - {nome}",
+            marker=dict(color=marker_color, size=8) if marker_color else dict(size=8),
+            customdata=customdata,
+            hovertemplate=hovertemplate,
             )
         linhas.append(linha)  # Adiciona a linha à lista de linhas do gráfico
     if not linhas:

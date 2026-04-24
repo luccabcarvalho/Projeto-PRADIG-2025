@@ -135,7 +135,8 @@ def progressao_turma(request):
         xaxis=dict(tickfont=dict(size=16)),
         yaxis=dict(tickfont=dict(size=16)),
         height=800,
-        width=1800
+        autosize=True,
+        margin=dict(l=80, r=20, t=40, b=150)
     )
 
     turmas_options = [

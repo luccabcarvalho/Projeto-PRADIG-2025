@@ -31,7 +31,7 @@ def progressao_turma(request):
         partes = str(periodo_evasao).split('/')
         if len(partes) < 2:
             return None
-        return f"{partes[0]} - {partes[1]}"
+        return f"{partes[0]} - {partes[1]}" # oiiii
 
     # Monta um dicionário de evasão indexado por ID PESSOA para consulta rápida dentro do loop
     df_evasao = (

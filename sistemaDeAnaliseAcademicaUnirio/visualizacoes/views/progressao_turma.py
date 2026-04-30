@@ -26,17 +26,17 @@ def progressao_turma(request):
 
     # Converte o formato "2009/2°. semestre" (PERIODO EVASAO) para "2009 - 2°. semestre" (mesmo formato de ANO_PERIODO)
     def evasao_para_ano_periodo(periodo_evasao):
-        if pd.isna(periodo_evasao) or not str(periodo_evasao).strip():
+        if pd.isna(periodo_evasao) or not str(periodo_evasao).strip(): # Verifica NA
             return None
-        partes = str(periodo_evasao).split('/')
-        if len(partes) < 2:
+        partes = str(periodo_evasao).split('/') # Divide a string em /
+        if len(partes) < 2: # Caso dê ruim, retorna None
             return None
-        return f"{partes[0]} - {partes[1]}" # oiiii
+        return f"{partes[0]} - {partes[1]}" # Retorna no formato da coluna ANO_PERIODO
 
     # Monta um dicionário de evasão indexado por ID PESSOA para consulta rápida dentro do loop
     df_evasao = (
-        df_alunos[['ID PESSOA', 'FORMA EVASAO', 'PERIODO EVASAO']]
-        .drop_duplicates(subset='ID PESSOA')
+        df_alunos[['ID PESSOA', 'FORMA EVASAO', 'PERIODO EVASAO']] # Colunas relevantes
+        .drop_duplicates(subset='ID PESSOA') # Garante singularidade
         .copy()
     )
     df_evasao['ANO_PERIODO_EVASAO'] = df_evasao['PERIODO EVASAO'].apply(evasao_para_ano_periodo)

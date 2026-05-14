@@ -1,0 +1,6 @@
+{
+    "python.defaultInterpreterPath": "${workspaceFolder}\\pradigEnv2025\\Scripts\\python.exe",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}\\sistemaDeAnaliseAcademicaUnirio"
+    ]
+}

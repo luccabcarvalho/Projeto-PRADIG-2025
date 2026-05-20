@@ -10,3 +10,12 @@ USER_ID = 'user1'
 EVASAO_BOA = {'CON - Curso concluído'}   # verde
 EVASAO_SEM = {'Sem evasão'}              # sem destaque (aluno ainda ativo)
 
+def dicionario_de_equivalencias():
+    # Carrega o arquivo de equivalências
+    caminho_arquivo = os.path.join(USER_DIR, 'alunosP')
+    df_equivalencias = pd.read_csv(caminho_arquivo)
+    
+    # Cria um dicionário de equivalências
+    
+    
+    return equivalencias

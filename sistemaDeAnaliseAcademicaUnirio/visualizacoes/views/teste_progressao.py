@@ -11,11 +11,11 @@ EVASAO_BOA = {'CON - Curso concluído'}   # verde
 EVASAO_SEM = {'Sem evasão'}              # sem destaque (aluno ainda ativo)
 
 def dicionario_de_equivalencias():
-    # Carrega o arquivo de equivalências
-    caminho_arquivo = os.path.join(USER_DIR, 'alunosP')
-    df_equivalencias = pd.read_csv(caminho_arquivo)
+    USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID) # Definindo caminhos dos arquivos
+    equivalencias_path = os.path.join(USER_DIR, 'relacaoEquivalenciaDisciplinas.csv')
+    df_equivalencias = pd.read_csv(equivalencias_path, encoding='latin1', sep=';')
     
-    # Cria um dicionário de equivalências
-    
-    
-    return equivalencias
+    VERSION_ORDER = ['2002/2', '2005/2', '2008/1', '2023/2']
+
+    # Inicializa todas as versões com dicts vazios
+    equivalencias = {v: {} for v in VERSION_ORDER}

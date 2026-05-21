@@ -15,7 +15,7 @@ def dicionario_de_equivalencias():
     equivalencias_path = os.path.join(USER_DIR, 'relacaoEquivalenciaDisciplinas.csv')
     df_equivalencias = pd.read_csv(equivalencias_path, encoding='latin1', sep=';')
     
-    VERSION_ORDER = ['2002/2', '2005/2', '2008/1', '2023/2']
+    VERSION_ORDER = ['2000/2', '2005/2', '2008/1', '2023/2']
 
     # Inicializa todas as versões com dicts vazios
     equivalencias = {v: {} for v in VERSION_ORDER}

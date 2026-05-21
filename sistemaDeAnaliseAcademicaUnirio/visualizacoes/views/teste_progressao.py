@@ -19,3 +19,6 @@ def dicionario_de_equivalencias():
 
     # Inicializa todas as versões com dicts vazios
     equivalencias = {v: {} for v in VERSION_ORDER}
+
+    # Filtra o dataframe para incluir apenas as linhas com equivalências
+    df_validos = df_equivalencias[df_equivalencias['NOME_DISC_EQUIV'].notna()][['NUM_VERSAO', 'NOME_DISCIPLINA', 'NOME_DISC_EQUIV']]

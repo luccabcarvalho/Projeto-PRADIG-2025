@@ -11,7 +11,7 @@ EVASAO_BOA = {'CON - Curso concluído'}   # verde
 EVASAO_SEM = {'Sem evasão'}              # sem destaque (aluno ainda ativo)
 
 def dicionario_de_equivalencias():
-    USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID)
+    USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID) # Transformar em função
     equivalencias_path = os.path.join(USER_DIR, 'relacaoEquivalenciaDisciplinas.csv')
     df = pd.read_csv(equivalencias_path, encoding='latin1', sep=';')
 
@@ -23,14 +23,8 @@ def dicionario_de_equivalencias():
 
     mapeamento = {} # Dicionário vazio
     for antigo, novo in zip(codigos_antigos, codigos_novos): # Itera sobre os códigos formando pares
-        if antigo not in mapeamento: # Se o código antigo ainda não tiver sido adicionado ao dicionário
-            mapeamento[antigo] = [] # Inicia uma lista vazia para armazenar códigos equivalentes
-        mapeamento[antigo].append(novo) # Anexa o código novo na lista do código antigo equivalente
+        if novo not in mapeamento: # Se o código novo ainda não tiver sido adicionado ao dicionário
+            mapeamento[novo] = [] # Inicia uma lista vazia para armazenar códigos equivalentes
+        mapeamento[novo].append(antigo) # Anexa o código antigo na lista do código novo equivalente
 
-    # Dict comprehension
-    equivalencias = {
-        antigo: (nomes[0] if len(nomes) == 1 else nomes) # Se antigo tiver apenas uma equivalência, retorna uma string. Mais de uma, retorna uma lista.
-        for antigo, nomes in mapeamento.items() # Itera sobre o mapeamento retornando pares de antigo e nomes
-    }
-
-    return equivalencias
+    return mapeamento

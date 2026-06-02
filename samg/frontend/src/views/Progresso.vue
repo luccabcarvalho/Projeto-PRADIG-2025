@@ -149,6 +149,8 @@
 import axios from "axios";
 import instance from "@/api/instance";
 
+const PROGRESS_CACHE_VERSION = '2026-05-26-v1';
+
 // Importa todos os CSVs de docs e subpastas
 const csvDocs = import.meta.glob('@docs/**/*.csv', { query: '?raw', import: 'default', eager: true });
 function getCsvDocsDisponiveis() {
@@ -163,6 +165,11 @@ function getCsvDocsDisponiveis() {
 
 const csvDisponiveis = getCsvDocsDisponiveis();
 const historicoCsv = csvDisponiveis.HistoricoEscolarSimplificado || '';
+const progressoSourceSignature = [
+  PROGRESS_CACHE_VERSION,
+  historicoCsv.length,
+  ...Object.keys(csvDisponiveis).sort(),
+].join('|');
 
 export default {
   data() {
@@ -227,6 +234,24 @@ export default {
     },
   },
   methods: {
+    getCacheKey(matricula) {
+      return `samg_progresso:${progressoSourceSignature}:${String(matricula || '')}`;
+    },
+    readCache(matricula) {
+      try {
+        const raw = localStorage.getItem(this.getCacheKey(matricula));
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) {
+        return null;
+      }
+    },
+    writeCache(matricula, payload) {
+      try {
+        localStorage.setItem(this.getCacheKey(matricula), JSON.stringify(payload));
+      } catch (e) {
+        // ignore cache failures
+      }
+    },
     async yieldToUI() {
       await new Promise((resolve) => setTimeout(resolve, 0));
     },
@@ -298,6 +323,16 @@ export default {
 
         const text = historicoCsv;
         const matricula = String(this.user.matricula);
+
+        const cached = this.readCache(matricula);
+        if (cached && Array.isArray(cached.grade) && Array.isArray(cached.curriculoGrade)) {
+          this.grade = cached.grade;
+          this.curriculoGrade = cached.curriculoGrade;
+          this.curriculoVersion = cached.curriculoVersion || null;
+          this.message = cached.message || null;
+          return;
+        }
+
         const curriculoYear = this.extrairVersaoCurriculoHistorico(text, matricula);
         const disciplinas = await this.parseHistoricoCsv(text, matricula);
         
@@ -323,6 +358,13 @@ export default {
             const currList = await this.parseCurriculoCsv(curriculoRaw.text);
             this.curriculoVersion = curriculoRaw.ver;
             this.curriculoGrade = await this.buildCurriculoProgresso(currList, disciplinas);
+
+            this.writeCache(matricula, {
+              grade: this.grade,
+              curriculoGrade: this.curriculoGrade,
+              curriculoVersion: this.curriculoVersion,
+              message: null,
+            });
           } else {
             this.curriculoGrade = [];
           }

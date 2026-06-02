@@ -126,6 +126,8 @@
 <script>
 const csvDocs = import.meta.glob('@docs/**/*.csv', { query: '?raw', import: 'default', eager: true });
 
+const MIGRACAO_CACHE_VERSION = '2026-05-26-v1';
+
 function normalizeText(value) {
   return String(value || '')
     .normalize('NFD')
@@ -147,6 +149,12 @@ const csvDisponiveis = getCsvDocsDisponiveis();
 const historicoCsv = csvDisponiveis.HistoricoEscolarSimplificado || '';
 const equivalenciasCsvNome = Object.keys(csvDisponiveis).find((nome) => normalizeText(nome).includes('equivalencia'));
 const equivalenciasCsv = equivalenciasCsvNome ? csvDisponiveis[equivalenciasCsvNome] : '';
+const migracaoSourceSignature = [
+  MIGRACAO_CACHE_VERSION,
+  historicoCsv.length,
+  equivalenciasCsv.length,
+  ...Object.keys(csvDisponiveis).sort(),
+].join('|');
 
 export default {
   data() {
@@ -178,6 +186,24 @@ export default {
     },
   },
   methods: {
+    getCacheKey(matricula) {
+      return `samg_migracao:${migracaoSourceSignature}:${String(matricula || '')}`;
+    },
+    readCache(matricula) {
+      try {
+        const raw = localStorage.getItem(this.getCacheKey(matricula));
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) {
+        return null;
+      }
+    },
+    writeCache(matricula, payload) {
+      try {
+        localStorage.setItem(this.getCacheKey(matricula), JSON.stringify(payload));
+      } catch (e) {
+        // ignore cache failures
+      }
+    },
     async yieldToUI() {
       await new Promise((resolve) => setTimeout(resolve, 0));
     },
@@ -274,12 +300,16 @@ export default {
       if (idxVersao < 0) return null;
 
       const freq = new Map();
+
       for (let i = 1; i < lines.length; i++) {
         const cols = this.splitLinhaCsv(lines[i]);
+
         if (matricula && idxMatricula >= 0) {
           const rowMat = String(cols[idxMatricula] || '').trim();
+
           if (String(rowMat) !== String(matricula)) continue;
         }
+        
         const versao = String(cols[idxVersao] || '').trim();
         if (!versao) continue;
         freq.set(versao, (freq.get(versao) || 0) + 1);
@@ -478,6 +508,16 @@ export default {
         }
     
         const matricula = String(this.user.matricula);
+
+            const cached = this.readCache(matricula);
+            if (cached && Array.isArray(cached.grade)) {
+              this.grade = cached.grade;
+              this.curriculoAtual = cached.curriculoAtual || null;
+              this.curriculoNovo = cached.curriculoNovo || null;
+              this.message = cached.message || null;
+              return;
+            }
+
         const versaoAtual = this.extrairVersaoCurriculoHistorico(historicoCsv, matricula);
         const { aprovadas } = await this.parseHistoricoAluno(historicoCsv, matricula);
 
@@ -503,6 +543,13 @@ export default {
         this.curriculoNovo = curriculoDestino.ver;
         this.grade = await this.buildGradeMigracao(curriculoNovoList, aprovadas, equivalenciasMap);
         this.message = null;
+
+        this.writeCache(matricula, {
+          grade: this.grade,
+          curriculoAtual: this.curriculoAtual,
+          curriculoNovo: this.curriculoNovo,
+          message: null,
+        });
     
       } finally {
         this.loading = false;

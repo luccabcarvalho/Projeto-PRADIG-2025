@@ -1,6 +1,6 @@
 <template>
   <v-container class="auth" fluid>
-      <v-row justify="center" align="center" style="min-height:100vh;">
+      <v-row justify="center" align:="center" style="min-height:100vh;">
       <v-col cols="12" md="6" class="d-flex justify-center">
         <v-card class="pa-6 elevation-4 auth-card">
           <div class="d-flex flex-column align-center mb-4">
@@ -35,7 +35,7 @@
               </v-form>
             </div>
 
-            <v-alert v-if="message" :type="messageType" class="mt-4" border="left">{{ message }}</v-alert>
+            <v-alert v-if="message" :type="messageType" class="mt-4" border:="left">{{ message }}</v-alert>
           </v-card-text>
         </v-card>
       </v-col>

@@ -1,42 +1,109 @@
 <template>
   <v-container class="auth" fluid>
-      <v-row justify="center" align:="center" style="min-height:100vh;">
-      <v-col cols="12" md="6" class="d-flex justify-center">
-        <v-card class="pa-6 elevation-4 auth-card">
+    <v-row justify="center" align:center class="auth-row">
+      <v-col cols="12" sm="1" md="8" lg="10" xl="5" class="d-flex justify-center">
+        <v-card class="pa-6 elevation-4 auth-card" style="min-width: 350px;">
           <div class="d-flex flex-column align-center mb-4">
-            <v-avatar size="64" class="mb-3" color="primary">
+            <v-avatar size="64" color="primary">
               <v-icon color="white">mdi-account</v-icon>
             </v-avatar>
             <h3 class="ma-0">Acesso ao SAMG</h3>
             <small class="grey--text">Entre ou crie sua conta</small>
           </div>
 
-          <v-tabs v-model="tab" background-color="transparent" class="mb-4" grow>
-            <v-tab key="login"><v-icon left small>mdi-login</v-icon>Entrar</v-tab>
-            <v-tab key="register"><v-icon left small>mdi-account-plus</v-icon>Cadastrar</v-tab>
+          <v-tabs
+            v-model="tab"
+            background-color="transparent"
+            slider-transition="grow" 
+            slider-transition-duration="900"
+            slider-color="primary"
+            centered
+            class="custom-slider-size"
+          >
+            <v-tab key="login" class="auth-tab">
+              Entrar
+            </v-tab>
+            <v-tab key="register" class="auth-tab">
+              Cadastrar
+            </v-tab>
           </v-tabs>
 
           <v-card-text>
+            <!-- TAB 0: LOGIN -->
             <div v-if="tab === 0">
               <v-form ref="loginForm" @submit.prevent="submitLogin" lazy-validation>
-                <v-text-field label="Matrícula" v-model="login.matricula" variant="outlined" density="comfortable" :rules="[rules.required, rules.matricula]" prepend-inner-icon="mdi-card-account-details" autofocus required />
-                <v-text-field label="Senha" v-model="login.password" :type="showPassword ? 'text' : 'password'" variant="outlined" density="comfortable" :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'" @click:append-inner="showPassword = !showPassword" :rules="[rules.required]" prepend-inner-icon="mdi-lock" required />
-                <v-btn color="primary" class="mt-4" block @click="submitLogin">Entrar</v-btn>
+                <v-text-field
+                  v-model="loginData.matricula"
+                  label="Matrícula"
+                  outlined
+                  required
+                  class="mb-3"
+                />
+                <v-text-field
+                  v-model="loginData.senha"
+                  label="Senha"
+                  type="password"
+                  outlined
+                  required
+                  class="mb-3"
+                />
               </v-form>
+
+              <v-btn color="primary" class="mt-4" block @click="submitLogin" :loading="loadingLogin">
+                Entrar
+              </v-btn>
+
+              <v-divider class="my-4" />
+
+              <!-- Botão Google -->
+              <div ref="googleBtnContainer" class="d-flex justify-center mb-4 google-btn-container"></div>
             </div>
 
+            <!-- TAB 1: REGISTER -->
             <div v-else>
               <v-form ref="registerForm" @submit.prevent="submitRegister" lazy-validation>
-                <v-text-field label="Nome" v-model="register.name" variant="outlined" density="comfortable" :rules="[rules.required]" prepend-inner-icon="mdi-account" required />
-                <v-text-field label="Email" v-model="register.email" type="email" variant="outlined" density="comfortable" :rules="[rules.required, rules.email]" prepend-inner-icon="mdi-email" required />
-                <v-text-field label="Matrícula" v-model="register.matricula" variant="outlined" density="comfortable" :rules="[rules.required, rules.matricula]" prepend-inner-icon="mdi-card-account-details" required />
-                <v-text-field label="Senha" v-model="register.password" :type="showPassword ? 'text' : 'password'" variant="outlined" density="comfortable" :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'" @click:append-inner="showPassword = !showPassword" :rules="[rules.required, rules.min8]" prepend-inner-icon="mdi-lock" required />
-                <v-btn color="primary" class="mt-4" block @click="submitRegister">Cadastrar</v-btn>
+                <v-text-field
+                  v-model="registerData.nome"
+                  label="Nome Completo"
+                  outlined
+                  required
+                  class="mb-3"
+                />
+                <v-text-field
+                  v-model="registerData.matricula"
+                  label="Matrícula"
+                  outlined
+                  required
+                  class="mb-3"
+                />
+                <v-text-field
+                  v-model="registerData.email"
+                  label="Email"
+                  type="email"
+                  outlined
+                  required
+                  class="mb-3"
+                />
+                <v-text-field
+                  v-model="registerData.senha"
+                  label="Senha"
+                  type="password"
+                  outlined
+                  required
+                  class="mb-3"
+                />
               </v-form>
-            </div>
 
-            <v-alert v-if="message" :type="messageType" class="mt-4" border:="left">{{ message }}</v-alert>
+              <v-btn color="primary" class="mt-4" block @click="submitRegister" :loading="loadingRegister">
+                Cadastrar
+              </v-btn>
+            </div>
           </v-card-text>
+
+          <!-- Mensagens -->
+          <v-alert v-if="message" :type="messageType" class="mt-4" dismissible>
+            {{ message }}
+          </v-alert>
         </v-card>
       </v-col>
     </v-row>
@@ -47,79 +114,174 @@
 import instance from '@/api/instance';
 
 export default {
+  name: 'Auth',
   data() {
     return {
       tab: 0,
-      login: { matricula: '', password: '' },
-      register: { name: '', email: '', matricula: '', password: '' },
+      loadingLogin: false,
+      loadingRegister: false,
       message: null,
       messageType: 'info',
-      showPassword: false,
-      rules: {
-        required: v => !!v || 'Campo obrigatório',
-        email: v => /\S+@\S+\.\S+/.test(v) || 'Email inválido',
-        min8: v => (v && v.length >= 8) || 'Use ao menos 8 caracteres',
-        matricula: v => (v && /^\d{11}$/.test(v)) || 'Matrícula deve conter exatamente 11 números',
+      loginData: {
+        matricula: '',
+        senha: '',
+      },
+      registerData: {
+        nome: '',
+        matricula: '',
+        email: '',
+        senha: '',
       },
     };
   },
+  mounted() {
+    this.initGoogleLogin();
+  },
   methods: {
-    async submitRegister() {
+    initGoogleLogin() {
+      if (!window.google?.accounts?.id) {
+        console.warn('Google Identity Services não carregado');
+        return;
+      }
+
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        callback: this.handleGoogleCredential,
+      });
+
+      window.google.accounts.id.renderButton(this.$refs.googleBtnContainer, {
+        theme: 'outline',
+        size: 'large',
+        width: '100%',
+        text: 'signin_with',
+      });
+    },
+
+    async handleGoogleCredential(response) {
+      this.loadingLogin = true;
       this.message = null;
+
       try {
-        const { data } = await instance.post('auth/register', this.register);
-        this.message = 'Cadastro realizado com sucesso.';
+        // Envia o token para o backend validar
+        const { data } = await instance.post('/auth/google', {
+          credential: response.credential,
+        });
+
+        this.message = 'Login realizado com sucesso!';
         this.messageType = 'success';
-        
-        this.tab = 0;
-        this.login.matricula = this.register.matricula;
+
+        // Armazena usuário no localStorage
+        localStorage.setItem('samg_user', JSON.stringify(data.user));
+
+        // Dispara evento para sincronização
+        window.dispatchEvent(
+          new CustomEvent('samg_user_changed', { detail: data.user })
+        );
+
+        // Aguarda 1.5s e redireciona
+        setTimeout(() => {
+          this.$router.push({ name: 'inicio' });
+        }, 1500);
       } catch (err) {
-        this.message = err.response?.data?.error || 'Erro no cadastro';
+        this.message = err.response?.data?.error || 'Erro ao fazer login com Google';
         this.messageType = 'error';
+      } finally {
+        this.loadingLogin = false;
       }
     },
-    async submitLogin() {
-      this.message = null;
-      try {
-        const { data } = await instance.post('auth/login', this.login);
-        this.message = 'Login efetuado com sucesso.';
-        this.messageType = 'success';
-        
-        localStorage.setItem('samg_user', JSON.stringify(data.user));
-        
 
-        window.dispatchEvent(new CustomEvent('samg_user_changed', { detail: data.user }));
-        this.$router.push({ name: 'progresso' });
+    async submitLogin() {
+      if (!this.$refs.loginForm.validate()) return;
+
+      this.loadingLogin = true;
+      this.message = null;
+
+      try {
+        const { data } = await instance.post('/auth/login', this.loginData);
+
+        this.message = 'Login realizado com sucesso!';
+        this.messageType = 'success';
+
+        localStorage.setItem('samg_user', JSON.stringify(data.user));
+        window.dispatchEvent(
+          new CustomEvent('samg_user_changed', { detail: data.user })
+        );
+
+        setTimeout(() => {
+          this.$router.push({ name: 'inicio' });
+        }, 1500);
       } catch (err) {
-        this.message = err.response?.data?.error || 'Credenciais incorretas';
+        this.message = err.response?.data?.error || 'Erro ao fazer login';
         this.messageType = 'error';
+      } finally {
+        this.loadingLogin = false;
+      }
+    },
+
+    async submitRegister() {
+      if (!this.$refs.registerForm.validate()) return;
+
+      this.loadingRegister = true;
+      this.message = null;
+
+      try {
+        await instance.post('/auth/register', this.registerData);
+
+        this.message = 'Cadastro realizado com sucesso! Você pode fazer login agora.';
+        this.messageType = 'success';
+
+        this.registerData = { nome: '', matricula: '', email: '', senha: '' };
+        this.tab = 0;
+      } catch (err) {
+        this.message = err.response?.data?.error || 'Erro ao cadastrar';
+        this.messageType = 'error';
+      } finally {
+        this.loadingRegister = false;
       }
     },
   },
 };
 </script>
 
-<style scoped>
+<style lang="css" scoped>
 .auth {
-  margin-top: 0;
+  background: linear-gradient(135deg, #667eea 0%, 100%);
+  min-height: 100vh;
+  padding-top: 32px;
+  padding-bottom: 32px;
 }
 
+.auth-row {
+  min-height: calc(50vh - 64px);
+}
 
 .auth-card {
   width: 100%;
-  max-width: 32.5rem; 
-  box-sizing: border-box;
-  margin: 0 auto; 
-  min-width: 32.5rem; 
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
 }
 
+.google-btn-container {
+  width: 100%;
+}
 
-@media (max-width: 32.5rem) {
-  .auth-card {
-    min-width: 0;
-    max-width: 22.5rem; 
-    padding: 12px;
-    margin: 0 auto;
-  }
+.auth-tab {
+  min-width: 0 !important; 
+  padding: 0 !important; 
+  margin: 2px 15% !important; 
+  letter-spacing: normal !important;
+}
+
+::v-deep(.custom-slider-size .v-tabs-slider-wrapper) {
+  display: flex !important;
+  justify-content: center !important;
+}
+
+::v-deep(.custom-slider-size .v-tabs-slider) {
+  width: 75% !important; 
+}
+.text-grey {
+  color: #888;
 }
 </style>

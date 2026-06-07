@@ -1,5 +1,6 @@
-// Load environment variables
+// carrega variaveis de ambiente
 require('dotenv').config();
+
 
 const Fastify = require("fastify");
 const fs = require("fs");
@@ -13,6 +14,9 @@ const { pipeline } = require("stream");
 //const readPdfMigracao = require("./services/handlerPDFMigracaoContent");
 const authService = require('./services/authService');
 const dbModule = require('./services/db');
+const auth2Client = require('google-auth-library').OAuth2Client;
+const client = new auth2Client(process.env.GOOGLE_CLIENT_ID);
+
 
 const pump = util.promisify(pipeline);
 
@@ -202,12 +206,63 @@ fastify.post("/admin/upload-historico", async (req, reply) => {
   }
 });
 
-  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-  const host = process.env.HOST || '0.0.0.0';
-  fastify.listen({ port, host }, (err, address) => {
-    if (err) {
-      fastify.log.error(err);
-      process.exit(1);
-    }
-  console.log(`Servidor rodando em ${address}`);
+// Rota: POST /auth/google
+fastify.post('/auth/google', async (request, reply) => {
+  try {
+    const { credential } = request.body;
+
+    // Valida o token JWT do Google
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { sub, email, name, picture } = payload;
+
+    // Procura usuário por email no banco
+    let user = db.users.find(u => u.email === email);
+
+    if (!user) {
+      // Se não existe, cria novo usuário
+      user = {
+        id: Date.now().toString(),
+        googleId: sub,
+        email,
+        nome: name,
+        fotoPerfil: picture,
+        matricula: email.split('@')[0], // usa prefixo do email como matricula
+        criadoEm: new Date().toISOString(),
+      };
+
+      db.users.push(user);
+    }
+
+    // Gera token JWT
+    const token = authService.gerarToken(user);
+
+    return reply.send({
+      user: {
+        id: user.id,
+        nome: user.nome,
+        email: user.email,
+        matricula: user.matricula,
+        fotoPerfil: user.fotoPerfil,
+      },
+      token,
+    });
+  } catch (err) {
+    fastify.log.error(err);
+    return reply.status(401).send({ error: 'Falha ao autenticar com Google' });
+  }
+});
+
+const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const host = process.env.HOST || '0.0.0.0';
+fastify.listen({ port, host }, (err, address) => {
+  if (err) {
+    fastify.log.error(err);
+    process.exit(1);
+  }
+  fastify.log.info(`Servidor rodando em ${address}`);
 });

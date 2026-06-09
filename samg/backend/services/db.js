@@ -1,14 +1,23 @@
 const sql = require('mssql');
 
-// Build config with support for Windows Authentication or SQL Auth
+
 const buildConfig = () => {
+  const parsedPort = Number.parseInt(process.env.DB_PORT || '1433', 10);
+  const port = Number.isFinite(parsedPort) ? parsedPort : 1433;
+
   const config = {
     server: process.env.DB_SERVER || 'localhost',
     database: process.env.DB_NAME || 'samg',
+    port,
+    pool: {
+      max: 10,
+      min: 0,
+      idleTimeoutMillis: 30000
+    },
     options: {
-      encrypt: process.env.DB_ENCRYPT === 'true' || false,
+      encrypt: process.env.DB_ENCRYPT === 'true',
       trustServerCertificate: true,
-      port: parseInt(process.env.DB_PORT || '1433')
+      enableArithAbort: true
     }
   };
 

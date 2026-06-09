@@ -13,7 +13,6 @@ const { pipeline } = require("stream");
 //const readPdfIntegralizacao = require("./services/handlerPDFIntegralizacaoContent");
 //const readPdfMigracao = require("./services/handlerPDFMigracaoContent");
 const authService = require('./services/authService');
-const dbModule = require('./services/db');
 const auth2Client = require('google-auth-library').OAuth2Client;
 const client = new auth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -24,16 +23,7 @@ const fastify = Fastify({ logger: true });
 fastify.register(fastifyCors, { origin: "*" });
 fastify.register(fastifyMultipart);
 
-// Start no banco de dados
-fastify.register(async function(fastify) {
-  try {
-    await dbModule.init();
-    console.log('Banco de dados inicializado com sucesso!');
-  } catch (err) {
-    fastify.log.error('Falha ao inicializar o banco de dados: ' + err.message);
-    throw err;
-  }
-});
+// No database mode: authentication via Google only (in-memory sessions)
 
 fastify.get('/', function (req, reply) {
     reply.send({ hello: 'opa' })
@@ -51,42 +41,7 @@ fastify.get('/', function (req, reply) {
 //    reply.send({ disciplinas })
 //})
 
-fastify.post('/auth/register', async (req, reply) => {
-  try {
-    const body = await req.body;
-    const user = await authService.registerUser(body);
-    reply.send({ user });
-  } catch (err) {
-    reply.status(400).send({ error: err.message });
-  }
-});
-
-fastify.post('/auth/login', async (req, reply) => {
-  try {
-    const body = await req.body;
-    
-    const identifier = body.email || body.matricula || body.identifier;
-    const password = body.password || body.senha;
-    const user = await authService.loginUser({ identifier, password });
-    reply.send({ user });
-  } catch (err) {
-    reply.status(401).send({ error: err.message });
-  }
-});
-
-// Endpoint para mudança de senha
-fastify.post('/auth/change-password', async (req, reply) => {
-  try {
-    const authHeader = req.headers['authorization'] || '';
-    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
-    const body = await req.body;
-    const { oldPassword, newPassword } = body;
-    const user = await authService.changePassword({ token, oldPassword, newPassword });
-    reply.send({ user });
-  } catch (err) {
-    reply.status(400).send({ error: err.message });
-  }
-});
+// Note: email/password registration/login not supported in DB-free mode
 
 //fastify.post("/uploadIntegralizacao", async (req, reply) => {
 //  const data = await req.file();
@@ -123,93 +78,16 @@ function getSessionFromToken(token) {
   return authService.getSessionByToken ? authService.getSessionByToken(token) : null;
 }
 
-// Endpoint para upload de currículo (ADM)
-fastify.post("/admin/upload-curriculo", async (req, reply) => {
-  try {
-    const authHeader = req.headers['authorization'] || '';
-    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
-    
-    const session = getSessionFromToken(token);
-    if (!session) {
-      return reply.status(401).send({ error: 'Não autenticado' });
-    }
-    if (session.tipoUsuario !== 'adm') {
-      return reply.status(403).send({ error: 'Apenas ADM pode fazer upload' });
-    }
-
-    const data = await req.file();
-    const filename = `curriculo-${data.filename}`;
-    const filepath = path.resolve(__dirname, './data', filename);
-    
-    if (!fs.existsSync(path.dirname(filepath))) {
-      fs.mkdirSync(path.dirname(filepath), { recursive: true });
-    }
-    
-    await pump(data.file, fs.createWriteStream(filepath));
-    
-    const pool = await dbModule.getConnection();
-    const anoSemestre = data.filename.replace(/\.csv$/i, '');
-    
-    await pool.request()
-      .input('anoSemestre', anoSemestre)
-      .input('caminho', filepath)
-      .input('usuarioId', session.userId)
-      .query(`
-        IF EXISTS (SELECT 1 FROM Curriculos WHERE ano_semestre = @anoSemestre)
-          UPDATE Curriculos SET arquivo_caminho = @caminho, uploadedAt = GETDATE() WHERE ano_semestre = @anoSemestre
-        ELSE
-          INSERT INTO Curriculos (ano_semestre, arquivo_caminho, uploadedBy) VALUES (@anoSemestre, @caminho, @usuarioId)
-      `);
-    
-    reply.send({ success: true, mensagem: `Currículo ${anoSemestre} enviado com sucesso` });
-  } catch (err) {
-    fastify.log.error(err);
-    reply.status(500).send({ error: 'Erro ao fazer upload do currículo' });
-  }
-});
-
-// Endpoint para upload de histórico escolar (ADM)
-fastify.post("/admin/upload-historico", async (req, reply) => {
-  try {
-    const authHeader = req.headers['authorization'] || '';
-    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
-    
-    const session = getSessionFromToken(token);
-    if (!session) {
-      return reply.status(401).send({ error: 'Não autenticado' });
-    }
-    if (session.tipoUsuario !== 'adm') {
-      return reply.status(403).send({ error: 'Apenas ADM pode fazer upload' });
-    }
-
-    const data = await req.file();
-    const filename = `historico-${Date.now()}-${data.filename}`;
-    const filepath = path.resolve(__dirname, './data', filename);
-    
-    if (!fs.existsSync(path.dirname(filepath))) {
-      fs.mkdirSync(path.dirname(filepath), { recursive: true });
-    }
-    
-    await pump(data.file, fs.createWriteStream(filepath));
-    
-    const pool = await dbModule.getConnection();
-    
-    await pool.request()
-      .input('caminho', filepath)
-      .input('usuarioId', session.userId)
-      .query(`INSERT INTO Historicos (arquivo_caminho, uploadedBy) VALUES (@caminho, @usuarioId)`);
-    
-    reply.send({ success: true, mensagem: 'Histórico escolar enviado com sucesso' });
-  } catch (err) {
-    fastify.log.error(err);
-    reply.status(500).send({ error: 'Erro ao fazer upload do histórico' });
-  }
-});
+// Admin upload endpoints removed in DB-free mode. Use file-storage-only approach if needed.
 
 // Rota: POST /auth/google
 fastify.post('/auth/google', async (request, reply) => {
   try {
     const { credential } = request.body;
+    if (!credential) {
+      fastify.log.warn('Requisição /auth/google sem credential no corpo');
+      return reply.status(400).send({ error: 'Missing credential in request body' });
+    }
 
     // Valida o token JWT do Google
     const ticket = await client.verifyIdToken({
@@ -220,40 +98,29 @@ fastify.post('/auth/google', async (request, reply) => {
     const payload = ticket.getPayload();
     const { sub, email, name, picture } = payload;
 
-    // Procura usuário por email no banco
-    let user = db.users.find(u => u.email === email);
+    // Cria sessão em memória e retorna token
+    const { user, token } = await authService.signInWithGoogle({ sub, email, name, picture });
 
-    if (!user) {
-      // Se não existe, cria novo usuário
-      user = {
-        id: Date.now().toString(),
-        googleId: sub,
-        email,
-        nome: name,
-        fotoPerfil: picture,
-        matricula: email.split('@')[0], // usa prefixo do email como matricula
-        criadoEm: new Date().toISOString(),
-      };
+    return reply.send({ user, token });
+  } catch (err) {
+    // Log completo para depuração
+    fastify.log.error({ err }, 'Erro em /auth/google');
+    const message = err && err.message ? err.message : 'Falha ao autenticar com Google';
+    return reply.status(401).send({ error: message });
+  }
+});
 
-      db.users.push(user);
-    }
-
-    // Gera token JWT
-    const token = authService.gerarToken(user);
-
-    return reply.send({
-      user: {
-        id: user.id,
-        nome: user.nome,
-        email: user.email,
-        matricula: user.matricula,
-        fotoPerfil: user.fotoPerfil,
-      },
-      token,
-    });
+// Debug endpoint para checar configuração e sessões
+fastify.get('/auth/debug', async (request, reply) => {
+  try {
+    const info = {
+      GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || null,
+      NODE_ENV: process.env.NODE_ENV || null
+    };
+    return reply.send({ ok: true, info });
   } catch (err) {
     fastify.log.error(err);
-    return reply.status(401).send({ error: 'Falha ao autenticar com Google' });
+    return reply.status(500).send({ error: 'Erro no debug' });
   }
 });
 
@@ -265,4 +132,24 @@ fastify.listen({ port, host }, (err, address) => {
     process.exit(1);
   }
   fastify.log.info(`Servidor rodando em ${address}`);
+});
+
+// Permite ao usuário inserir sua matrícula após login Google
+fastify.post('/auth/set-matricula', async (request, reply) => {
+  try {
+    const authHeader = request.headers['authorization'] || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+    const body = await request.body;
+    const { matricula } = body || {};
+
+    if (!token) return reply.status(401).send({ error: 'Token ausente' });
+    if (!matricula) return reply.status(400).send({ error: 'Matrícula ausente' });
+
+    const result = await authService.setMatricula(token, matricula);
+    return reply.send({ ok: true, user: result });
+  } catch (err) {
+    fastify.log.error({ err }, 'Erro em /auth/set-matricula');
+    const message = err && err.message ? err.message : 'Erro ao setar matrícula';
+    return reply.status(400).send({ error: message });
+  }
 });

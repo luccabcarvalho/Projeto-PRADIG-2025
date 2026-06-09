@@ -11,99 +11,39 @@
             <small class="grey--text">Entre ou crie sua conta</small>
           </div>
 
-          <v-tabs
-            v-model="tab"
-            background-color="transparent"
-            slider-transition="grow" 
-            slider-transition-duration="900"
-            slider-color="primary"
-            centered
-            class="custom-slider-size"
-          >
-            <v-tab key="login" class="auth-tab">
-              Entrar
-            </v-tab>
-            <v-tab key="register" class="auth-tab">
-              Cadastrar
-            </v-tab>
-          </v-tabs>
-
           <v-card-text>
-            <!-- TAB 0: LOGIN -->
-            <div v-if="tab === 0">
-              <v-form ref="loginForm" @submit.prevent="submitLogin" lazy-validation>
-                <v-text-field
-                  v-model="loginData.matricula"
-                  label="Matrícula"
-                  outlined
-                  required
-                  class="mb-3"
-                />
-                <v-text-field
-                  v-model="loginData.senha"
-                  label="Senha"
-                  type="password"
-                  outlined
-                  required
-                  class="mb-3"
-                />
-              </v-form>
-
-              <v-btn color="primary" class="mt-4" block @click="submitLogin" :loading="loadingLogin">
-                Entrar
-              </v-btn>
-
-              <v-divider class="my-4" />
-
-              <!-- Botão Google -->
-              <div ref="googleBtnContainer" class="d-flex justify-center mb-4 google-btn-container"></div>
+            <div class="d-flex flex-column align-center mb-4">
+              <p>Entre usando sua conta Google</p>
             </div>
-
-            <!-- TAB 1: REGISTER -->
-            <div v-else>
-              <v-form ref="registerForm" @submit.prevent="submitRegister" lazy-validation>
-                <v-text-field
-                  v-model="registerData.nome"
-                  label="Nome Completo"
-                  outlined
-                  required
-                  class="mb-3"
-                />
-                <v-text-field
-                  v-model="registerData.matricula"
-                  label="Matrícula"
-                  outlined
-                  required
-                  class="mb-3"
-                />
-                <v-text-field
-                  v-model="registerData.email"
-                  label="Email"
-                  type="email"
-                  outlined
-                  required
-                  class="mb-3"
-                />
-                <v-text-field
-                  v-model="registerData.senha"
-                  label="Senha"
-                  type="password"
-                  outlined
-                  required
-                  class="mb-3"
-                />
-              </v-form>
-
-              <v-btn color="primary" class="mt-4" block @click="submitRegister" :loading="loadingRegister">
-                Cadastrar
-              </v-btn>
-            </div>
+            <div ref="googleBtnContainer" class="d-flex justify-center mb-4 google-btn-container"></div>
           </v-card-text>
 
-          <!-- Mensagens -->
-          <v-alert v-if="message" :type="messageType" class="mt-4" dismissible>
-            {{ message }}
-          </v-alert>
+              <!-- Dialog para solicitar matrícula após login Google -->
+              <v-dialog v-model="showMatriculaDialog" max-width="420">
+                <v-card>
+                  <v-card-title>Informe sua matrícula</v-card-title>
+                  <v-card-text>
+                    <v-form ref="matriculaForm" @submit.prevent="submitMatricula">
+                      <v-text-field
+                        v-model="matriculaInput"
+                        label="Matrícula"
+                        outlined
+                        required
+                      />
+                    </v-form>
+                  </v-card-text>
+                  <v-card-actions>
+                    <v-spacer />
+                    <v-btn text @click="showMatriculaDialog = false">Cancelar</v-btn>
+                    <v-btn color="primary" :loading="loadingMatricula" @click="submitMatricula">Enviar</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+
+              <!-- Mensagens -->
+              <v-alert v-if="message" :type="messageType" class="mt-4" dismissible>
+                {{ message }}
+              </v-alert>
         </v-card>
       </v-col>
     </v-row>
@@ -119,19 +59,14 @@ export default {
     return {
       tab: 0,
       loadingLogin: false,
-      loadingRegister: false,
       message: null,
       messageType: 'info',
-      loginData: {
-        matricula: '',
-        senha: '',
-      },
-      registerData: {
-        nome: '',
-        matricula: '',
-        email: '',
-        senha: '',
-      },
+      // local login/register removed — Google-only auth
+      // matrícula pós-Google
+      token: null,
+      showMatriculaDialog: false,
+      matriculaInput: '',
+      loadingMatricula: false,
     };
   },
   mounted() {
@@ -170,13 +105,25 @@ export default {
         this.message = 'Login realizado com sucesso!';
         this.messageType = 'success';
 
-        // Armazena usuário no localStorage
+        // Armazena usuário e token no localStorage
         localStorage.setItem('samg_user', JSON.stringify(data.user));
+        if (data.token) {
+          localStorage.setItem('samg_token', data.token);
+          this.token = data.token;
+        }
 
         // Dispara evento para sincronização
         window.dispatchEvent(
           new CustomEvent('samg_user_changed', { detail: data.user })
         );
+
+        // Se usuário precisa informar matrícula, abrir diálogo
+        if (data.user && data.user.needsMatricula) {
+          this.showMatriculaDialog = true;
+          this.matriculaInput = '';
+          this.loadingLogin = false;
+          return;
+        }
 
         // Aguarda 1.5s e redireciona
         setTimeout(() => {
@@ -190,55 +137,46 @@ export default {
       }
     },
 
-    async submitLogin() {
-      if (!this.$refs.loginForm.validate()) return;
+    async submitMatricula() {
+      if (!this.matriculaInput) {
+        this.message = 'Informe a matrícula';
+        this.messageType = 'error';
+        return;
+      }
 
-      this.loadingLogin = true;
+      this.loadingMatricula = true;
       this.message = null;
 
       try {
-        const { data } = await instance.post('/auth/login', this.loginData);
+        const headers = {};
+        if (this.token) headers.Authorization = `Bearer ${this.token}`;
 
-        this.message = 'Login realizado com sucesso!';
-        this.messageType = 'success';
-
-        localStorage.setItem('samg_user', JSON.stringify(data.user));
-        window.dispatchEvent(
-          new CustomEvent('samg_user_changed', { detail: data.user })
+        const { data } = await instance.post(
+          '/auth/set-matricula',
+          { matricula: this.matriculaInput },
+          { headers }
         );
 
-        setTimeout(() => {
-          this.$router.push({ name: 'inicio' });
-        }, 1500);
-      } catch (err) {
-        this.message = err.response?.data?.error || 'Erro ao fazer login';
-        this.messageType = 'error';
-      } finally {
-        this.loadingLogin = false;
-      }
-    },
-
-    async submitRegister() {
-      if (!this.$refs.registerForm.validate()) return;
-
-      this.loadingRegister = true;
-      this.message = null;
-
-      try {
-        await instance.post('/auth/register', this.registerData);
-
-        this.message = 'Cadastro realizado com sucesso! Você pode fazer login agora.';
+        this.message = 'Matrícula registrada com sucesso!';
         this.messageType = 'success';
 
-        this.registerData = { nome: '', matricula: '', email: '', senha: '' };
-        this.tab = 0;
+        // Atualiza usuário local
+        const prevUser = JSON.parse(localStorage.getItem('samg_user') || '{}');
+        const user = { ...prevUser, ...data.user };
+        localStorage.setItem('samg_user', JSON.stringify(user));
+        window.dispatchEvent(new CustomEvent('samg_user_changed', { detail: user }));
+
+        this.showMatriculaDialog = false;
+        setTimeout(() => this.$router.push({ name: 'inicio' }), 800);
       } catch (err) {
-        this.message = err.response?.data?.error || 'Erro ao cadastrar';
+        this.message = err.response?.data?.error || 'Erro ao enviar matrícula';
         this.messageType = 'error';
       } finally {
-        this.loadingRegister = false;
+        this.loadingMatricula = false;
       }
     },
+
+    // local login/register removed — use Google Sign-In
   },
 };
 </script>

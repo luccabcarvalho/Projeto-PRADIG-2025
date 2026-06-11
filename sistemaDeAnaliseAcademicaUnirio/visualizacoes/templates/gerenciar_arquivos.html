@@ -113,6 +113,26 @@
             </td>
         </tr>
         <tr>
+            <td>Relatório de equivalências</td>
+            <td>
+                {% if equivalencias %}relacaoEquivalenciaDisciplinas.csv{% else %}<span style="color:#888">Nenhum</span>{% endif %}
+            </td>
+            <td>
+                {% if equivalencias %}
+                <form method="post" style="display:inline">{% csrf_token %}
+                        <input type="hidden" name="remover" value="relacaoEquivalenciaDisciplinas.csv">
+                        <button class="btn" type="submit"><i class="fas fa-trash"></i> Remover</button>
+                </form>
+                {% else %}
+                <form method="post" enctype="multipart/form-data" class="upload-form">{% csrf_token %}
+                        <input type="hidden" name="tipo" value="equivalencias">
+                        <input type="file" name="arquivo" accept=".csv" required>
+                        <button class="btn" type="submit"><i class="fas fa-upload"></i> Enviar</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
             <td>Currículos</td>
             <td>
                 {% if curriculos %}

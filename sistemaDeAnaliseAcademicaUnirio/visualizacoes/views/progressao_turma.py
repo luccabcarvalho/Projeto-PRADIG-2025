@@ -10,10 +10,27 @@ USER_ID = 'user1'
 EVASAO_BOA = {'CON - Curso concluído'}   # verde
 EVASAO_SEM = {'Sem evasão'}              # sem destaque (aluno ainda ativo)
 
+def dicionario_de_equivalencias():
+    USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID)
+    equivalencias_path = os.path.join(USER_DIR, 'relacaoEquivalenciaDisciplinas.csv')
+    df = pd.read_csv(equivalencias_path, encoding='latin1', sep=';')
+    df_validos = df[df['NOME_DISC_EQUIV'].notna()][['NOME_DISCIPLINA', 'NOME_DISC_EQUIV']]
+    # Extrai apenas o código (parte antes do ' - ')
+    codigos_novos   = df_validos['NOME_DISCIPLINA'].str.split(' - ').str[0].str.strip()
+    codigos_antigos = df_validos['NOME_DISC_EQUIV'].str.split(' - ').str[0].str.strip()
+    mapeamento = {} # Dicionário vazio
+    for antigo, novo in zip(codigos_antigos, codigos_novos): # Itera sobre os códigos formando pares
+        if novo not in mapeamento: # Se o código novo ainda não tiver sido adicionado ao dicionário
+            mapeamento[novo] = [] # Inicia uma lista vazia para armazenar códigos equivalentes
+        mapeamento[novo].append(antigo) # Anexa o código antigo na lista do código novo equivalente
+    return mapeamento
+
 def progressao_turma(request):
     USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID) # Definindo caminhos dos arquivos
     alunos_path = os.path.join(USER_DIR, 'alunosPorCurso.csv')
     historico_path = os.path.join(USER_DIR, 'historicoEscolar.csv')
+
+    equiv_map = dicionario_de_equivalencias() # Carrega o dicionário de equivalências
 
     df_historico = pd.read_csv(historico_path) # Carregamento dos dados
     df_alunos = pd.read_csv(alunos_path)
@@ -49,7 +66,7 @@ def progressao_turma(request):
         turma = df_alunos['TURMA'].iloc[0] # Se o parâmetro não for válido, seleciona a primeira turma disponível
 
     matriculas_turma = df_alunos[df_alunos['TURMA'] == turma]['ID PESSOA'] # Filtra os alunos das turmas selecionadas
-    dados_turma = df_historico[df_historico['ID PESSOA'].isin(matriculas_turma)].copy() # O isin filtra o histórico, deixxando apenas ... entendeu né?
+    dados_turma = df_historico[df_historico['ID PESSOA'].isin(matriculas_turma)].copy() # O isin filtra o histórico, deixando apenas os registros da turma selecionada
     if dados_turma.empty:
         turmas_options = [ # Cria as opções de turmas para o dropdown
             {'id': t, 'label': t}
@@ -94,6 +111,14 @@ def progressao_turma(request):
         'DIS - Dispensa sem nota': '#32CD32',
     }
 
+    # Status que representam aproveitamento/dispensa e precisam ser verificados no dicionário de equivalências
+    status_adi = {
+        'ADI - Aproveitamento',
+        'ADI - Aproveitamento de créditos da disciplina',
+        'ADI - Dispensa com nota',
+        'DIS - Dispensa sem nota',
+    }
+
     # Monta um dicionário (ID PESSOA, ANO_PERIODO) → label de trancamento para identificar quais períodos foram trancados e hoverizar essas infos
     CODIGOS_TRANCAMENTO = {
         'TRT0001': 'Período trancado',
@@ -120,37 +145,53 @@ def progressao_turma(request):
         forma_evasao = info_ev.get('FORMA EVASAO', 'Sem evasão') or 'Sem evasão'
         periodo_evasao_ap = info_ev.get('ANO_PERIODO_EVASAO')  # já convertido para o formato "ANO - PERIODO"
 
-        carga_acumulada = (
-            dados_aluno.groupby('ANO_PERIODO')['CARGA'].sum().reindex(periodos, fill_value=0).cumsum() # Agrupa por período, soma a carga horária, reindexa para garantir que todos os períodos estejam presentes e calcula a carga acumulada
-        )
+        periodos_com_dados = sorted(dados_aluno['ANO_PERIODO'].unique(), key=ordenar_periodo) # Cria uma lista com todos os períodos cursados do aluno
+        if not periodos_com_dados: # Verifica se lista vazia
+            continue
+        primeiro_periodo = periodos_com_dados[0] # Primeiro período cursado pelo aluno
 
-        x_linha = list(periodos) # Cria cópia dos valores para poder modificar caso o aluno tenha saído do curso
-        y_linha = list(carga_acumulada.values)
+        if forma_evasao not in EVASAO_SEM and periodo_evasao_ap and periodo_evasao_ap in periodos:
+            ultimo_periodo = periodo_evasao_ap # Se o aluno evadiu, o último período é o de evasão
+        else:
+            ultimo_periodo = periodos_com_dados[-1] # Se não evadiu, é o último período com dados
 
-        # Trunca a linha no período de evasão usando PERIODO EVASAO do alunosPorCurso
-        if forma_evasao not in EVASAO_SEM:
-            if periodo_evasao_ap and periodo_evasao_ap in periodos:
-                idx_ev = periodos.index(periodo_evasao_ap)
-                x_linha = periodos[:idx_ev + 1]
-                y_linha = list(carga_acumulada.values[:idx_ev + 1])
-            else:
-                # Período de evasão fora do range disponível no histórico:
-                # limita ao último período em que o aluno registrou atividade
-                periodos_com_dados = sorted(dados_aluno['ANO_PERIODO'].unique(), key=ordenar_periodo)
-                if periodos_com_dados:
-                    ultimo = periodos_com_dados[-1]
-                    if ultimo in periodos:
-                        idx_ultimo = periodos.index(ultimo)
-                        x_linha = periodos[:idx_ultimo + 1]
-                        y_linha = list(carga_acumulada.values[:idx_ultimo + 1])
+        if primeiro_periodo not in periodos or ultimo_periodo not in periodos: # Se primeiro ou último período não existirem, pula aluno
+            continue
+
+        idx_primeiro = periodos.index(primeiro_periodo)
+        idx_ultimo = periodos.index(ultimo_periodo)
+        if idx_primeiro > idx_ultimo:
+            continue
+
+        x_linha = periodos[idx_primeiro:idx_ultimo + 1] # Eixo x limitado ao primeiro até o último período do aluno
+
+        # Contabiliza as horas por período e coleta info de ADI para o hover
+        horas_por_periodo = {p: 0.0 for p in x_linha} # Inicializa todas as horas como zero
+        hover_adi = {p: [] for p in x_linha} # Inicializa as strings de hover ADI como listas vazias
+
+        for _, row in dados_aluno.iterrows(): # Percorre cada disciplina do aluno
+            periodo = row['ANO_PERIODO']
+            if periodo not in horas_por_periodo: # Ignora períodos fora do intervalo do aluno
+                continue
+            horas_por_periodo[periodo] += row['CARGA'] # Acumula a carga horária no período
+            if row['STATUS'] in status_adi and row['COD ATIV CURRIC'] in equiv_map: # Se é ADI e tem equivalência no dicionário
+                equivalentes = equiv_map[row['COD ATIV CURRIC']]
+                hover_adi[periodo].append(f"<br>↔ {row['COD ATIV CURRIC']} ← {', '.join(equivalentes)}") # Guarda a relação novo ← antigo(s) para o hover
+
+        # Calcula a carga acumulada como lista, período a período
+        y_linha = []
+        total = 0.0
+        for p in x_linha:
+            total += horas_por_periodo[p]
+            y_linha.append(total)
 
         # Determina a cor do último marcador conforme o tipo de saída do aluno
         if forma_evasao in EVASAO_BOA:
-            cor_ultimo = '#2ecc40'  
+            cor_ultimo = '#2ecc40'
         elif forma_evasao in EVASAO_SEM:
-            cor_ultimo = None        
+            cor_ultimo = None
         else:
-            cor_ultimo = '#ff4136'   
+            cor_ultimo = '#ff4136'
 
         marker_color = ( # Transforma todos os pontos em cinza e o último na cor definida acima
             ['rgba(100,100,100,0.5)'] * (len(x_linha) - 1) + [cor_ultimo]
@@ -158,11 +199,12 @@ def progressao_turma(request):
             else None
         )
 
-        # customdata agora é uma lista de pares que mostra no hover se o aluno tá cursando ou com período trancado
+        # customdata agora é uma lista de triplas que mostra no hover o nome, status do período e info de ADI
         customdata = []
         for periodo in x_linha:
             status_periodo = trancamentos_map.get((pessoa_id, periodo), 'Cursando')
-            customdata.append([nome, status_periodo])
+            adi_str = ''.join(hover_adi[periodo]) # '' se não há ADI, ou '<br>↔ ...' para cada equivalência
+            customdata.append([nome, status_periodo, adi_str])
 
         if forma_evasao not in EVASAO_SEM and customdata: # Se saiu do curso, substitui o status do último ponto pelo motivo de saída
             customdata[-1][1] = forma_evasao
@@ -174,18 +216,20 @@ def progressao_turma(request):
             name=f"{matr} - {nome}",
             marker=dict(color=marker_color, size=8) if marker_color else dict(size=8),
             customdata=customdata,
-            hovertemplate=( 
+            hovertemplate=(
                 '<b>%{customdata[0]}</b><br>'
                 'Período: %{x}<br>'
                 'Carga H. acumulada: %{y}h<br>'
                 'Status: %{customdata[1]}'
+                '%{customdata[2]}'   # vazio ou info de ADI com <br> embutido
                 '<extra></extra>'
             ),
-            )
+        )
         linhas.append(linha)  # Adiciona a linha à lista de linhas do gráfico
+
     if not linhas:
-         turmas_options = [{'id': t, 'label': t} for t in df_alunos['TURMA'].unique()]
-         return render(request, 'progressao_turma.html', {
+        turmas_options = [{'id': t, 'label': t} for t in df_alunos['TURMA'].unique()]
+        return render(request, 'progressao_turma.html', {
             'plot_div': '',
             'turmas_options': turmas_options,
             'selected_id': str(turma),

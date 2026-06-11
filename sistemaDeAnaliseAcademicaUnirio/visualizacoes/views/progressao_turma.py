@@ -125,7 +125,7 @@ def progressao_turma(request):
         'TRT0002': 'Período trancado (Pandemia)',
     }
     trancamentos_df = dados_turma[dados_turma['COD ATIV CURRIC'].isin(CODIGOS_TRANCAMENTO)][
-        ['ID PESSOA', 'ANO_PERIODO', 'COD ATIV CURRIC']
+        ['ID PESSOA', 'ANO_PERIODO', 'COD ATIV CURRIC'] # Filtra disciplinas trancadas
     ].drop_duplicates(subset=['ID PESSOA', 'ANO_PERIODO'])
     trancamentos_map = {
         (row['ID PESSOA'], row['ANO_PERIODO']): CODIGOS_TRANCAMENTO[row['COD ATIV CURRIC']]

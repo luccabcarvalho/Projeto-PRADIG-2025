@@ -1,5 +1,5 @@
 from .home import home
-from sistemaDeAnaliseAcademicaUnirio.samg.backend.auth_google import login_google
+from samg.backend.auth_google import login_google
 from .matriz_de_progressao import matriz_de_progressao
 from .prazos_de_integralizacao import prazos_de_integralizacao
 from .progressao_individual import progressao_individual

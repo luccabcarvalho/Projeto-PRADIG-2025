@@ -9,7 +9,7 @@
         <div style="font-size:2.2rem;color:#2356a8;margin-bottom:0.8rem;">
             <i class="fas fa-user-shield"></i>
         </div>
-        <h1 style="font-size:1.8rem;margin:0 0 0.6rem 0;color:#003366;">Acesso ao SAMG</h1>
+        <h1 style="font-size:1.8rem;margin:0 0 0.6rem 0;color:#003366;">Qual sistema deseja entrar?</h1>
         <p style="font-size:1.02rem;color:#444;line-height:1.5;margin-bottom:1.6rem;">
             Entre com sua conta Google para acessar as visualizações acadêmicas.
         </p>
@@ -26,8 +26,12 @@
 
         <a href="{% provider_login_url 'google' process='login' %}" style="display:inline-flex;align-items:center;justify-content:center;gap:0.6rem;background:#fff;color:#333;border:1px solid #d6d6d6;border-radius:8px;padding:0.8rem 1.2rem;text-decoration:none;font-weight:600;min-width:240px;">
             <i class="fab fa-google" style="color:#DB4437;"></i>
-            Continuar com Google
+            Acesso ao SAMG - Google
         </a>
+        <a href="{% url 'home' %}"  style="display:inline-flex;align-items:center;justify-content:center;gap:0.6rem;background:#fff;color:#333;border:1px solid #d6d6d6;border-radius:8px;padding:0.8rem 1.2rem;text-decoration:none;font-weight:600;min-width:240px;">
+        <i class="feature-icon" style="color:#003366;"> </i>
+            Acesso ao SAGA     
+        </a> 
     </div>
 </div>
 {% endblock %}

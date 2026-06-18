@@ -1,5 +1,7 @@
 from .home import home
 from samg.backend.auth_google import login_google
+from samg.frontend.progresso import progresso
+from samg.frontend.migracao import migracao
 from .matriz_de_progressao import matriz_de_progressao
 from .prazos_de_integralizacao import prazos_de_integralizacao
 from .progressao_individual import progressao_individual

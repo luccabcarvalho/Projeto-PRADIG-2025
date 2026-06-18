@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema de Apoio ao Monitoramento de Graduação{% endblock %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --unirio-blue: #2356a8;
+            --unirio-blue-light: #2356a8;
+            --unirio-black: #000;
+            --unirio-white: #fff;
+        }
+        html, body {
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--unirio-white) !important;
+            color: var(--unirio-black);
+            margin: 0;
+            min-height: 100vh;
+        }
+        .navbar {
+            background: linear-gradient(90deg, var(--unirio-blue) 70%, #3a7bd5 100%);
+            color: var(--unirio-white);
+            padding: 0.6rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            font-size: 1.15rem;
+            letter-spacing: 1px;
+        }
+        .navbar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2.5rem;
+            min-height: 45px;
+        }
+        .navbar-logo {
+            font-size: 2rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            text-shadow: 1px 2px 8px rgba(0,0,0,0.10);
+        }
+        .navbar-links {
+            display: flex;
+            gap: 2.5rem;
+        }
+        .navbar-links a {
+            color: var(--unirio-white);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.18rem;
+            padding: 0.4rem 1.1rem;
+            border-radius: 6px;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(35,86,168,0.04);
+        }
+        .navbar-links a:hover, .navbar-links .active {
+            background: rgba(255,255,255,0.18);
+            color: #e0eaff;
+            text-decoration: none;
+            box-shadow: 0 2px 12px rgba(35,86,168,0.10);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: #888;
+            font-size: 0.9rem;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-logo">
+                <i class="fas fa-graduation-cap"></i>  SAGA
+            </div>
+            <div class="navbar-links">
+                <a href="{% url 'progresso' %}" {% if request.resolver_match.url_name == 'progresso' %}class="active"{% endif %}>Progresso</a>
+                <a href="{% url 'migracao' %}" {% if request.resolver_match.url_name == 'migracao' %}class="active"{% endif %}>Migracao</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

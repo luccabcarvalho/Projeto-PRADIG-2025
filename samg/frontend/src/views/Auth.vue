@@ -8,12 +8,11 @@
               <v-icon color="white">mdi-account</v-icon>
             </v-avatar>
             <h3 class="ma-0">Acesso ao SAMG</h3>
-            <small class="grey--text">Entre ou crie sua conta</small>
           </div>
 
           <v-card-text>
             <div class="d-flex flex-column align-center mb-4">
-              <p>Entre usando sua conta Google</p>
+              <p>Utilize sua conta acadêmica do Google</p>
             </div>
             <div ref="googleBtnContainer" class="d-flex justify-center mb-4 google-btn-container"></div>
           </v-card-text>
@@ -23,7 +22,7 @@
                 <v-card>
                   <v-card-title>Informe sua matrícula</v-card-title>
                   <v-card-text>
-                    <v-form ref="matriculaForm" @submit.prevent="submitMatricula">
+                    <v-form ref="matriculaForm" @submit.prevent="enviaMatricula">
                       <v-text-field
                         v-model="matriculaInput"
                         label="Matrícula"
@@ -35,7 +34,7 @@
                   <v-card-actions>
                     <v-spacer />
                     <v-btn text @click="showMatriculaDialog = false">Cancelar</v-btn>
-                    <v-btn color="primary" :loading="loadingMatricula" @click="submitMatricula">Enviar</v-btn>
+                    <v-btn color="primary" :loading="loadingMatricula" @click="enviaMatricula">Enviar</v-btn>
                   </v-card-actions>
                 </v-card>
               </v-dialog>
@@ -61,8 +60,6 @@ export default {
       loadingLogin: false,
       message: null,
       messageType: 'info',
-      // local login/register removed — Google-only auth
-      // matrícula pós-Google
       token: null,
       showMatriculaDialog: false,
       matriculaInput: '',
@@ -70,10 +67,10 @@ export default {
     };
   },
   mounted() {
-    this.initGoogleLogin();
+    this.iniciaGoogleLogin();
   },
   methods: {
-    initGoogleLogin() {
+    iniciaGoogleLogin() {
       if (!window.google?.accounts?.id) {
         console.warn('Google Identity Services não carregado');
         return;
@@ -137,7 +134,7 @@ export default {
       }
     },
 
-    async submitMatricula() {
+    async enviaMatricula() {
       if (!this.matriculaInput) {
         this.message = 'Informe a matrícula';
         this.messageType = 'error';
@@ -174,18 +171,19 @@ export default {
       } finally {
         this.loadingMatricula = false;
       }
+      this.$router.push('/progresso');
     },
 
-    // local login/register removed — use Google Sign-In
+    
   },
 };
 </script>
 
 <style lang="css" scoped>
 .auth {
-  background: linear-gradient(135deg, #667eea 0%, 100%);
+ 
   min-height: 100vh;
-  padding-top: 32px;
+  padding-top: 64px;
   padding-bottom: 32px;
 }
 

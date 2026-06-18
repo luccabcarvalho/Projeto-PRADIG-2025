@@ -124,26 +124,14 @@
     
 
 <script>
-const csvDocs = import.meta.glob('@docs/**/*.csv', { query: '?raw', import: 'default', eager: true });
+
+import { getCsvDocsDisponiveis } from "@/utils/csvDocs";
+import { normalizeText } from "@/utils/csvDocs";
 
 const MIGRACAO_CACHE_VERSION = '2026-05-26-v1';
 
-function normalizeText(value) {
-  return String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim();
-}
 
-function getCsvDocsDisponiveis() {
-  const csvDisponiveis = {};
-  for (const path in csvDocs) {
-    const nome = path.split('/').pop().replace(/\.csv$/i, '');
-    csvDisponiveis[nome] = csvDocs[path];
-  }
-  return csvDisponiveis;
-}
+
 
 const csvDisponiveis = getCsvDocsDisponiveis();
 const historicoCsv = csvDisponiveis.HistoricoEscolarSimplificado || '';
@@ -207,7 +195,7 @@ export default {
     async yieldToUI() {
       await new Promise((resolve) => setTimeout(resolve, 0));
     },
-    loadUser() {
+    carregaUsu() {
       try {
         const raw = localStorage.getItem('samg_user');
         this.user = raw ? JSON.parse(raw) : null;
@@ -217,12 +205,12 @@ export default {
     },
     onStorageChanged(e) {
       if (e.key && e.key !== 'samg_user') return;
-      this.loadUser();
-      this.loadMigracao();
+      this.carregaUsu();
+      this.carregaMigracao();
     },
     onSamgUserChanged() {
-      this.loadUser();
-      this.loadMigracao();
+      this.carregaUsu();
+      this.carregaMigracao();
     },
     sigla(nome) {
       if (!nome || typeof nome !== 'string') return '';
@@ -490,7 +478,7 @@ export default {
           };
         });
     },
-    async loadMigracao() {
+    async carregaMigracao() {
       this.loading = true;
       await this.$nextTick();
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -558,10 +546,10 @@ export default {
     
   },
   created() {
-    this.loadUser();
+    this.carregaUsu();
   },
   mounted() {
-    this.loadMigracao();
+    this.carregaMigracao();
     window.addEventListener('samg_user_changed', this.onSamgUserChanged);
     window.addEventListener('storage', this.onStorageChanged);
   },

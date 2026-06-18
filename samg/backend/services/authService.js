@@ -1,6 +1,5 @@
 const crypto = require('crypto');
 
-// In-memory token store (for production, use a database or Redis)
 const activeSessions = new Map();
 
 function generateToken() {
@@ -45,10 +44,6 @@ async function signInWithGoogle({ sub, email, name, picture }) {
   return { user, token };
 }
 
-// Funções antigas que dependiam de DB não são mais suportadas
-async function registerUser() { throw new Error('Register via email/senha não suportado. Use /auth/google.'); }
-async function loginUser() { throw new Error('Login via email/senha não suportado. Use /auth/google.'); }
-async function changePassword() { throw new Error('Alteração de senha não suportada.'); }
 
 async function setMatricula(token, matricula) {
   if (!token) throw new Error('Token ausente');

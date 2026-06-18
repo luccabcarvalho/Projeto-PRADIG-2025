@@ -146,22 +146,10 @@
 
 
 <script>
-import axios from "axios";
-import instance from "@/api/instance";
+
+import { getCsvDocsDisponiveis } from "@/utils/csvDocs";
 
 const PROGRESS_CACHE_VERSION = '2026-05-26-v1';
-
-// Importa todos os CSVs de docs e subpastas
-const csvDocs = import.meta.glob('@docs/**/*.csv', { query: '?raw', import: 'default', eager: true });
-function getCsvDocsDisponiveis() {
-  const csvDisponiveis = {};
-  for (const path in csvDocs) {
-    // Extrai o nome do arquivo sem extensão
-    const nome = path.split('/').pop().replace(/\.csv$/i, '');
-    csvDisponiveis[nome] = csvDocs[path];
-  }
-  return csvDisponiveis;
-}
 
 const csvDisponiveis = getCsvDocsDisponiveis();
 const historicoCsv = csvDisponiveis.HistoricoEscolarSimplificado || '';
@@ -255,7 +243,7 @@ export default {
     async yieldToUI() {
       await new Promise((resolve) => setTimeout(resolve, 0));
     },
-    loadUser() {
+    carregaUsu() {
       try {
         const raw = localStorage.getItem('samg_user');
         this.user = raw ? JSON.parse(raw) : null;
@@ -309,7 +297,7 @@ export default {
         .sort((a, b) => (b[1] - a[1]) || (parseInt(b[0], 10) - parseInt(a[0], 10)))[0][0];
     },
 
-    async loadHistoricoForUser() {
+    async carregaHistoricoPorUsu() {
       this.loading = true;
       await this.$nextTick();
       await this.yieldToUI();
@@ -357,7 +345,7 @@ export default {
           if (curriculoRaw) {
             const currList = await this.parseCurriculoCsv(curriculoRaw.text);
             this.curriculoVersion = curriculoRaw.ver;
-            this.curriculoGrade = await this.buildCurriculoProgresso(currList, disciplinas);
+            this.curriculoGrade = await this.criaCurriculoProgresso(currList, disciplinas);
 
             this.writeCache(matricula, {
               grade: this.grade,
@@ -379,8 +367,8 @@ export default {
     },
 
     onSamgUserChanged(e) {
-      this.loadUser();
-      this.loadHistoricoForUser();
+      this.carregaUsu();
+      this.carregaHistoricoPorUsu();
     },
     statusColor(status) {
       if (status === 'Vencido') return 'success';
@@ -689,7 +677,7 @@ export default {
       return out;
     },
 
-    async buildCurriculoProgresso(curriculoList, userDisciplinas) {
+    async criaCurriculoProgresso(curriculoList, userDisciplinas) {
       const statusByCode = {};
       for (let i = 0; i < userDisciplinas.length; i++) {
         if (i % 500 === 0) await this.yieldToUI();
@@ -762,8 +750,8 @@ export default {
 
   },
   mounted() {
-    this.loadUser();
-    this.loadHistoricoForUser();
+    this.carregaUsu();
+    this.carregaHistoricoPorUsu();
     window.addEventListener('samg_user_changed', this.onSamgUserChanged);
   },
   beforeUnmount() {

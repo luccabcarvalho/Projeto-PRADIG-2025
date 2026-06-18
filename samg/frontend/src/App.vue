@@ -64,8 +64,8 @@ onBeforeUnmount(() => {
       <v-spacer />
 
       <div class="app-title">
-        <span class="non-mobile">Sistema de Apoio à Migração de Grade de BSI (SAMG BSI)</span>
-        <span class="mobile">SAMG BSI</span>
+        <span class="non-mobile">Sistema de Apoio ao Monitoramento de Graduação</span>
+        <span class="mobile">SAMG</span>
       </div>
 
       <v-spacer />
@@ -77,7 +77,7 @@ onBeforeUnmount(() => {
           class="auth-btn"
           to="/"
         >
-          Entrar / Cadastrar
+          Entrar
         </v-btn>
 
         <v-menu v-if="user">
@@ -108,16 +108,23 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .app-title {
-  font-size: 1.1rem;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1rem;
   font-weight: 500;
   color: #fff;
   text-align: center;
   white-space: nowrap;
-  position: static;
   min-width: 0;
   max-width: 44vw;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin: 0 auto;
+  z-index: 2;
 }
 
 .mobile {
@@ -125,17 +132,18 @@ onBeforeUnmount(() => {
   position: relative;
 }
 
-@media (max-width: 960px) {
-  .non-mobile {
-    display: none;
-  }
+.non-mobile {
+  display: inline-block;
+  text-align: center;
+}
 
+@media (max-width: 900px) {
   .mobile {
     display: inline;
   }
 
   .app-title {
-    font-size: 0.95rem;
+    font-size: 1rem;
     max-width: 34vw;
   }
 
@@ -243,17 +251,7 @@ nav a:first-of-type {
   }
 }
 
-@media (min-width5: 1200px) {
-  .non-mobile {
-    display: inline;
-  }
-
-  .mobile {
-    display: none;
-  }
-}
-
-@media (max-width: 1199px) {
+@media (max-width: 950px) {
   .app-bar {
     padding-left: 8px !important;
     padding-right: 8px !important;
@@ -281,7 +279,7 @@ nav a:first-of-type {
 
   .mobile {
     display: block !important;
-    font-size: 12px !important;
+    font-size: inherit !important;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -291,6 +289,21 @@ nav a:first-of-type {
 
   .non-mobile {
     display: none;
+  }
+
+  
+  .app-title {
+    position: static !important;
+    left: auto !important;
+    transform: none !important;
+    max-width: calc(100% - 160px) !important;
+    padding: 0 80px !important;
+    z-index: 1 !important;
+    box-sizing: border-box;
+  }
+
+  .app-title {
+    display: none !important;
   }
 }
 

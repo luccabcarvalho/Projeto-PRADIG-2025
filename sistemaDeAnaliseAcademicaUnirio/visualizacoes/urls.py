@@ -1,10 +1,13 @@
 from django.urls import path
 from . import views
 from .views import home, matriz_de_progressao, prazos_de_integralizacao, progressao_individual, progressao_turma, gerenciar_arquivos, checar_arquivos_necessarios
+from django.contrib.auth.views import LogoutView
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+     path('login/', views.login_google, name='login_google'),
+     path('logout/', LogoutView.as_view(), name='logout'),
     path('', home, name='home'),
     path('desempenho/', progressao_individual, name='progressao_individual'),
     path('progressao-turma/', progressao_turma, name='progressao_turma'),

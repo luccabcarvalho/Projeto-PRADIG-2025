@@ -22,5 +22,6 @@ import plotly.graph_objects as go
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('accounts/', include('allauth.urls')),
     path('visualizacoes/', include('visualizacoes.urls')),
 ]

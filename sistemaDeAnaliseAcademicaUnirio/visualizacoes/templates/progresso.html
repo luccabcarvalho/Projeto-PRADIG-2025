@@ -1,0 +1,305 @@
+{% extends "base_samg.html" %}
+{% block title %}Progresso Acadêmico{% endblock %}
+{% block extra_head %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    .progresso-page {
+        padding: 2rem 0 3rem;
+    }
+    .hero-card {
+        background: linear-gradient(135deg, #2356a8 0%, #3a7bd5 100%);
+        color: #fff;
+        border-radius: 20px;
+        box-shadow: 0 12px 30px rgba(35, 86, 168, 0.18);
+    }
+    .hero-title {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: .25rem;
+    }
+    .hero-subtitle {
+        opacity: .9;
+    }
+    .summary-card {
+        border: 0;
+        border-radius: 18px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+        height: 100%;
+    }
+    .summary-value {
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+    .period-card {
+        border: 0;
+        border-radius: 18px;
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+        height: 100%;
+    }
+    .period-header {
+        background: #2356a8;
+        color: #fff;
+        padding: 1rem 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+    }
+    .period-header h2 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    .period-header small {
+        opacity: .9;
+    }
+    .period-percent {
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, .16);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    .period-body {
+        padding: 1.25rem;
+        background: #fff;
+    }
+    .progress-track {
+        height: 10px;
+        border-radius: 999px;
+        background: #eef3fb;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+    .progress-track > div {
+        height: 100%;
+        background: linear-gradient(90deg, #198754 0%, #28a745 100%);
+        border-radius: 999px;
+    }
+    .discipline-group {
+        margin-bottom: 1.25rem;
+    }
+    .discipline-group:last-child {
+        margin-bottom: 0;
+    }
+    .discipline-group h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: .75rem;
+        color: #1c355e;
+    }
+    .discipline-list {
+        display: flex;
+        flex-direction: column;
+        gap: .65rem;
+    }
+    .discipline-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: flex-start;
+        padding: .8rem .9rem;
+        border: 1px solid #e7edf7;
+        border-radius: 14px;
+        background: #fbfdff;
+    }
+    .discipline-main {
+        min-width: 0;
+    }
+    .discipline-code {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: .2rem .6rem;
+        border-radius: 999px;
+        font-size: .78rem;
+        font-weight: 700;
+        margin-bottom: .35rem;
+        background: #e9f1ff;
+        color: #2356a8;
+    }
+    .discipline-name {
+        margin: 0;
+        font-weight: 600;
+        color: #173153;
+    }
+    .discipline-meta {
+        font-size: .85rem;
+        color: #5f6f86;
+        margin-top: .2rem;
+    }
+    .status-badge {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+    .section-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #173153;
+        margin-bottom: .75rem;
+    }
+    .student-select {
+        min-width: 320px;
+    }
+    @media (max-width: 767px) {
+        .hero-title {
+            font-size: 1.5rem;
+        }
+        .student-select {
+            min-width: 0;
+            width: 100%;
+        }
+        .period-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const select = document.getElementById('matr_aluno');
+        if (select) {
+            select.addEventListener('change', function () {
+                document.getElementById('filtros-form').submit();
+            });
+        }
+
+        document.querySelectorAll('.progress-track-fill').forEach(function (bar) {
+            const width = bar.getAttribute('data-width') || '0';
+            bar.style.width = width + '%';
+        });
+    });
+</script>
+{% endblock %}
+{% block content %}
+<div class="progresso-page">
+    <div class="hero-card p-4 p-md-5 mb-4">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-4 align-items-lg-center">
+            <div>
+                <div class="hero-title">Progresso Acadêmico</div>
+                <div class="hero-subtitle">Acompanhe a grade separada por período, com destaque para as disciplinas já concluídas.</div>
+                {% if aluno_nome %}
+                <div class="mt-2 fw-semibold">Aluno: {{ aluno_nome }}</div>
+                {% endif %}
+            </div>
+            <form method="get" id="filtros-form" class="d-flex flex-column align-items-start align-items-lg-end gap-2">
+                <label for="matr_aluno" class="form-label mb-0 text-white-50 fw-semibold">Selecionar aluno</label>
+                <select name="matr_aluno" id="matr_aluno" class="form-select student-select">
+                    {% for aluno in alunos_options %}
+                        <option value="{{ aluno.id }}" {% if selected_id == aluno.id %}selected{% endif %}>{{ aluno.label }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+    </div>
+
+    {% if message %}
+        <div class="alert alert-warning border-0 shadow-sm">{{ message }}</div>
+    {% else %}
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="summary-card card p-3">
+                    <div class="text-muted small">Disciplinas na grade</div>
+                    <div class="summary-value">{{ curriculoStats.total }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="summary-card card p-3">
+                    <div class="text-muted small">Concluídas</div>
+                    <div class="summary-value text-success">{{ curriculoStats.concluidas }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="summary-card card p-3">
+                    <div class="text-muted small">Pendentes</div>
+                    <div class="summary-value text-warning">{{ curriculoStats.pendentes }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="summary-card card p-3">
+                    <div class="text-muted small">Progresso</div>
+                    <div class="summary-value">{{ curriculoStats.percentual }}%</div>
+                </div>
+            </div>
+        </div>
+
+        {% if curriculoVersion %}
+        <div class="alert alert-light border-0 shadow-sm mb-4">
+            Currículo utilizado: <strong>{{ curriculoVersion }}</strong>
+        </div>
+        {% endif %}
+
+        <div class="row g-4">
+            {% for periodo in filteredCurriculoGrade %}
+            <div class="col-12 col-xl-6">
+                <div class="period-card">
+                    <div class="period-header">
+                        <div>
+                            <h2>{{ periodo.periodo_label }}</h2>
+                            <small>{{ periodo.concluidas }}/{{ periodo.total }} disciplinas concluídas</small>
+                        </div>
+                        <div class="period-percent">{{ periodo.percentual }}%</div>
+                    </div>
+                    <div class="period-body">
+                        <div class="progress-track">
+                            <div class="progress-track-fill" data-width="{{ periodo.percentual }}"></div>
+                        </div>
+
+                        <div class="discipline-group">
+                            <div class="section-title">Disciplinas concluídas</div>
+                            {% if periodo.disciplinas_concluidas %}
+                                <div class="discipline-list">
+                                    {% for disc in periodo.disciplinas_concluidas %}
+                                    <div class="discipline-item">
+                                        <div class="discipline-main">
+                                            <div class="discipline-code">{{ disc.sigla }}</div>
+                                            <p class="discipline-name">{{ disc.nome }}</p>
+                                            {% if disc.periodo_real %}
+                                            <div class="discipline-meta">Lançada em {{ disc.periodo_real }}{% if disc.media_final %} • Média final: {{ disc.media_final }}{% endif %}</div>
+                                            {% endif %}
+                                        </div>
+                                        <span class="badge bg-success status-badge">{{ disc.status_label }}</span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-muted">Nenhuma disciplina concluída neste período.</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="discipline-group">
+                            <div class="section-title">Demais disciplinas do período</div>
+                            {% if periodo.disciplinas_pendentes %}
+                                <div class="discipline-list">
+                                    {% for disc in periodo.disciplinas_pendentes %}
+                                    <div class="discipline-item">
+                                        <div class="discipline-main">
+                                            <div class="discipline-code">{{ disc.sigla }}</div>
+                                            <p class="discipline-name">{{ disc.nome }}</p>
+                                            <div class="discipline-meta">
+                                                {% if disc.periodo_real %}Último registro: {{ disc.periodo_real }}{% else %}Sem registro no histórico{% endif %}
+                                            </div>
+                                        </div>
+                                        <span class="badge bg-{{ disc.status_badge }} status-badge">{{ disc.status_label }}</span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-muted">Todas as disciplinas deste período já foram concluídas.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -66,6 +66,28 @@
             transition: background 0.2s, color 0.2s, box-shadow 0.2s;
             box-shadow: 0 2px 8px rgba(35,86,168,0.04);
         }
+        .navbar-links form {
+            margin: 0;
+            display: flex;
+        }
+        .navbar-links .logout-button {
+            border: 0;
+            background: transparent;
+            color: var(--unirio-white);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.18rem;
+            padding: 0.4rem 1.1rem;
+            border-radius: 6px;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(35,86,168,0.04);
+            cursor: pointer;
+        }
+        .navbar-links .logout-button:hover {
+            background: rgba(255,255,255,0.18);
+            color: #e0eaff;
+            box-shadow: 0 2px 12px rgba(35,86,168,0.10);
+        }
         .navbar-links a:hover, .navbar-links .active {
             background: rgba(255,255,255,0.18);
             color: #e0eaff;
@@ -86,6 +108,7 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
+    {% if user.is_authenticated %}
     <nav class="navbar">
         <div class="navbar-container">
             <div class="navbar-logo">
@@ -93,10 +116,15 @@
             </div>
             <div class="navbar-links">
                 <a href="{% url 'progresso' %}" {% if request.resolver_match.url_name == 'progresso' %}class="active"{% endif %}>Progresso</a>
-                <a href="{% url 'migracao' %}" {% if request.resolver_match.url_name == 'migracao' %}class="active"{% endif %}>Migracao</a>
+                <a href="{% url 'migracao' %}" {% if request.resolver_match.url_name == 'migracao' %}class="active"{% endif %}>Migração</a>
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-button">Sair</button>
+                </form>
             </div>
         </div>
     </nav>
+    {% endif %}
     <div class="container">
         {% block content %}{% endblock %}
     </div>

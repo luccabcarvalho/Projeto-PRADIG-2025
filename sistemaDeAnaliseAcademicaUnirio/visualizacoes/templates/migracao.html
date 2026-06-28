@@ -112,22 +112,24 @@
 				<div class="mt-2 fw-semibold">Aluno: {{ aluno_nome }}</div>
 				{% endif %}
 			</div>
-			<form method="get" id="filtros-form" class="d-flex flex-column align-items-start align-items-lg-end gap-2">
-				<label for="matr_aluno" class="form-label mb-0 text-white-50 fw-semibold">Selecionar aluno</label>
-				<select name="matr_aluno" id="matr_aluno" class="form-select" style="min-width: 320px;">
-					{% for aluno in alunos_options %}
-						<option value="{{ aluno.id }}" {% if selected_id == aluno.id %}selected{% endif %}>{{ aluno.label }}</option>
-					{% endfor %}
-				</select>
-				<div class="form-check">
-					<input class="form-check-input" type="checkbox" id="apenas_obrigatorias" name="apenas_obrigatorias" value="1" {% if apenas_obrigatorias %}checked{% endif %}>
-					<label class="form-check-label text-white" for="apenas_obrigatorias">Apenas obrigatórias</label>
-				</div>
-				<div class="form-check">
-					<input class="form-check-input" type="checkbox" id="apenas_pendentes" name="apenas_pendentes" value="1" {% if apenas_pendentes %}checked{% endif %}>
-					<label class="form-check-label text-white" for="apenas_pendentes">Apenas pendentes</label>
-				</div>
-			</form>
+			<div class="d-flex flex-column align-items-start align-items-lg-end gap-3">
+				<form method="get" id="filtros-form" class="d-flex flex-column align-items-start align-items-lg-end gap-2">
+					<label for="matr_aluno" class="form-label mb-0 text-white-50 fw-semibold">Selecionar aluno</label>
+					<select name="matr_aluno" id="matr_aluno" class="form-select" style="min-width: 320px;">
+						{% for aluno in alunos_options %}
+							<option value="{{ aluno.id }}" {% if selected_id == aluno.id %}selected{% endif %}>{{ aluno.label }}</option>
+						{% endfor %}
+					</select>
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" id="apenas_obrigatorias" name="apenas_obrigatorias" value="1" {% if apenas_obrigatorias %}checked{% endif %}>
+						<label class="form-check-label text-white" for="apenas_obrigatorias">Apenas obrigatórias</label>
+					</div>
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" id="apenas_pendentes" name="apenas_pendentes" value="1" {% if apenas_pendentes %}checked{% endif %}>
+						<label class="form-check-label text-white" for="apenas_pendentes">Apenas pendentes</label>
+					</div>
+				</form>
+			</div>
 		</div>
 	</div>
 

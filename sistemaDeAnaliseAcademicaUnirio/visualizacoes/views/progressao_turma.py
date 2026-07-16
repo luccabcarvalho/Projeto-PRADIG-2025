@@ -31,6 +31,13 @@ def progressao_turma(request):
     historico_path = os.path.join(USER_DIR, 'historicoEscolar.csv')
 
     equiv_map = dicionario_de_equivalencias() # Carrega o dicionário de equivalências
+    
+    equiv_map_reverso = {}
+    for novo, antigos in equiv_map.items():
+        for antigo in antigos:
+            if antigo not in equiv_map_reverso:
+                equiv_map_reverso[antigo] = []
+            equiv_map_reverso[antigo].append(novo)
 
     df_historico = pd.read_csv(historico_path) # Carregamento dos dados
     df_alunos = pd.read_csv(alunos_path)
@@ -174,27 +181,41 @@ def progressao_turma(request):
 
         # Identifica disciplinas antigas substituídas e aloca a carga horária nova diretamente nos períodos passados
         disciplinas_substituidas = set()
+        aproveitamentos_alocados_no_passado = set()
+        aproveitamentos_ignorados = set() 
+        
         for _, row in dados_aluno.iterrows(): # Busca disciplinas que são aproveitamentos e que possuem equivalência
-            if row['STATUS'] in status_adi and row['COD ATIV CURRIC'] in equiv_map:
-                cod_novo = row['COD ATIV CURRIC']
+            if row['STATUS'] in status_adi:
+                cod_dispensa = row['COD ATIV CURRIC']
                 carga_nova = row['CARGA']
-                codigos_antigos = equiv_map[cod_novo]
 
-                # Guarda os códigos antigos para ignorar suas cargas originais mais abaixo
-                for c_antigo in codigos_antigos:
-                    disciplinas_substituidas.add(c_antigo)
+                if cod_dispensa in equiv_map:
+                    codigos_antigos = equiv_map[cod_dispensa]
+                    
+                    # Encontra em qual período do passado o aluno de fato realizou a disciplina antiga
+                    reg_antigos = dados_turma[
+                        (dados_turma['ID PESSOA'] == pessoa_id) &
+                        (dados_turma['COD ATIV CURRIC'].isin(codigos_antigos))
+                    ]
+                    
+                    # Só adiciona a carga quando existir um registro antigo no histórico
+                    if not reg_antigos.empty:
+                        periodo_destino = reg_antigos['ANO_PERIODO'].iloc[0]
+                        if periodo_destino in horas_por_periodo:
+                            horas_por_periodo[periodo_destino] += carga_nova
+                            aproveitamentos_alocados_no_passado.add(cod_dispensa)
 
-                # Encontra em qual período do passado o aluno de fato realizou a disciplina antiga
-                reg_antigos = dados_turma[
-                    (dados_turma['ID PESSOA'] == pessoa_id) &
-                    (dados_turma['COD ATIV CURRIC'].isin(codigos_antigos))
-                ]
-
-                # Só adiciona a carga quando existir um registro antigo no histórico
-                if not reg_antigos.empty:
-                    periodo_destino = reg_antigos['ANO_PERIODO'].iloc[0]
-                    if periodo_destino in horas_por_periodo:
-                        horas_por_periodo[periodo_destino] += carga_nova
+                        # Guarda os códigos antigos para ignorar suas cargas originais mais abaixo
+                        for c_antigo in codigos_antigos:
+                            disciplinas_substituidas.add(c_antigo)
+                
+                elif cod_dispensa in equiv_map_reverso:
+                    codigos_novos = equiv_map_reverso[cod_dispensa]
+                    reg_novos = dados_aluno[
+                        (dados_aluno['COD ATIV CURRIC'].isin(codigos_novos))
+                    ]
+                    if not reg_novos.empty:
+                        aproveitamentos_ignorados.add(cod_dispensa)
 
         for _, row in dados_aluno.iterrows(): # Percorre cada disciplina do aluno
             periodo = row['ANO_PERIODO']
@@ -203,24 +224,31 @@ def progressao_turma(request):
 
             # Condições para controle do fluxo de soma
             e_dispensa = row['STATUS'] in status_adi # Verifica se é qualquer tipo de dispensa
-            foi_materia_antiga_substituida = row['COD ATIV CURRIC'] in disciplinas_substituidas
+            cod_atual = row['COD ATIV CURRIC']
+            
+            foi_materia_antiga_substituida = cod_atual in disciplinas_substituidas
+            foi_dispensa_alocada_passado = cod_atual in aproveitamentos_alocados_no_passado
+            foi_dispensa_ignorada = cod_atual in aproveitamentos_ignorados 
 
             # Só soma a carga no período atual se NÃO for NENHUMA dispensa e NÃO for a matéria antiga substituída
-            if not e_dispensa and not foi_materia_antiga_substituida:
-                horas_por_periodo[periodo] += row['CARGA'] # Acumula a carga horária no período
+            if not foi_materia_antiga_substituida and not foi_dispensa_ignorada:
+                if not e_dispensa or (e_dispensa and not foi_dispensa_alocada_passado):
+                    horas_por_periodo[periodo] += row['CARGA'] # Acumula a carga horária no período
 
-            foi_aproveitamento_com_equiv = row['STATUS'] in status_adi and row['COD ATIV CURRIC'] in equiv_map
-
-            if foi_aproveitamento_com_equiv:
-                reg_antigos = dados_turma[
-                    (dados_turma['ID PESSOA'] == pessoa_id) &
-                    (dados_turma['COD ATIV CURRIC'].isin(equiv_map[row['COD ATIV CURRIC']]))
-                ]
-
-                # Só inclui a relação no hover quando houver registro antigo no histórico
-                if not reg_antigos.empty:
-                    equivalentes = equiv_map[row['COD ATIV CURRIC']]
-                    hover_adi[periodo].append(f"<br>↔ {row['COD ATIV CURRIC']} ← {', '.join(equivalentes)}") # Guarda a relação novo ← antigo(s) para o hover
+            if e_dispensa:
+                if cod_atual in equiv_map:
+                    reg_antigos = dados_turma[
+                        (dados_turma['ID PESSOA'] == pessoa_id) &
+                        (dados_turma['COD ATIV CURRIC'].isin(equiv_map[cod_atual]))
+                    ]
+                    # Só inclui a relação no hover quando houver registro antigo no histórico
+                    if not reg_antigos.empty:
+                        equivalentes = equiv_map[cod_atual]
+                        hover_adi[periodo].append(f"<br>↔ {cod_atual} ← {', '.join(equivalentes)}") # Guarda a relação novo ← antigo(s) para o hover
+                
+                elif cod_atual in equiv_map_reverso and cod_atual not in aproveitamentos_ignorados:
+                    equivalentes = equiv_map_reverso[cod_atual]
+                    hover_adi[periodo].append(f"<br>↔ {cod_atual} (Antiga) dispensa {', '.join(equivalentes)}")
 
         # Calcula a carga acumulada como lista, período a período
         # O ponto de cada período representa o total acumulado até chegar nele,
@@ -228,8 +256,8 @@ def progressao_turma(request):
         y_linha = []
         total = 0.0
         for p in x_linha:
-            y_linha.append(total)
             total += horas_por_periodo[p]
+            y_linha.append(total)
 
         # Determina a cor do último marcador conforme o tipo de saída do aluno
         if forma_evasao in EVASAO_BOA:
@@ -305,11 +333,8 @@ def progressao_turma(request):
         margin=dict(l=80, r=20, t=40, b=150)
     )
 
-    turmas_options = [
-        {'id': t, 'label': t}
-        for t in df_alunos['TURMA'].unique()
-    ]
-
+    turmas_options = [{'id': t, 'label': t} for t in df_alunos['TURMA'].unique()]
+    
     # Converte a figura para HTML para ser renderizada na template
     plot_div = fig.to_html(full_html=False)
     return render(request, 'progressao_turma.html', {

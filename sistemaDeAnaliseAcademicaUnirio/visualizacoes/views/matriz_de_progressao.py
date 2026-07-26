@@ -6,6 +6,15 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 
+
+def normaliza_media_final(value):
+    if pd.isna(value):
+        return ''
+    text = str(value).strip()
+    if text.lower() in {'nan', 'none', 'null'}:
+        return ''
+    return text
+
 def matriz_de_progressao(request):
     if not request.GET:
         return redirect(f"{reverse('matriz_de_progressao')}?curriculos=20232&tipo_disciplina=obrigatoria")
@@ -201,9 +210,9 @@ def matriz_de_progressao(request):
             nome_aluno = s.get('nome_aluno', '')
             nome_disciplina = s.get('nome_disciplina', '')
             status = s.get('status', '')
-            media = s.get('media_final', '')
+            media = normaliza_media_final(s.get('media_final', ''))
             periodo = s.get('ano_periodo', '')
-            nota_str = f"{media}" if pd.notna(media) else ""
+            nota_str = media
             return (
                 f"{nome_aluno}<br>"
                 f"{nome_disciplina}<br>"
@@ -218,9 +227,9 @@ def matriz_de_progressao(request):
             historico = []
             for s in sorted(status_list, key=lambda x: x.get('ano_periodo', ''), reverse=True):
                 status = s.get('status', '')
-                media = s.get('media_final', '')
+                media = normaliza_media_final(s.get('media_final', ''))
                 periodo = s.get('ano_periodo', '')
-                nota_str = f"{media}" if pd.notna(media) else ""
+                nota_str = media
                 historico.append(f"{status} ({periodo}) {nota_str}")
             return (
                 f"{nome_aluno}<br>"

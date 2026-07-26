@@ -24,7 +24,8 @@
             </div>
         {% endif %}
 
-        <a href="{% provider_login_url 'google' process='login' %}" style="display:inline-flex;align-items:center;justify-content:center;gap:0.6rem;background:#fff;color:#333;border:1px solid #d6d6d6;border-radius:8px;padding:0.8rem 1.2rem;text-decoration:none;font-weight:600;min-width:240px;">
+        {% provider_login_url 'google' process='login' as google_login_url %}
+        <a href="{{ google_login_url }}&next=/visualizacoes/progresso/" style="display:inline-flex;align-items:center;justify-content:center;gap:0.6rem;background:#fff;color:#333;border:1px solid #d6d6d6;border-radius:8px;padding:0.8rem 1.2rem;text-decoration:none;font-weight:600;min-width:240px;">
             <i class="fab fa-google" style="color:#DB4437;"></i>
             Acesso ao SAMG - Google
         </a>

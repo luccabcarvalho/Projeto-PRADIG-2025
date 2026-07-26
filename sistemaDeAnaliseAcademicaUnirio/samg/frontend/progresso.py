@@ -3,27 +3,59 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
 from samg.frontend.common import (
-    build_alunos_options,
+    geraListaAlunos,
     extract_name,
     extract_sigla,
     filtrar_disciplinas,
     is_tipo_obrigatoria,
-    load_base_data,
-    load_curriculo,
-    resolve_selected_id,
+    carregaBD,
+    carregaCurriculo,
+    getMatriculaAluno,
     status_info,
-    version_key,
+    versaoCurriculo,
 )
 
 
 DEFAULT_CURRICULO_VERSION = '20232'
 
 
+def normaliza_media_final(value):
+    if pd.isna(value):
+        return ''
+    text = str(value).strip()
+    if text.lower() in {'nan', 'none', 'null'}:
+        return ''
+    return text
+
+
+def exibe_media_final(value):
+    text = normaliza_media_final(value)
+    return text if text else 'Aprovado sem nota'
+
+
+def normaliza_carga_horaria(value):
+    if pd.isna(value):
+        return None
+    text = str(value).strip().replace(',', '.')
+    try:
+        number = float(text)
+    except ValueError:
+        return None
+    if number.is_integer():
+        return int(number)
+    return round(number, 1)
+
+
+def exibe_carga_horaria(value):
+    carga = normaliza_carga_horaria(value)
+    return '' if carga is None else f'{carga}h'
+
+
 @login_required
 def progresso(request):
     apenas_obrigatorias = request.GET.get('apenas_obrigatorias') == '1'
     apenas_pendentes = request.GET.get('apenas_pendentes') == '1'
-    df_alunos, df_historico, erro_base = load_base_data()
+    df_alunos, df_historico, erro_base = carregaBD()
     if erro_base:
         return render(request, 'progresso.html', {
             'message': erro_base,
@@ -38,10 +70,10 @@ def progresso(request):
             'apenas_pendentes': apenas_pendentes,
         })
 
-    alunos_options = build_alunos_options(df_alunos)
+    alunos_options = geraListaAlunos(df_alunos)
 
     matriculas_validas = {item['id'] for item in alunos_options}
-    matricula_selecionada = resolve_selected_id(request, matriculas_validas)
+    matricula_selecionada = getMatriculaAluno(request, matriculas_validas)
 
     if not matricula_selecionada:
         return render(request, 'progresso.html', {
@@ -74,9 +106,9 @@ def progresso(request):
 
     aluno_base = aluno_base.iloc[0]
     aluno_nome = str(aluno_base.get('NOME PESSOA', '')).strip()
-    versao_curriculo = version_key(aluno_base.get('NUM VERSAO'))
+    versao_curriculo = versaoCurriculo(aluno_base.get('NUM VERSAO'))
 
-    df_curriculo = load_curriculo(versao_curriculo)
+    df_curriculo = carregaCurriculo(versao_curriculo)
     if df_curriculo is None:
         return render(request, 'progresso.html', {
             'message': f'Não foi possível localizar o currículo da versão {versao_curriculo}.',
@@ -114,7 +146,7 @@ def progresso(request):
     historico_map = (
         historico_aluno.sort_values(
             by=['COD ATIV CURRIC', 'ANO_NUM', 'PERIODO_NUM', 'SITUACAO_ITEM_NUM'],
-            ascending=[True, True, True, True],
+            ascending=[True, True, True, False],
         )
         .drop_duplicates(subset=['COD ATIV CURRIC'], keep='last')
         .set_index('COD ATIV CURRIC')
@@ -123,6 +155,14 @@ def progresso(request):
 
     curriculo_grade = []
     disciplinas_concluidas = []
+
+    def obter_carga_horaria(row):
+        for campo in ('CH TOTAL', 'TOTAL CH', 'NUM HORAS', 'CREDITOS'):
+            if campo in row.index:
+                carga = normaliza_carga_horaria(row.get(campo))
+                if carga is not None:
+                    return carga
+        return None
 
     for periodo_ideal, df_periodo in df_curriculo.sort_values(['PERIODO IDEAL_NUM', 'COD DISCIPLINA']).groupby('PERIODO IDEAL_NUM'):
         disciplinas_periodo = []
@@ -135,11 +175,12 @@ def progresso(request):
             status_label, status_badge, concluida, cursando, reprovada = status_info(status_raw)
             periodo_real = ''
             media_final = ''
+            carga_horaria = obter_carga_horaria(row)
             if historico:
                 ano = historico.get('ANO_NUM', '')
                 periodo_txt = historico.get('PERIODO', '')
                 periodo_real = f"{ano} - {periodo_txt}" if ano else str(periodo_txt)
-                media_final = historico.get('MEDIA FINAL', '')
+                media_final = exibe_media_final(historico.get('MEDIA FINAL', ''))
 
             disciplina = {
                 'codigo': codigo,
@@ -154,6 +195,8 @@ def progresso(request):
                 'reprovada': reprovada,
                 'periodo_real': periodo_real,
                 'media_final': media_final,
+                'carga_horaria': carga_horaria,
+                'carga_horaria_label': exibe_carga_horaria(carga_horaria),
             }
             disciplinas_periodo.append(disciplina)
             if concluida:
@@ -162,6 +205,8 @@ def progresso(request):
         concluidas = sum(1 for disciplina in disciplinas_periodo if disciplina['concluida'])
         pendentes = len(disciplinas_periodo) - concluidas
         percentual = round((concluidas / len(disciplinas_periodo)) * 100, 1) if disciplinas_periodo else 0
+        carga_total = sum((d['carga_horaria'] or 0) for d in disciplinas_periodo)
+        carga_concluida = sum((d['carga_horaria'] or 0) for d in disciplinas_periodo if d['concluida'])
 
         curriculo_grade.append({
             'periodo': int(periodo_ideal) if pd.notna(periodo_ideal) else periodo_ideal,
@@ -170,6 +215,9 @@ def progresso(request):
             'concluidas': concluidas,
             'pendentes': pendentes,
             'percentual': percentual,
+            'carga_horaria_total': carga_total,
+            'carga_horaria_concluida': carga_concluida,
+            'carga_horaria_pendente': max(carga_total - carga_concluida, 0),
             'disciplinas': disciplinas_periodo,
             'disciplinas_concluidas': [d for d in disciplinas_periodo if d['concluida']],
             'disciplinas_pendentes': [d for d in disciplinas_periodo if not d['concluida']],
@@ -190,6 +238,8 @@ def progresso(request):
         total_filtrado = len(disciplinas_filtradas)
         total_concluidas_filtrado = len(concluidas_filtradas)
         percentual_filtrado = round((total_concluidas_filtrado / total_filtrado) * 100, 1) if total_filtrado else 0
+        carga_total_filtrada = sum((d['carga_horaria'] or 0) for d in disciplinas_filtradas)
+        carga_concluida_filtrada = sum((d['carga_horaria'] or 0) for d in disciplinas_filtradas if d['concluida'])
 
         filtered_curriculo_grade.append({
             'periodo': periodo['periodo'],
@@ -198,6 +248,9 @@ def progresso(request):
             'concluidas': total_concluidas_filtrado,
             'pendentes': len(pendentes_filtradas),
             'percentual': percentual_filtrado,
+            'carga_horaria_total': carga_total_filtrada,
+            'carga_horaria_concluida': carga_concluida_filtrada,
+            'carga_horaria_pendente': max(carga_total_filtrada - carga_concluida_filtrada, 0),
             'disciplinas': disciplinas_filtradas,
             'disciplinas_concluidas': concluidas_filtradas,
             'disciplinas_pendentes': pendentes_filtradas,
@@ -207,6 +260,9 @@ def progresso(request):
     total_concluidas = sum(periodo['concluidas'] for periodo in filtered_curriculo_grade)
     total_pendentes = total_curriculo - total_concluidas
     percentual_geral = round((total_concluidas / total_curriculo) * 100, 1) if total_curriculo else 0
+    carga_total_geral = sum(periodo.get('carga_horaria_total', 0) for periodo in filtered_curriculo_grade)
+    carga_concluida_geral = sum(periodo.get('carga_horaria_concluida', 0) for periodo in filtered_curriculo_grade)
+    carga_pendente_geral = max(carga_total_geral - carga_concluida_geral, 0)
 
     return render(request, 'progresso.html', {
         'message': '',
@@ -222,6 +278,9 @@ def progresso(request):
             'concluidas': total_concluidas,
             'pendentes': total_pendentes,
             'percentual': percentual_geral,
+            'carga_horaria_total': carga_total_geral,
+            'carga_horaria_concluida': carga_concluida_geral,
+            'carga_horaria_pendente': carga_pendente_geral,
         },
         'apenas_obrigatorias': apenas_obrigatorias,
         'apenas_pendentes': apenas_pendentes,

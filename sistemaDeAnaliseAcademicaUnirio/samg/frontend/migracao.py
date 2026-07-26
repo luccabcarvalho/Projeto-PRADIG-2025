@@ -2,14 +2,14 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
 from samg.frontend.common import (
-    build_alunos_options,
+    geraListaAlunos,
     build_historico_concluido,
     compare_curriculos,
     filtrar_resultado_comparacao,
-    load_base_data,
-    load_curriculo,
-    resolve_selected_id,
-    version_key,
+    carregaBD,
+    carregaCurriculo,
+    getMatriculaAluno,
+    versaoCurriculo,
 )
 
 
@@ -24,7 +24,7 @@ def migracao(request):
     apenas_obrigatorias = request.GET.get('apenas_obrigatorias') == '1'
     apenas_pendentes = request.GET.get('apenas_pendentes') == '1'
 
-    df_alunos, df_historico, erro_base = load_base_data()
+    df_alunos, df_historico, erro_base = carregaBD()
     if erro_base:
         return render(request, 'migracao.html', {
             'message': erro_base,
@@ -40,9 +40,9 @@ def migracao(request):
             'apenas_pendentes': apenas_pendentes,
         })
 
-    alunos_options = build_alunos_options(df_alunos)
+    alunos_options = geraListaAlunos(df_alunos)
     matriculas_validas = {item['id'] for item in alunos_options}
-    selected_id = resolve_selected_id(request, matriculas_validas)
+    selected_id = getMatriculaAluno(request, matriculas_validas)
 
     if not selected_id:
         return render(request, 'migracao.html', {
@@ -78,10 +78,10 @@ def migracao(request):
     aluno_row = aluno_row.iloc[0]
     aluno_nome = str(aluno_row.get('NOME PESSOA', '')).strip()
     curriculo_atual_label = str(aluno_row.get('NUM VERSAO', '')).strip() or DEFAULT_CURRICULO_VERSION
-    curriculo_atual = version_key(aluno_row.get('NUM VERSAO', DEFAULT_CURRICULO_VERSION))
+    curriculo_atual = versaoCurriculo(aluno_row.get('NUM VERSAO', DEFAULT_CURRICULO_VERSION))
 
-    df_curriculo_atual = load_curriculo(curriculo_atual)
-    df_curriculo_novo = load_curriculo(DEFAULT_CURRICULO_VERSION)
+    df_curriculo_atual = carregaCurriculo(curriculo_atual)
+    df_curriculo_novo = carregaCurriculo(DEFAULT_CURRICULO_VERSION)
     if df_curriculo_atual is None or df_curriculo_novo is None:
         return render(request, 'migracao.html', {
             'message': 'Não foi possível carregar um dos currículos necessários para a comparação.',

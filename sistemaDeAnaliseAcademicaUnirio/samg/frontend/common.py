@@ -70,11 +70,11 @@ def extract_sigla(value):
     return value
 
 
-def version_key(value):
+def versaoCurriculo(value):
     return re.sub(r'\D', '', '' if pd.isna(value) else str(value)) or DEFAULT_CURRICULO_VERSION
 
 
-def load_base_data():
+def carregaBD():
     media_root = Path(settings.MEDIA_ROOT)
     base_dir = Path(settings.BASE_DIR)
 
@@ -124,7 +124,7 @@ def load_base_data():
     return df_alunos, df_historico, None
 
 
-def build_alunos_options(df_alunos):
+def geraListaAlunos(df_alunos):
     return [
         {'id': matricula, 'label': f"{matricula} - {nome}"}
         for matricula, nome in df_alunos[['MATR ALUNO', 'NOME PESSOA']]
@@ -134,7 +134,7 @@ def build_alunos_options(df_alunos):
     ]
 
 
-def resolve_selected_id(request, valid_ids, param_name='matr_aluno'):
+def getMatriculaAluno(request, valid_ids, param_name='matr_aluno'):
     selected_id = request.GET.get(param_name, '').strip()
     if not selected_id:
         username = (request.user.username or '').strip()
@@ -144,10 +144,10 @@ def resolve_selected_id(request, valid_ids, param_name='matr_aluno'):
     return selected_id
 
 
-def load_curriculo(version):
+def carregaCurriculo(version):
     media_root = Path(settings.MEDIA_ROOT)
     base_dir = Path(settings.BASE_DIR)
-    curriculo_file = CURRICULO_FILES.get(version_key(version), CURRICULO_FILES[DEFAULT_CURRICULO_VERSION])
+    curriculo_file = CURRICULO_FILES.get(versaoCurriculo(version), CURRICULO_FILES[DEFAULT_CURRICULO_VERSION])
     curriculo_path = first_existing([
         media_root / 'curriculos_bsi' / curriculo_file,
         base_dir / 'visualizacoes' / 'data' / curriculo_file,
@@ -178,7 +178,7 @@ def build_historico_concluido(df_historico, matricula):
 
     df_historico_aluno = df_historico_aluno.sort_values(
         by=['COD ATIV CURRIC', 'ANO_NUM', 'PERIODO_NUM', 'SITUACAO_ITEM_NUM'],
-        ascending=[True, True, True, True],
+        ascending=[True, True, True, False],
     )
     df_historico_ultimo = df_historico_aluno.drop_duplicates(subset=['COD ATIV CURRIC'], keep='last')
     df_historico_ultimo['STATUS_CONCLUIDO'] = df_historico_ultimo['DESCR SITUACAO'].astype(str).str.strip().isin(STATUS_CONCLUIDAS)

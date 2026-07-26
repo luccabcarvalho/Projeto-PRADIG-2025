@@ -31,6 +31,11 @@
         font-weight: 800;
         line-height: 1;
     }
+    .summary-subvalue {
+        font-size: .92rem;
+        color: #5f6f86;
+        margin-top: .25rem;
+    }
     .period-card {
         border: 0;
         border-radius: 18px;
@@ -134,6 +139,12 @@
         font-size: .85rem;
         color: #5f6f86;
         margin-top: .2rem;
+    }
+    .discipline-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .35rem;
+        margin-top: .45rem;
     }
     .status-badge {
         flex-shrink: 0;
@@ -249,6 +260,20 @@
                     <div class="summary-value">{{ curriculoStats.percentual }}%</div>
                 </div>
             </div>
+            <div class="col-12 col-lg-6">
+                <div class="summary-card card p-3">
+                    <div class="text-muted small">Carga horária concluída</div>
+                    <div class="summary-value">{{ curriculoStats.carga_horaria_concluida }}h</div>
+                    
+                </div>
+            </div>
+            <div class="col-12 col-lg-6">
+                <div class="summary-card card p-3">
+                    <div class="text-muted small">Carga horária pendente</div>
+                    <div class="summary-value">{{ curriculoStats.carga_horaria_pendente }}h</div>
+                    
+                </div>
+            </div>
         </div>
 
         {% if curriculoVersion %}
@@ -265,6 +290,7 @@
                         <div>
                             <h2>{{ periodo.periodo_label }}</h2>
                             <small>{{ periodo.concluidas }}/{{ periodo.total }} disciplinas concluídas</small>
+                            <div class="small mt-1">{{ periodo.carga_horaria_concluida }}h de {{ periodo.carga_horaria_total }}h pendentes</div>
                         </div>
                         <div class="period-percent">{{ periodo.percentual }}%</div>
                     </div>
@@ -282,6 +308,11 @@
                                         <div class="discipline-main">
                                             <div class="discipline-code">{{ disc.sigla }}</div>
                                             <p class="discipline-name">{{ disc.nome }}</p>
+                                            {% if disc.carga_horaria_label %}
+                                            <div class="discipline-badges">
+                                                <span class="badge bg-light text-dark border">{{ disc.carga_horaria_label }}</span>
+                                            </div>
+                                            {% endif %}
                                             {% if disc.periodo_real %}
                                             <div class="discipline-meta">Lançada em {{ disc.periodo_real }}{% if disc.media_final %} • Média final: {{ disc.media_final }}{% endif %}</div>
                                             {% endif %}
@@ -304,6 +335,11 @@
                                         <div class="discipline-main">
                                             <div class="discipline-code">{{ disc.sigla }}</div>
                                             <p class="discipline-name">{{ disc.nome }}</p>
+                                            {% if disc.carga_horaria_label %}
+                                            <div class="discipline-badges">
+                                                <span class="badge bg-light text-dark border">{{ disc.carga_horaria_label }}</span>
+                                            </div>
+                                            {% endif %}
                                             <div class="discipline-meta">
                                                 {% if disc.periodo_real %}Último registro: {{ disc.periodo_real }}{% else %}Sem registro no histórico{% endif %}
                                             </div>

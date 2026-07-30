@@ -310,6 +310,23 @@ def progressao_turma(request):
             'mensagem': "Não há dados disponíveis para a turma selecionada.",
         })
 
+    grupos_sobrepostos = {}
+    for i, linha in enumerate(linhas):
+        chave = tuple(zip(linha.x, tuple(round(v, 2) for v in linha.y)))
+        grupos_sobrepostos.setdefault(chave, []).append(i)
+
+    for indices in grupos_sobrepostos.values():
+        n = len(indices)
+        if n < 2:
+            continue
+        for pos, i in enumerate(indices):
+            linha = linhas[i]
+            y_original = list(linha.y)
+            offset = (pos - (n - 1) / 2) * 60
+            linha.y = [v + offset for v in y_original]
+            linha.customdata = [list(cd) + [y_original[j]] for j, cd in enumerate(linha.customdata)]
+            linha.hovertemplate = linha.hovertemplate.replace('%{y}h', '%{customdata[3]}h')
+
     carga_referencia = 3240
     linha_referencia = go.Scatter(  # Cria uma linha de referência para a carga horária total
         x=periodos,

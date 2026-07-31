@@ -310,15 +310,16 @@ def progressao_turma(request):
             'mensagem': "Não há dados disponíveis para a turma selecionada.",
         })
 
-    grupos_sobrepostos = {}
-    for i, linha in enumerate(linhas):
-        chave = tuple(zip(linha.x, tuple(round(v, 2) for v in linha.y)))
-        grupos_sobrepostos.setdefault(chave, []).append(i)
+    grupos_sobrepostos = {} # Cria dicionário vazio
+    for i, linha in enumerate(linhas): # Itera sobre cada linha do gráfico (cada aluno)
+        chave = tuple(zip(linha.x, tuple(round(v, 2) for v in linha.y))) # Cria uma chave única para cada combinação de pontos da linha
+        grupos_sobrepostos.setdefault(chave, []).append(i) # Se a chave ainda não existir, cria uma lista vazia e adiciona o índice da linha atual.
+        # Dessa forma, linhas com os mesmos pontos (mesmo x e y) serão agrupadas juntas.
 
-    for indices in grupos_sobrepostos.values():
-        n = len(indices)
-        if n < 2:
-            continue
+    for indices in grupos_sobrepostos.values(): # Percorre os índices das linhas sobrepostas
+        n = len(indices) 
+        if n < 2: # Se não houver sobreposição, não precisa ajustar nada
+            continue 
         for pos, i in enumerate(indices):
             linha = linhas[i]
             y_original = list(linha.y)

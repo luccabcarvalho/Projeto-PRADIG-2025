@@ -31,12 +31,6 @@ def checar_arquivos_necessarios(request):
             faltando.append('alunosPorCurso.csv')
         if not os.path.exists(os.path.join(USER_DIR, 'historicoEscolar.csv')):
             faltando.append('historicoEscolar.csv')
-        curriculos = [
-            'curriculo-20002.csv',
-            'curriculo-20052.csv',
-            'curriculo-20081.csv',
-            'curriculo-20232.csv',
-        ]
-        curriculos_faltando = [c for c in curriculos if not os.path.exists(os.path.join(CURRICULOS_DIR, c))]
-        faltando.extend(curriculos_faltando)
+        if not os.path.exists(os.path.join(CURRICULOS_DIR, 'curriculos-bsi.csv')):
+            faltando.append('curriculos-bsi.csv')
     return JsonResponse({'faltando': faltando})

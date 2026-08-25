@@ -67,6 +67,36 @@
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 1rem;
 	}
+	.student-select {
+		min-width: 320px;
+	}
+	.filter-chips {
+		margin-top: 1rem;
+		padding-top: 1rem;
+		border-top: 1px solid rgba(255, 255, 255, 0.18);
+		display: flex;
+		flex-wrap: wrap;
+		gap: .6rem;
+		align-items: center;
+	}
+	.filter-chip-label {
+		color: rgba(255, 255, 255, 0.82);
+		font-weight: 700;
+		margin-right: .15rem;
+	}
+	.filter-chip {
+		border-radius: 999px;
+		padding: .45rem .9rem;
+		font-weight: 700;
+		transition: all .2s ease;
+		user-select: none;
+	}
+	.btn-check:checked + .filter-chip {
+		background: #ffffff;
+		color: #2356a8;
+		border-color: #ffffff;
+		box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+	}
 	@media (max-width: 991px) {
 		.comparison-grid {
 			grid-template-columns: 1fr;
@@ -79,16 +109,13 @@
 <script>
 	document.addEventListener('DOMContentLoaded', function () {
 		const select = document.getElementById('matr_aluno');
-		const obrigatorias = document.getElementById('apenas_obrigatorias');
 		const pendentes = document.getElementById('apenas_pendentes');
+		const eletivas = document.getElementById('mostrar_eletivas');
+		const optativas = document.getElementById('mostrar_optativas');
+		const demais = document.getElementById('mostrar_demais');
 		const form = document.getElementById('filtros-form');
 		if (select) {
 			select.addEventListener('change', function () {
-				form.submit();
-			});
-		}
-		if (obrigatorias) {
-			obrigatorias.addEventListener('change', function () {
 				form.submit();
 			});
 		}
@@ -96,6 +123,15 @@
 			pendentes.addEventListener('change', function () {
 				form.submit();
 			});
+		}
+		if (eletivas) {
+			eletivas.addEventListener('change', function () { form.submit(); });
+		}
+		if (optativas) {
+			optativas.addEventListener('change', function () { form.submit(); });
+		}
+		if (demais) {
+			demais.addEventListener('change', function () { form.submit(); });
 		}
 	});
 </script>
@@ -115,21 +151,27 @@
 			<div class="d-flex flex-column align-items-start align-items-lg-end gap-3">
 				<form method="get" id="filtros-form" class="d-flex flex-column align-items-start align-items-lg-end gap-2">
 					<label for="matr_aluno" class="form-label mb-0 text-white-50 fw-semibold">Selecionar aluno</label>
-					<select name="matr_aluno" id="matr_aluno" class="form-select" style="min-width: 320px;">
+					<select name="matr_aluno" id="matr_aluno" class="form-select student-select">
 						{% for aluno in alunos_options %}
 							<option value="{{ aluno.id }}" {% if selected_id == aluno.id %}selected{% endif %}>{{ aluno.label }}</option>
 						{% endfor %}
 					</select>
-					<div class="form-check">
-						<input class="form-check-input" type="checkbox" id="apenas_obrigatorias" name="apenas_obrigatorias" value="1" {% if apenas_obrigatorias %}checked{% endif %}>
-						<label class="form-check-label text-white" for="apenas_obrigatorias">Apenas obrigatórias</label>
-					</div>
-					<div class="form-check">
-						<input class="form-check-input" type="checkbox" id="apenas_pendentes" name="apenas_pendentes" value="1" {% if apenas_pendentes %}checked{% endif %}>
-						<label class="form-check-label text-white" for="apenas_pendentes">Apenas pendentes</label>
-					</div>
 				</form>
 			</div>
+		</div>
+		<div class="filter-chips">
+			<span class="filter-chip-label">Filtros rápidos</span>
+			<input class="btn-check" type="checkbox" id="apenas_pendentes" name="apenas_pendentes" value="1" {% if apenas_pendentes %}checked{% endif %}>
+			<label class="btn btn-outline-light filter-chip" for="apenas_pendentes">Apenas pendentes</label>
+
+			<input class="btn-check" type="checkbox" id="mostrar_eletivas" name="mostrar_eletivas" value="1" {% if mostrar_eletivas %}checked{% endif %}>
+			<label class="btn btn-outline-light filter-chip" for="mostrar_eletivas">Mostrar eletivas</label>
+
+			<input class="btn-check" type="checkbox" id="mostrar_optativas" name="mostrar_optativas" value="1" {% if mostrar_optativas %}checked{% endif %}>
+			<label class="btn btn-outline-light filter-chip" for="mostrar_optativas">Mostrar optativas</label>
+
+			<input class="btn-check" type="checkbox" id="mostrar_demais" name="mostrar_demais" value="1" {% if mostrar_demais %}checked{% endif %}>
+			<label class="btn btn-outline-light filter-chip" for="mostrar_demais">Demais disciplinas</label>
 		</div>
 	</div>
 

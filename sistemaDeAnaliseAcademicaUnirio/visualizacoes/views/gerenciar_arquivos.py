@@ -19,10 +19,7 @@ def gerenciar_arquivos(request):
     historico_path = os.path.join(USER_DIR, 'historicoEscolar.csv')
     curriculos = []
     curriculos_padrao = [
-        'curriculo-20002.csv',
-        'curriculo-20052.csv',
-        'curriculo-20081.csv',
-        'curriculo-20232.csv',
+        'curriculos-bsi.csv',
     ]
     if os.path.exists(CURRICULOS_DIR):
         curriculos = [c for c in curriculos_padrao if os.path.exists(os.path.join(CURRICULOS_DIR, c))]

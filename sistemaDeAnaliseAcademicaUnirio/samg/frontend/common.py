@@ -9,11 +9,14 @@ from django.conf import settings
 
 USER_ID = 'user1'
 DEFAULT_CURRICULO_VERSION = '20232'
-CURRICULO_FILES = {
-    '20232': 'curriculo-20232.csv',
-    '20052': 'curriculo-20052.csv',
-    '20002': 'curriculo-20002.csv',
-    '20081': 'curriculo-20081.csv',
+CURRICULO_FILE = 'curriculos-bsi.csv'
+
+# Mapeamento entre código de versão (20232) e NUM VERSAO no arquivo consolidado (2023/2)
+VERSION_MAPPING = {
+    '20232': '2023/2',
+    '20052': '2000/2',
+    '20002': '2000/2',
+    '20081': '2008/1',
 }
 
 STATUS_CONCLUIDAS = {
@@ -147,15 +150,21 @@ def getMatriculaAluno(request, valid_ids, param_name='matr_aluno'):
 def carregaCurriculo(version):
     media_root = Path(settings.MEDIA_ROOT)
     base_dir = Path(settings.BASE_DIR)
-    curriculo_file = CURRICULO_FILES.get(versaoCurriculo(version), CURRICULO_FILES[DEFAULT_CURRICULO_VERSION])
     curriculo_path = first_existing([
-        media_root / 'curriculos_bsi' / curriculo_file,
-        base_dir / 'visualizacoes' / 'data' / curriculo_file,
+        media_root / 'curriculos_bsi' / CURRICULO_FILE,
+        base_dir / 'visualizacoes' / 'data' / CURRICULO_FILE,
     ])
     if not curriculo_path:
         return None
 
     df = pd.read_csv(curriculo_path)
+    versao_codigo = versaoCurriculo(version)
+    # Mapeia código de versão para NUM VERSAO no arquivo consolidado
+    versao_num = VERSION_MAPPING.get(versao_codigo, versao_codigo)
+    if 'NUM VERSAO' in df.columns:
+        df = df[df['NUM VERSAO'].astype(str).str.strip() == versao_num]
+    if df.empty:
+        return None
     if 'COD DISCIPLINA' in df.columns:
         df['COD DISCIPLINA'] = df['COD DISCIPLINA'].astype(str).str.strip()
     if 'NOME DISCIPLINA' in df.columns:
@@ -169,6 +178,58 @@ def carregaCurriculo(version):
     else:
         df['PERIODO IDEAL_NUM'] = 999
     return df
+
+
+def carregaEquivalencias():
+    """Carrega o arquivo de equivalências entre currículos.
+    
+    Arquivo: "Relação de equivalência dos currículos.csv"
+    Estrutura: separado por ";"
+    - NUM_VERSAO: versão DESTINO (ex: 2023/2)
+    - NOME_DISCIPLINA: código + nome da disciplina na versão DESTINO
+    - NOME_DISC_EQUIV: código + nome da disciplina equivalente em versão ANTERIOR
+    
+    Exemplo de linha:
+    2023/2;...;TIN0223 - Introdução à Lógica Computacional;TIN0105 - INTRODUÇÃO À LÓGICA COMPUTACIONAL;...
+    
+    Retorna um DataFrame com mapeamento de (código_antigo, versão_novo) → código_novo
+    """
+    media_root = Path(settings.MEDIA_ROOT)
+    base_dir = Path(settings.BASE_DIR)
+    
+    # Procura o arquivo de equivalências
+    equivalencias_path = first_existing([
+        media_root / 'curriculos_bsi' / 'Relação de equivalência dos currículos.csv',
+        base_dir / 'visualizacoes' / 'data' / 'Relação de equivalência dos currículos.csv',
+    ])
+    
+    if not equivalencias_path:
+        return None
+    
+    try:
+        # Carrega com separador ";" e encoding correto para acentos
+        df = pd.read_csv(equivalencias_path, sep=';', encoding='utf-8-sig')
+        
+        # Normaliza nomes de colunas se necessário
+        df.columns = df.columns.str.strip()
+        
+        # Remove linhas onde NOME_DISC_EQUIV está vazio (sem equivalência)
+        df = df.dropna(subset=['NOME_DISC_EQUIV'])
+        df = df[df['NOME_DISC_EQUIV'].astype(str).str.strip() != '']
+        
+        # Extrai os códigos das disciplinas
+        # NOME_DISCIPLINA e NOME_DISC_EQUIV têm format: "TINU0XXX - Nome da Disciplina"
+        df['COD_NOVO'] = df['NOME_DISCIPLINA'].astype(str).str.extract(r'^([A-Z]+\d{4})', expand=False)
+        df['COD_ANTIGO'] = df['NOME_DISC_EQUIV'].astype(str).str.extract(r'^([A-Z]+\d{4})', expand=False)
+        df['NUM_VERSAO'] = df['NUM_VERSAO'].astype(str).str.strip()
+        
+        # Remove linhas onde não foi possível extrair os códigos
+        df = df.dropna(subset=['COD_NOVO', 'COD_ANTIGO'])
+        
+        return df[['COD_ANTIGO', 'COD_NOVO', 'NUM_VERSAO']].copy()
+    except Exception as e:
+        print(f"Erro ao carregar equivalências: {e}")
+        return None
 
 
 def build_historico_concluido(df_historico, matricula):
@@ -213,12 +274,29 @@ def filtrar_disciplinas(disciplinas, apenas_obrigatorias=False, apenas_pendentes
     return disciplinas_filtradas
 
 
-def filtrar_resultado_comparacao(resultado_comparacao, apenas_obrigatorias=False, apenas_pendentes=False):
-    comparacao_filtrada = filtrar_disciplinas(
-        resultado_comparacao.get('comparacao', []),
-        apenas_obrigatorias=apenas_obrigatorias,
-        apenas_pendentes=apenas_pendentes,
-    )
+def filtrar_resultado_comparacao(
+    resultado_comparacao,
+    apenas_obrigatorias=False,
+    apenas_pendentes=False,
+    mostrar_eletivas=False,
+    mostrar_optativas=False,
+    mostrar_demais=False,
+):
+    comparacao_filtrada = []
+    for item in resultado_comparacao.get('comparacao', []):
+        if item.get('obrigatoria'):
+            comparacao_filtrada.append(item)
+        elif item.get('eletiva') and mostrar_eletivas:
+            comparacao_filtrada.append(item)
+        elif item.get('optativa') and mostrar_optativas:
+            comparacao_filtrada.append(item)
+        elif item.get('demais') and mostrar_demais:
+            comparacao_filtrada.append(item)
+
+    if apenas_obrigatorias:
+        comparacao_filtrada = [item for item in comparacao_filtrada if item.get('obrigatoria')]
+    if apenas_pendentes:
+        comparacao_filtrada = [item for item in comparacao_filtrada if not item.get('concluida')]
 
     disciplinas_reaproveitadas = [
         item for item in comparacao_filtrada if item.get('reaproveitada') and item.get('concluida')
@@ -234,23 +312,84 @@ def filtrar_resultado_comparacao(resultado_comparacao, apenas_obrigatorias=False
     }
 
 
-def compare_curriculos(df_curriculo_atual, df_curriculo_novo, historico_concluido):
+def compare_curriculos(df_curriculo_atual, df_curriculo_novo, historico_concluido, df_equivalencias=None):
+    """Compara dois currículos e identifica disciplinas equivalentes.
+    
+    A equivalência é buscada em ordem de prioridade:
+    1. Arquivo de equivalências explícitas (equivalencias-disciplinas.csv)
+    2. Matching por nome normalizado (fallback)
+    
+    Args:
+        df_curriculo_atual: DataFrame com disciplinas do currículo anterior
+        df_curriculo_novo: DataFrame com disciplinas do currículo novo
+        historico_concluido: Set com códigos de disciplinas já concluídas
+        df_equivalencias: DataFrame com equivalências mapeadas (opcional)
+    """
+    # Se não passar o DataFrame de equivalências, carrega automaticamente
+    if df_equivalencias is None:
+        df_equivalencias = carregaEquivalencias()
+    
+    # Indexa novo currículo por nome normalizado como fallback
     novo_por_nome = {
         row['NOME NORMALIZADO']: row
         for _, row in df_curriculo_novo.drop_duplicates(subset=['NOME NORMALIZADO'], keep='first').iterrows()
     }
 
+    # Indexa novo currículo por código para busca rápida
+    novo_por_codigo = {
+        row['COD DISCIPLINA']: row
+        for _, row in df_curriculo_novo.iterrows()
+    }
+    
+    # Extrai versão do currículo novo para busca no arquivo de equivalências
+    versao_novo = None
+    if not df_curriculo_novo.empty:
+        versao_novo = str(df_curriculo_novo.iloc[0].get('NUM VERSAO', '')).strip()
+    
+    # Mapeia equivalências do arquivo CSV
+    # Formato esperado: COD_ANTIGO, COD_NOVO, NUM_VERSAO (versão novo)
+    equivalencias_mapa = {}
+    if df_equivalencias is not None and not df_equivalencias.empty and versao_novo:
+        # Filtra equivalências para a versão do currículo novo
+        df_equiv_filtrado = df_equivalencias[
+            df_equivalencias['NUM_VERSAO'] == versao_novo
+        ]
+        
+        # Cria mapeamento COD_ANTIGO → COD_NOVO
+        for _, equiv_row in df_equiv_filtrado.iterrows():
+            cod_antigo = str(equiv_row.get('COD_ANTIGO', '')).strip()
+            cod_novo = str(equiv_row.get('COD_NOVO', '')).strip()
+            
+            if cod_antigo and cod_novo:
+                equivalencias_mapa[cod_antigo] = cod_novo
+
     comparacao = []
     ordenado_atual = df_curriculo_atual.sort_values(['PERIODO IDEAL_NUM', 'COD DISCIPLINA']).drop_duplicates(subset=['NOME NORMALIZADO'], keep='first')
 
     for _, row in ordenado_atual.iterrows():
-        nome_norm = row['NOME NORMALIZADO']
-        equivalente = novo_por_nome.get(nome_norm)
         codigo_atual = str(row.get('COD DISCIPLINA', '')).strip()
         nome_atual = row.get('NOME LIMPO', '')
         concluida = codigo_atual in historico_concluido
         tipo_disciplina = str(row.get('TIPO DISCIPLINA', '')).strip()
-        obrigatoria = is_tipo_obrigatoria(tipo_disciplina)
+        tipo_norm = normalize_text(tipo_disciplina)
+        obrigatoria = tipo_norm == 'obrigatoria'
+        eletiva = tipo_norm == 'eletiva'
+        optativa = tipo_norm == 'optativa'
+        demais = not (obrigatoria or eletiva or optativa)
+
+        # Procura equivalência primeiro no arquivo de equivalências
+        equivalente = None
+        
+        if codigo_atual in equivalencias_mapa:
+            # Encontrou uma equivalência explícita para este código
+            cod_novo_equiv = equivalencias_mapa[codigo_atual]
+            if cod_novo_equiv in novo_por_codigo:
+                equivalente = novo_por_codigo[cod_novo_equiv]
+        
+        # Se não encontrou no arquivo de equivalências, tenta por nome normalizado (fallback)
+        if equivalente is None:
+            nome_norm = row['NOME NORMALIZADO']
+            equivalente = novo_por_nome.get(nome_norm)
 
         item = {
             'codigo_atual': codigo_atual,
@@ -259,6 +398,9 @@ def compare_curriculos(df_curriculo_atual, df_curriculo_novo, historico_concluid
             'concluida': concluida,
             'tipo_disciplina': tipo_disciplina,
             'obrigatoria': obrigatoria,
+            'eletiva': eletiva,
+            'optativa': optativa,
+            'demais': demais,
             'status_reaproveitamento': 'Reaproveitável' if equivalente is not None else 'Sem equivalente',
             'codigo_novo': '',
             'nome_novo': '',
@@ -276,8 +418,11 @@ def compare_curriculos(df_curriculo_atual, df_curriculo_novo, historico_concluid
     disciplinas_nao_reaproveitadas = [item for item in comparacao if not item['reaproveitada']]
     total_atual = len(comparacao)
     total_novo = len(df_curriculo_novo.drop_duplicates(subset=['NOME NORMALIZADO']))
-    reaproveitadas = len([item for item in comparacao if item['reaproveitada']])
+    equivalencias_possiveis_grade = len([item for item in comparacao if item['reaproveitada']])
+    aproveitadas_pelo_aluno = len([item for item in comparacao if item['reaproveitada'] and item['concluida']])
+    reaproveitadas = equivalencias_possiveis_grade
     aproveitamento = round((reaproveitadas / total_atual) * 100, 1) if total_atual else 0
+    aproveitamento_pelo_aluno = round((aproveitadas_pelo_aluno / equivalencias_possiveis_grade) * 100, 1) if equivalencias_possiveis_grade else 0
 
     return {
         'comparacao': comparacao,
@@ -288,5 +433,8 @@ def compare_curriculos(df_curriculo_atual, df_curriculo_novo, historico_concluid
             'total_novo': total_novo,
             'reaproveitadas': reaproveitadas,
             'aproveitamento': aproveitamento,
+            'equivalencias_possiveis_grade': equivalencias_possiveis_grade,
+            'aproveitadas_pelo_aluno': aproveitadas_pelo_aluno,
+            'aproveitamento_pelo_aluno': aproveitamento_pelo_aluno,
         },
     }

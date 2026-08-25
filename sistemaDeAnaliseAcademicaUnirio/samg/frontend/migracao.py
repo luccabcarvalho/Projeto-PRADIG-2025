@@ -8,6 +8,7 @@ from samg.frontend.common import (
     filtrar_resultado_comparacao,
     carregaBD,
     carregaCurriculo,
+    carregaEquivalencias,
     getMatriculaAluno,
     versaoCurriculo,
 )
@@ -21,8 +22,10 @@ USER_ID = 'user1'
 
 @login_required
 def migracao(request):
-    apenas_obrigatorias = request.GET.get('apenas_obrigatorias') == '1'
     apenas_pendentes = request.GET.get('apenas_pendentes') == '1'
+    mostrar_eletivas = request.GET.get('mostrar_eletivas') == '1'
+    mostrar_optativas = request.GET.get('mostrar_optativas') == '1'
+    mostrar_demais = request.GET.get('mostrar_demais') == '1'
 
     df_alunos, df_historico, erro_base = carregaBD()
     if erro_base:
@@ -36,8 +39,10 @@ def migracao(request):
             'resumo': {'total_atual': 0, 'total_novo': 0, 'reaproveitadas': 0, 'aproveitamento': 0},
             'disciplinas_reaproveitadas': [],
             'disciplinas_nao_reaproveitadas': [],
-            'apenas_obrigatorias': apenas_obrigatorias,
             'apenas_pendentes': apenas_pendentes,
+            'mostrar_eletivas': mostrar_eletivas,
+            'mostrar_optativas': mostrar_optativas,
+            'mostrar_demais': mostrar_demais,
         })
 
     alunos_options = geraListaAlunos(df_alunos)
@@ -55,8 +60,10 @@ def migracao(request):
             'resumo': {'total_atual': 0, 'total_novo': 0, 'reaproveitadas': 0, 'aproveitamento': 0},
             'disciplinas_reaproveitadas': [],
             'disciplinas_nao_reaproveitadas': [],
-            'apenas_obrigatorias': apenas_obrigatorias,
             'apenas_pendentes': apenas_pendentes,
+            'mostrar_eletivas': mostrar_eletivas,
+            'mostrar_optativas': mostrar_optativas,
+            'mostrar_demais': mostrar_demais,
         })
 
     aluno_row = df_alunos[df_alunos['MATR ALUNO'] == selected_id].copy()
@@ -71,8 +78,10 @@ def migracao(request):
             'resumo': {'total_atual': 0, 'total_novo': 0, 'reaproveitadas': 0, 'aproveitamento': 0},
             'disciplinas_reaproveitadas': [],
             'disciplinas_nao_reaproveitadas': [],
-            'apenas_obrigatorias': apenas_obrigatorias,
             'apenas_pendentes': apenas_pendentes,
+            'mostrar_eletivas': mostrar_eletivas,
+            'mostrar_optativas': mostrar_optativas,
+            'mostrar_demais': mostrar_demais,
         })
 
     aluno_row = aluno_row.iloc[0]
@@ -93,17 +102,81 @@ def migracao(request):
             'resumo': {'total_atual': 0, 'total_novo': 0, 'reaproveitadas': 0, 'aproveitamento': 0},
             'disciplinas_reaproveitadas': [],
             'disciplinas_nao_reaproveitadas': [],
-            'apenas_obrigatorias': apenas_obrigatorias,
             'apenas_pendentes': apenas_pendentes,
+            'mostrar_eletivas': mostrar_eletivas,
+            'mostrar_optativas': mostrar_optativas,
+            'mostrar_demais': mostrar_demais,
+        })
+
+    if 'COD CURSO' in aluno_row.index:
+        cod_curso = str(aluno_row.get('COD CURSO', '')).strip()
+        if cod_curso and cod_curso != 'nan':
+            if 'COD CURSO' in df_curriculo_atual.columns:
+                df_curriculo_atual = df_curriculo_atual[
+                    df_curriculo_atual['COD CURSO'].astype(str).str.strip() == cod_curso
+                ]
+            if 'COD CURSO' in df_curriculo_novo.columns:
+                df_curriculo_novo = df_curriculo_novo[
+                    df_curriculo_novo['COD CURSO'].astype(str).str.strip() == cod_curso
+                ]
+
+    if df_curriculo_atual.empty or df_curriculo_novo.empty:
+        return render(request, 'migracao.html', {
+            'message': 'Não foi possível filtrar os currículos por curso para a comparação.',
+            'alunos_options': alunos_options,
+            'selected_id': selected_id,
+            'aluno_nome': aluno_nome,
+            'curriculo_atual': curriculo_atual_label,
+            'curriculo_novo': DEFAULT_CURRICULO_VERSION,
+            'resumo': {'total_atual': 0, 'total_novo': 0, 'reaproveitadas': 0, 'aproveitamento': 0},
+            'disciplinas_reaproveitadas': [],
+            'disciplinas_nao_reaproveitadas': [],
+            'apenas_pendentes': apenas_pendentes,
+            'mostrar_eletivas': mostrar_eletivas,
+            'mostrar_optativas': mostrar_optativas,
+            'mostrar_demais': mostrar_demais,
         })
 
     historico_concluido = build_historico_concluido(df_historico, selected_id)
-    resultado_comparacao = compare_curriculos(df_curriculo_atual, df_curriculo_novo, historico_concluido)
+    df_equivalencias = carregaEquivalencias()
+    resultado_comparacao = compare_curriculos(df_curriculo_atual, df_curriculo_novo, historico_concluido, df_equivalencias)
     comparacao_filtrada = filtrar_resultado_comparacao(
         resultado_comparacao,
-        apenas_obrigatorias=apenas_obrigatorias,
+        apenas_obrigatorias=True,
         apenas_pendentes=apenas_pendentes,
+        mostrar_eletivas=mostrar_eletivas,
+        mostrar_optativas=mostrar_optativas,
+        mostrar_demais=mostrar_demais,
     )
+
+    resumo_total = resultado_comparacao['resumo']
+    resumo_total = {
+        'total_atual': resumo_total.get('total_atual', 0),
+        'total_novo': resumo_total.get('total_novo', 0),
+        'reaproveitadas': resumo_total.get('equivalencias_possiveis_grade', resumo_total.get('reaproveitadas', 0)),
+        'aproveitamento': resumo_total.get('aproveitamento', 0),
+        'aproveitadas_pelo_aluno': resumo_total.get('aproveitadas_pelo_aluno', 0),
+        'aproveitamento_pelo_aluno': resumo_total.get('aproveitamento_pelo_aluno', 0),
+    }
+
+    total_filtrado = len(comparacao_filtrada['comparacao'])
+    reaproveitadas_filtradas = len([
+        item for item in comparacao_filtrada['comparacao'] if item.get('reaproveitada')
+    ])
+    aproveitadas_pelo_aluno_filtrado = len([
+        item for item in comparacao_filtrada['comparacao'] if item.get('reaproveitada') and item.get('concluida')
+    ])
+
+    resumo_filtrado = {
+        'total_atual': total_filtrado,
+        'total_novo': resultado_comparacao['resumo']['total_novo'],
+        'reaproveitadas': resumo_total['reaproveitadas'],
+        'aproveitamento': resumo_total['aproveitamento'],
+        'equivalencias_possiveis_grade': resumo_total['reaproveitadas'],
+        'aproveitadas_pelo_aluno': resumo_total['aproveitadas_pelo_aluno'],
+        'aproveitamento_pelo_aluno': resumo_total['aproveitamento_pelo_aluno'],
+        'aproveitadas_pelo_aluno_filtrado': aproveitadas_pelo_aluno_filtrado,
+    }
 
     return render(request, 'migracao.html', {
         'message': '',
@@ -112,10 +185,12 @@ def migracao(request):
         'aluno_nome': aluno_nome,
         'curriculo_atual': curriculo_atual_label,
         'curriculo_novo': DEFAULT_CURRICULO_VERSION,
-        'resumo': resultado_comparacao['resumo'],
+        'resumo': resumo_filtrado,
         'disciplinas_reaproveitadas': comparacao_filtrada['disciplinas_reaproveitadas'],
         'disciplinas_nao_reaproveitadas': comparacao_filtrada['disciplinas_nao_reaproveitadas'],
         'comparacao_total': comparacao_filtrada['comparacao'],
-        'apenas_obrigatorias': apenas_obrigatorias,
         'apenas_pendentes': apenas_pendentes,
+        'mostrar_eletivas': mostrar_eletivas,
+        'mostrar_optativas': mostrar_optativas,
+        'mostrar_demais': mostrar_demais,
     })

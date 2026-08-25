@@ -8,6 +8,7 @@ from samg.frontend.common import (
     extract_sigla,
     filtrar_disciplinas,
     is_tipo_obrigatoria,
+    normalize_text,
     carregaBD,
     carregaCurriculo,
     getMatriculaAluno,
@@ -53,8 +54,10 @@ def exibe_carga_horaria(value):
 
 @login_required
 def progresso(request):
-    apenas_obrigatorias = request.GET.get('apenas_obrigatorias') == '1'
     apenas_pendentes = request.GET.get('apenas_pendentes') == '1'
+    mostrar_eletivas = request.GET.get('mostrar_eletivas') == '1'
+    mostrar_optativas = request.GET.get('mostrar_optativas') == '1'
+    mostrar_demais = request.GET.get('mostrar_demais') == '1'
     df_alunos, df_historico, erro_base = carregaBD()
     if erro_base:
         return render(request, 'progresso.html', {
@@ -66,8 +69,10 @@ def progresso(request):
             'selected_id': '',
             'curriculoVersion': '',
             'aluno_nome': '',
-            'apenas_obrigatorias': apenas_obrigatorias,
             'apenas_pendentes': apenas_pendentes,
+            'mostrar_eletivas': mostrar_eletivas,
+            'mostrar_optativas': mostrar_optativas,
+            'mostrar_demais': mostrar_demais,
         })
 
     alunos_options = geraListaAlunos(df_alunos)
@@ -85,8 +90,10 @@ def progresso(request):
             'selected_id': '',
             'curriculoVersion': '',
             'aluno_nome': '',
-            'apenas_obrigatorias': apenas_obrigatorias,
             'apenas_pendentes': apenas_pendentes,
+            'mostrar_eletivas': mostrar_eletivas,
+            'mostrar_optativas': mostrar_optativas,
+            'mostrar_demais': mostrar_demais,
         })
 
     aluno_base = df_alunos[df_alunos['MATR ALUNO'] == matricula_selecionada].copy()
@@ -100,8 +107,10 @@ def progresso(request):
             'selected_id': matricula_selecionada,
             'curriculoVersion': '',
             'aluno_nome': '',
-            'apenas_obrigatorias': apenas_obrigatorias,
             'apenas_pendentes': apenas_pendentes,
+            'mostrar_eletivas': mostrar_eletivas,
+            'mostrar_optativas': mostrar_optativas,
+            'mostrar_demais': mostrar_demais,
         })
 
     aluno_base = aluno_base.iloc[0]
@@ -119,8 +128,10 @@ def progresso(request):
             'selected_id': matricula_selecionada,
             'curriculoVersion': aluno_base.get('NUM VERSAO', versao_curriculo),
             'aluno_nome': aluno_nome,
-            'apenas_obrigatorias': apenas_obrigatorias,
             'apenas_pendentes': apenas_pendentes,
+            'mostrar_eletivas': mostrar_eletivas,
+            'mostrar_optativas': mostrar_optativas,
+            'mostrar_demais': mostrar_demais,
         })
 
     if 'COD CURSO' in df_curriculo.columns and 'COD CURSO' in aluno_base.index:
@@ -139,8 +150,10 @@ def progresso(request):
             'selected_id': matricula_selecionada,
             'curriculoVersion': aluno_base.get('NUM VERSAO', versao_curriculo),
             'aluno_nome': aluno_nome,
-            'apenas_obrigatorias': apenas_obrigatorias,
             'apenas_pendentes': apenas_pendentes,
+            'mostrar_eletivas': mostrar_eletivas,
+            'mostrar_optativas': mostrar_optativas,
+            'mostrar_demais': mostrar_demais,
         })
 
     historico_map = (
@@ -170,6 +183,12 @@ def progresso(request):
             codigo = str(row.get('COD DISCIPLINA', '')).strip()
             nome_curto = extract_name(row.get('NOME DISCIPLINA', '')) or codigo
             sigla = extract_sigla(codigo)
+            tipo_raw = str(row.get('TIPO DISCIPLINA', '')).strip()
+            tipo_norm = normalize_text(tipo_raw)
+            obrigatoria = tipo_norm == 'obrigatoria'
+            eletiva = tipo_norm == 'eletiva'
+            optativa = tipo_norm == 'optativa'
+            demais = not (obrigatoria or eletiva or optativa)
             historico = historico_map.get(codigo)
             status_raw = '' if not historico else str(historico.get('DESCR SITUACAO', '')).strip()
             status_label, status_badge, concluida, cursando, reprovada = status_info(status_raw)
@@ -186,7 +205,11 @@ def progresso(request):
                 'codigo': codigo,
                 'sigla': sigla,
                 'nome': nome_curto,
-                'obrigatoria': is_tipo_obrigatoria(row.get('TIPO DISCIPLINA', '')),
+                'tipo_disciplina': tipo_raw,
+                'obrigatoria': obrigatoria,
+                'eletiva': eletiva,
+                'optativa': optativa,
+                'demais': demais,
                 'status_raw': status_raw,
                 'status_label': status_label,
                 'status_badge': status_badge,
@@ -225,9 +248,20 @@ def progresso(request):
 
     filtered_curriculo_grade = []
     for periodo in curriculo_grade:
+        disciplinas_filtradas = []
+        for disciplina in periodo['disciplinas']:
+            if disciplina.get('obrigatoria'):
+                disciplinas_filtradas.append(disciplina)
+            elif disciplina.get('eletiva') and mostrar_eletivas:
+                disciplinas_filtradas.append(disciplina)
+            elif disciplina.get('optativa') and mostrar_optativas:
+                disciplinas_filtradas.append(disciplina)
+            elif disciplina.get('demais') and mostrar_demais:
+                disciplinas_filtradas.append(disciplina)
+
         disciplinas_filtradas = filtrar_disciplinas(
-            periodo['disciplinas'],
-            apenas_obrigatorias=apenas_obrigatorias,
+            disciplinas_filtradas,
+            apenas_obrigatorias=False,
             apenas_pendentes=apenas_pendentes,
         )
         if not disciplinas_filtradas:
@@ -282,6 +316,8 @@ def progresso(request):
             'carga_horaria_concluida': carga_concluida_geral,
             'carga_horaria_pendente': carga_pendente_geral,
         },
-        'apenas_obrigatorias': apenas_obrigatorias,
         'apenas_pendentes': apenas_pendentes,
+        'mostrar_eletivas': mostrar_eletivas,
+        'mostrar_optativas': mostrar_optativas,
+        'mostrar_demais': mostrar_demais,
     })

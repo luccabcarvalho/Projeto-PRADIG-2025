@@ -75,7 +75,11 @@
     .period-body {
         padding: 1.25rem;
         background: #fff;
+        display: none; /* escondido por padrão (minimizado) */
+        transition: max-height 0.28s ease, opacity 0.22s ease;
+        overflow: hidden;
     }
+    .period-card.expanded .period-body { display: block; }
     .progress-track {
         height: 10px;
         border-radius: 999px;
@@ -83,6 +87,7 @@
         overflow: hidden;
         margin-bottom: 1rem;
     }
+    
     .progress-track > div {
         height: 100%;
         background: linear-gradient(90deg, #198754 0%, #28a745 100%);
@@ -115,6 +120,12 @@
         border-radius: 14px;
         background: #fbfdff;
     }
+    
+     /* Tipos ocultos por padrão; obrigatórias aparecem sempre */
+     .eletiva, .optativa, .demais { display: none; }
+     .samg_show_eletivas .eletiva { display: flex; }
+     .samg_show_optativas .optativa { display: flex; }
+     .samg_show_demais .demais { display: flex; }
     .discipline-main {
         min-width: 0;
     }
@@ -159,6 +170,33 @@
     .student-select {
         min-width: 320px;
     }
+    .filter-chips {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.18);
+        display: flex;
+        flex-wrap: wrap;
+        gap: .6rem;
+        align-items: center;
+    }
+    .filter-chip-label {
+        color: rgba(255, 255, 255, 0.82);
+        font-weight: 700;
+        margin-right: .15rem;
+    }
+    .filter-chip {
+        border-radius: 999px;
+        padding: .45rem .9rem;
+        font-weight: 700;
+        transition: all .2s ease;
+        user-select: none;
+    }
+    .btn-check:checked + .filter-chip {
+        background: #ffffff;
+        color: #2356a8;
+        border-color: #ffffff;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+    }
     @media (max-width: 767px) {
         .hero-title {
             font-size: 1.5rem;
@@ -176,16 +214,13 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const select = document.getElementById('matr_aluno');
-        const obrigatorias = document.getElementById('apenas_obrigatorias');
         const pendentes = document.getElementById('apenas_pendentes');
+        const eletivas = document.getElementById('mostrar_eletivas');
+        const optativas = document.getElementById('mostrar_optativas');
+        const demais = document.getElementById('mostrar_demais');
         const form = document.getElementById('filtros-form');
         if (select) {
             select.addEventListener('change', function () {
-                form.submit();
-            });
-        }
-        if (obrigatorias) {
-            obrigatorias.addEventListener('change', function () {
                 form.submit();
             });
         }
@@ -194,11 +229,53 @@
                 form.submit();
             });
         }
+        if (eletivas) {
+            eletivas.addEventListener('change', function () { form.submit(); });
+        }
+        if (optativas) {
+            optativas.addEventListener('change', function () { form.submit(); });
+        }
+        if (demais) {
+            demais.addEventListener('change', function () { form.submit(); });
+        }
 
         document.querySelectorAll('.progress-track-fill').forEach(function (bar) {
             const width = bar.getAttribute('data-width') || '0';
             bar.style.width = width + '%';
         });
+
+        // Mostrar disciplinar por tipo via checkboxes (persiste em localStorage)
+        const bodyEl = document.body;
+        const filters = [
+            [eletivas, 'samg_show_eletivas'],
+            [optativas, 'samg_show_optativas'],
+            [demais, 'samg_show_demais'],
+        ];
+        filters.forEach(function ([checkbox, storageKey]) {
+            if (!checkbox) return;
+            checkbox.addEventListener('change', function () {
+                if (checkbox.checked) bodyEl.classList.add(storageKey); else bodyEl.classList.remove(storageKey);
+                try { localStorage.setItem(storageKey, checkbox.checked ? '1' : '0'); } catch (e) {}
+            });
+            try {
+                if (localStorage.getItem(storageKey) === '1') {
+                    bodyEl.classList.add(storageKey);
+                    checkbox.checked = true;
+                }
+            } catch (e) {}
+        });
+
+        // Períodos colapsáveis: botões que expandem/colapsam a .period-body
+        document.querySelectorAll('.period-toggle').forEach(function(btn){
+            btn.addEventListener('click', function(){
+                const card = btn.closest('.period-card');
+                if (!card) return;
+                const expanded = card.classList.toggle('expanded');
+                btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+                btn.textContent = expanded ? 'Ocultar' : 'Ver';
+            });
+        });
+
     });
 </script>
 {% endblock %}
@@ -220,15 +297,22 @@
                         <option value="{{ aluno.id }}" {% if selected_id == aluno.id %}selected{% endif %}>{{ aluno.label }}</option>
                     {% endfor %}
                 </select>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="apenas_obrigatorias" name="apenas_obrigatorias" value="1" {% if apenas_obrigatorias %}checked{% endif %}>
-                    <label class="form-check-label text-white" for="apenas_obrigatorias">Apenas obrigatórias</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="apenas_pendentes" name="apenas_pendentes" value="1" {% if apenas_pendentes %}checked{% endif %}>
-                    <label class="form-check-label text-white" for="apenas_pendentes">Apenas pendentes</label>
-                </div>
             </form>
+        </div>
+        <div class="filter-chips">
+            <span class="filter-chip-label">Filtros rápidos</span>
+
+            <input class="btn-check" type="checkbox" id="apenas_pendentes" name="apenas_pendentes" value="1" {% if apenas_pendentes %}checked{% endif %}>
+            <label class="btn btn-outline-light filter-chip" for="apenas_pendentes">Pendentes</label>
+
+            <input class="btn-check" type="checkbox" id="mostrar_eletivas" name="mostrar_eletivas" value="1" {% if mostrar_eletivas %}checked{% endif %}>
+            <label class="btn btn-outline-light filter-chip" for="mostrar_eletivas">Eletivas</label>
+
+            <input class="btn-check" type="checkbox" id="mostrar_optativas" name="mostrar_optativas" value="1" {% if mostrar_optativas %}checked{% endif %}>
+            <label class="btn btn-outline-light filter-chip" for="mostrar_optativas">Optativas</label>
+
+            <input class="btn-check" type="checkbox" id="mostrar_demais" name="mostrar_demais" value="1" {% if mostrar_demais %}checked{% endif %}>
+            <label class="btn btn-outline-light filter-chip" for="mostrar_demais">Outras</label>
         </div>
     </div>
 
@@ -290,9 +374,12 @@
                         <div>
                             <h2>{{ periodo.periodo_label }}</h2>
                             <small>{{ periodo.concluidas }}/{{ periodo.total }} disciplinas concluídas</small>
-                            <div class="small mt-1">{{ periodo.carga_horaria_concluida }}h de {{ periodo.carga_horaria_total }}h pendentes</div>
+                            <div class="small mt-1">{{ periodo.carga_horaria_concluida }}h / {{ periodo.carga_horaria_total }}h</div>
                         </div>
-                        <div class="period-percent">{{ periodo.percentual }}%</div>
+                        <div style="display:flex;gap:1rem;align-items:center;">
+                            <div class="period-percent">{{ periodo.percentual }}%</div>
+                            <button type="button" class="btn btn-sm btn-outline-light period-toggle" aria-expanded="false">Ver</button>
+                        </div>
                     </div>
                     <div class="period-body">
                         <div class="progress-track">
@@ -304,7 +391,7 @@
                             {% if periodo.disciplinas_concluidas %}
                                 <div class="discipline-list">
                                     {% for disc in periodo.disciplinas_concluidas %}
-                                    <div class="discipline-item">
+                                    <div class="discipline-item {% if disc.eletiva %}eletiva{% elif disc.optativa %}optativa{% elif disc.demais %}demais{% endif %}">
                                         <div class="discipline-main">
                                             <div class="discipline-code">{{ disc.sigla }}</div>
                                             <p class="discipline-name">{{ disc.nome }}</p>
@@ -331,7 +418,7 @@
                             {% if periodo.disciplinas_pendentes %}
                                 <div class="discipline-list">
                                     {% for disc in periodo.disciplinas_pendentes %}
-                                    <div class="discipline-item">
+                                    <div class="discipline-item {% if disc.eletiva %}eletiva{% elif disc.optativa %}optativa{% elif disc.demais %}demais{% endif %}">
                                         <div class="discipline-main">
                                             <div class="discipline-code">{{ disc.sigla }}</div>
                                             <p class="discipline-name">{{ disc.nome }}</p>

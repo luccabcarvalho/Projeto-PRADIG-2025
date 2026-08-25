@@ -15,6 +15,14 @@ def normaliza_media_final(value):
         return ''
     return text
 
+# Mapeamento entre código de versão (20232) e NUM VERSAO no arquivo consolidado (2023/2)
+VERSION_MAPPING = {
+    '20232': '2023/2',
+    '20052': '2000/2',
+    '20002': '2000/2',
+    '20081': '2008/1',
+}
+
 def matriz_de_progressao(request):
     if not request.GET:
         return redirect(f"{reverse('matriz_de_progressao')}?curriculos=20232&tipo_disciplina=obrigatoria")
@@ -29,21 +37,22 @@ def matriz_de_progressao(request):
     df_alunos = pd.read_csv(alunos_path)
     df_historico = pd.read_csv(historico_path)
 
-    df_disciplinas_20232 = pd.read_csv(os.path.join(CURRICULOS_DIR, 'curriculo-20232.csv'))
-    df_disciplinas_20052 = pd.read_csv(os.path.join(CURRICULOS_DIR, 'curriculo-20052.csv'))
-    df_disciplinas_20002 = pd.read_csv(os.path.join(CURRICULOS_DIR, 'curriculo-20002.csv'))
-    df_disciplinas_20081 = pd.read_csv(os.path.join(CURRICULOS_DIR, 'curriculo-20081.csv'))
+    df_disciplinas_todos = pd.read_csv(os.path.join(CURRICULOS_DIR, 'curriculos-bsi.csv'))
 
     # --- Filtros ---
     filtro_ativos = request.GET.get('ativos', 'todos')
     filtro_curriculos = request.GET.getlist('curriculos')
     filtro_tipo_disciplina = request.GET.get('tipo_disciplina', 'obrigatoria')
-    curriculos_map = {
-        '20232': df_disciplinas_20232,
-        '20052': df_disciplinas_20052,
-        '20002': df_disciplinas_20002,
-        '20081': df_disciplinas_20081,
-    }
+    
+    curriculos_map = {}
+    for versao in ['20232', '20052', '20002', '20081']:
+        if 'NUM VERSAO' in df_disciplinas_todos.columns:
+            versao_num = VERSION_MAPPING.get(versao, versao)
+            df_versao = df_disciplinas_todos[df_disciplinas_todos['NUM VERSAO'].astype(str).str.strip() == versao_num]
+            if not df_versao.empty:
+                curriculos_map[versao] = df_versao
+        else:
+            curriculos_map[versao] = df_disciplinas_todos
     curriculos_options = [
         {'value': '20232', 'label': 'Currículo 2023/2', 'selected': '20232' in filtro_curriculos},
         {'value': '20052', 'label': 'Currículo 2005/2', 'selected': '20052' in filtro_curriculos},
@@ -99,15 +108,17 @@ def matriz_de_progressao(request):
             if df is not None:
                 disciplinas = filtrar_disciplinas(df, curr, filtro_tipo_disciplina)
                 disciplinas_set.update(disciplinas)
-        df_ord = curriculos_map.get(filtro_curriculos[0], df_disciplinas_20232)
+        df_ord = curriculos_map.get(filtro_curriculos[0], curriculos_map.get('20232'))
         disciplinas_list = ordenar_disciplinas_por_periodo(df_ord, disciplinas_set)
     else:
         disciplinas_set = set()
-        disciplinas_set.update(filtrar_disciplinas(df_disciplinas_20232, '20232', filtro_tipo_disciplina))
-        disciplinas_set.update(filtrar_disciplinas(df_disciplinas_20052, '20052', filtro_tipo_disciplina))
-        disciplinas_set.update(filtrar_disciplinas(df_disciplinas_20002, '20002', filtro_tipo_disciplina))
-        disciplinas_set.update(filtrar_disciplinas(df_disciplinas_20081, '20081', filtro_tipo_disciplina))
-        disciplinas_list = ordenar_disciplinas_por_periodo(df_disciplinas_20232, disciplinas_set)
+        for versao in ['20232', '20052', '20002', '20081']:
+            df = curriculos_map.get(versao)
+            if df is not None:
+                disciplinas = filtrar_disciplinas(df, versao, filtro_tipo_disciplina)
+                disciplinas_set.update(disciplinas)
+        df_ord = curriculos_map.get('20232')
+        disciplinas_list = ordenar_disciplinas_por_periodo(df_ord, disciplinas_set)
 
     df_alunos['MATR ALUNO'] = df_alunos['MATR ALUNO'].astype(str)
     df_alunos = df_alunos.drop_duplicates(subset=['MATR ALUNO'])

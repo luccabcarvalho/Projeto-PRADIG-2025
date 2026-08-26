@@ -25,12 +25,28 @@ def dicionario_de_equivalencias():
         mapeamento[novo].append(antigo) # Anexa o código antigo na lista do código novo equivalente
     return mapeamento
 
+def dicionario_ch_curriculos():
+    # Mapeia cada currículo (NUM VERSAO) para sua carga horária total de curso (CH TOTAL CURSO)
+    USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID)
+    curriculos_path = os.path.join(USER_DIR, 'curriculos-bsi.csv')
+    df = pd.read_csv(curriculos_path, encoding='utf-8', sep=';')
+    # O arquivo tem uma linha por disciplina cadastrada em cada currículo, então NUM VERSAO se repete várias
+    # vezes; CH TOTAL CURSO é constante dentro do mesmo NUM VERSAO, então basta a primeira ocorrência de cada versão
+    ch_map = (
+        df[['NUM VERSAO', 'CH TOTAL CURSO']]
+        .drop_duplicates(subset='NUM VERSAO')
+        .set_index('NUM VERSAO')['CH TOTAL CURSO']
+        .to_dict()
+    )
+    return ch_map
+
 def progressao_turma(request):
     USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID) # Definindo caminhos dos arquivos
     alunos_path = os.path.join(USER_DIR, 'alunosPorCurso.csv')
     historico_path = os.path.join(USER_DIR, 'historicoEscolar.csv')
 
     equiv_map = dicionario_de_equivalencias() # Carrega o dicionário de equivalências
+    ch_curriculos = dicionario_ch_curriculos() # Carrega a CH total de cada currículo (NUM VERSAO -> CH TOTAL CURSO)
     
     equiv_map_reverso = {}
     for novo, antigos in equiv_map.items():
@@ -73,6 +89,9 @@ def progressao_turma(request):
         turma = df_alunos['TURMA'].iloc[0] # Se o parâmetro não for válido, seleciona a primeira turma disponível
 
     matriculas_turma = df_alunos[df_alunos['TURMA'] == turma]['ID PESSOA'] # Filtra os alunos das turmas selecionadas
+    # Currículos (NUM VERSAO) que os alunos dessa turma efetivamente cursaram, usados para desenhar
+    # uma linha de CH de referência por currículo (turmas mistas podem ter mais de um)
+    curriculos_da_turma = sorted(df_alunos.loc[df_alunos['TURMA'] == turma, 'NUM VERSAO'].dropna().unique())
     dados_turma = df_historico[df_historico['ID PESSOA'].isin(matriculas_turma)].copy() # O isin filtra o histórico, deixando apenas os registros da turma selecionada
     if dados_turma.empty:
         turmas_options = [ # Cria as opções de turmas para o dropdown
@@ -323,20 +342,33 @@ def progressao_turma(request):
         for pos, i in enumerate(indices):
             linha = linhas[i]
             y_original = list(linha.y)
-            offset = (pos - (n - 1) / 2) * 60
+            offset = (pos - (n - 1) / 2) * 15
             linha.y = [v + offset for v in y_original]
             linha.customdata = [list(cd) + [y_original[j]] for j, cd in enumerate(linha.customdata)]
             linha.hovertemplate = linha.hovertemplate.replace('%{y}h', '%{customdata[3]}h')
 
-    carga_referencia = 3240
-    linha_referencia = go.Scatter(  # Cria uma linha de referência para a carga horária total
-        x=periodos,
-        y=[carga_referencia] * len(periodos),
-        mode='lines',
-        name='C.H. Total',
-        line=dict(color='rgba(100,100,100,0.3)')
-    )
-    linhas.append(linha_referencia)
+    # Adiciona uma linha de CH total de referência para cada currículo que os alunos da turma cursaram
+    # (turmas mistas, com alunos em currículos diferentes, mostram uma linha por currículo em vez de um valor fixo)
+    CORES_REFERENCIA = [
+        'rgba(100,100,100,0.6)',
+        'rgba(31,119,180,0.6)',
+        'rgba(214,39,40,0.6)',
+        'rgba(148,103,189,0.6)',
+        'rgba(255,127,14,0.6)',
+    ]
+    for i, versao in enumerate(curriculos_da_turma):
+        carga_referencia = ch_curriculos.get(versao) # CH total cadastrada em curriculos-bsi.csv para esse currículo
+        if carga_referencia is None: # Currículo sem CH total cadastrada em curriculos-bsi.csv: pula em vez de quebrar o gráfico
+            continue
+        linha_referencia = go.Scatter(  # Cria uma linha de referência para a carga horária total desse currículo
+            x=periodos,
+            y=[carga_referencia] * len(periodos),
+            mode='lines',
+            name=f'C.H. Total - {versao} ({carga_referencia}h)',
+            line=dict(color=CORES_REFERENCIA[i % len(CORES_REFERENCIA)], dash='dash'),
+            hovertemplate=f'C.H. Total - Currículo {versao}: %{{y}}h<extra></extra>', # Sem período: só CH total e o currículo a que ela pertence
+        )
+        linhas.append(linha_referencia)
 
     # Cria a figura usando as linhas criadas anteriormente
     fig = go.Figure(linhas)

@@ -1,8 +1,13 @@
 {
+    "python.defaultInterpreterPath": "${workspaceFolder}\\pradigEnv2025\\Scripts\\python.exe",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}\\SistemaDeAnaliseAcademicaUnirio"
+    ],
+
     "python.testing.unittestArgs": [
         "-v",
         "-s",
-        "./sistemaDeAnaliseAcademicaUnirio",
+        "./SistemaDeAnaliseAcademicaUnirio",
         "-p",
         "*test.py"
     ],

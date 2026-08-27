@@ -156,8 +156,21 @@ def carregaCurriculo(version):
     ])
     if not curriculo_path:
         return None
-
-    df = pd.read_csv(curriculo_path)
+    df = None
+    # 1) tentativa padrão com utf-8-sig
+    try:
+        df = pd.read_csv(curriculo_path, encoding='utf-8-sig')
+    except Exception as e1:
+        # tenta com separador ";"
+        try:
+            df = pd.read_csv(curriculo_path, sep=';', engine='python', encoding='utf-8-sig')
+        except Exception as e2:
+            # tenta com latin-1 
+            try:
+                df = pd.read_csv(curriculo_path, sep=';', engine='python', encoding='latin-1')
+            except Exception:
+                # Falha ao ler o CSV
+                return None
     versao_codigo = versaoCurriculo(version)
     # Mapeia código de versão para NUM VERSAO no arquivo consolidado
     versao_num = VERSION_MAPPING.get(versao_codigo, versao_codigo)

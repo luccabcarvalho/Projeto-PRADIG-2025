@@ -55,8 +55,8 @@ def progressao_turma(request):
                 equiv_map_reverso[antigo] = []
             equiv_map_reverso[antigo].append(novo)
 
-    df_historico = pd.read_csv(historico_path) # Carregamento dos dados
-    df_alunos = pd.read_csv(alunos_path)
+    df_historico = pd.read_csv(historico_path, sep=None, engine='python') # Carregamento dos dados
+    df_alunos = pd.read_csv(alunos_path, sep=None, engine='python')
 
     df_historico['PERIODO_NUM'] = df_historico['PERIODO'].str.extract(r'(\d)')[0].astype(float) # Extrai o número do período
     df_historico = df_historico.sort_values(['MATR ALUNO', 'COD ATIV CURRIC', 'ANO', 'PERIODO_NUM']) # Ordena o histórico por aluno, disciplina, ano e período
@@ -376,7 +376,7 @@ def progressao_turma(request):
         font=dict(size=18),
         xaxis_title='Ano - Período',
         yaxis_title='Carga Horária',
-        xaxis=dict(tickfont=dict(size=16)),
+        xaxis=dict(tickfont=dict(size=16), categoryorder='array', categoryarray=periodos),
         yaxis=dict(tickfont=dict(size=16)),
         height=800,
         autosize=True,

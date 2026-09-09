@@ -11,10 +11,9 @@ from samg.frontend.common import (
     carregaEquivalencias,
     getMatriculaAluno,
     versaoCurriculo,
+    obter_proxima_versao,
+    VERSION_MAPPING,
 )
-
-
-DEFAULT_CURRICULO_VERSION = '20232'
 
 
 USER_ID = 'user1'
@@ -35,7 +34,7 @@ def migracao(request):
             'selected_id': '',
             'aluno_nome': '',
             'curriculo_atual': '',
-            'curriculo_novo': '20232',
+            'curriculo_novo': '',
             'resumo': {'total_atual': 0, 'total_novo': 0, 'reaproveitadas': 0, 'aproveitamento': 0},
             'disciplinas_reaproveitadas': [],
             'disciplinas_nao_reaproveitadas': [],
@@ -56,7 +55,7 @@ def migracao(request):
             'selected_id': '',
             'aluno_nome': '',
             'curriculo_atual': '',
-            'curriculo_novo': '20232',
+            'curriculo_novo': '',
             'resumo': {'total_atual': 0, 'total_novo': 0, 'reaproveitadas': 0, 'aproveitamento': 0},
             'disciplinas_reaproveitadas': [],
             'disciplinas_nao_reaproveitadas': [],
@@ -74,7 +73,7 @@ def migracao(request):
             'selected_id': selected_id,
             'aluno_nome': '',
             'curriculo_atual': '',
-            'curriculo_novo': '20232',
+            'curriculo_novo': '',
             'resumo': {'total_atual': 0, 'total_novo': 0, 'reaproveitadas': 0, 'aproveitamento': 0},
             'disciplinas_reaproveitadas': [],
             'disciplinas_nao_reaproveitadas': [],
@@ -86,11 +85,48 @@ def migracao(request):
 
     aluno_row = aluno_row.iloc[0]
     aluno_nome = str(aluno_row.get('NOME PESSOA', '')).strip()
-    curriculo_atual_label = str(aluno_row.get('NUM VERSAO', '')).strip() or DEFAULT_CURRICULO_VERSION
-    curriculo_atual = versaoCurriculo(aluno_row.get('NUM VERSAO', DEFAULT_CURRICULO_VERSION))
+    curriculo_atual_label = str(aluno_row.get('NUM VERSAO', '')).strip()
+    curriculo_atual = versaoCurriculo(aluno_row.get('NUM VERSAO'))
+
+    # Determina o próximo currículo cronologicamente
+    curriculo_novo, versao_encontrada = obter_proxima_versao(curriculo_atual)
+    
+    if not versao_encontrada:
+        return render(request, 'migracao.html', {
+            'message': f'Versão de currículo "{curriculo_atual}" não encontrada no sistema.',
+            'alunos_options': alunos_options,
+            'selected_id': selected_id,
+            'aluno_nome': aluno_nome,
+            'curriculo_atual': curriculo_atual_label,
+            'curriculo_novo': '',
+            'resumo': {'total_atual': 0, 'total_novo': 0, 'reaproveitadas': 0, 'aproveitamento': 0},
+            'disciplinas_reaproveitadas': [],
+            'disciplinas_nao_reaproveitadas': [],
+            'apenas_pendentes': apenas_pendentes,
+            'mostrar_eletivas': mostrar_eletivas,
+            'mostrar_optativas': mostrar_optativas,
+            'mostrar_demais': mostrar_demais,
+        })
+    
+    if curriculo_novo is None:
+        return render(request, 'migracao.html', {
+            'message': 'O aluno já está no currículo mais recente.',
+            'alunos_options': alunos_options,
+            'selected_id': selected_id,
+            'aluno_nome': aluno_nome,
+            'curriculo_atual': curriculo_atual_label,
+            'curriculo_novo': '',
+            'resumo': {'total_atual': 0, 'total_novo': 0, 'reaproveitadas': 0, 'aproveitamento': 0},
+            'disciplinas_reaproveitadas': [],
+            'disciplinas_nao_reaproveitadas': [],
+            'apenas_pendentes': apenas_pendentes,
+            'mostrar_eletivas': mostrar_eletivas,
+            'mostrar_optativas': mostrar_optativas,
+            'mostrar_demais': mostrar_demais,
+        })
 
     df_curriculo_atual = carregaCurriculo(curriculo_atual)
-    df_curriculo_novo = carregaCurriculo(DEFAULT_CURRICULO_VERSION)
+    df_curriculo_novo = carregaCurriculo(curriculo_novo)
     if df_curriculo_atual is None or df_curriculo_novo is None:
         return render(request, 'migracao.html', {
             'message': 'Não foi possível carregar um dos currículos necessários para a comparação.',
@@ -98,7 +134,7 @@ def migracao(request):
             'selected_id': selected_id,
             'aluno_nome': aluno_nome,
             'curriculo_atual': curriculo_atual_label,
-            'curriculo_novo': DEFAULT_CURRICULO_VERSION,
+            'curriculo_novo': curriculo_novo,
             'resumo': {'total_atual': 0, 'total_novo': 0, 'reaproveitadas': 0, 'aproveitamento': 0},
             'disciplinas_reaproveitadas': [],
             'disciplinas_nao_reaproveitadas': [],
@@ -127,7 +163,7 @@ def migracao(request):
             'selected_id': selected_id,
             'aluno_nome': aluno_nome,
             'curriculo_atual': curriculo_atual_label,
-            'curriculo_novo': DEFAULT_CURRICULO_VERSION,
+            'curriculo_novo': curriculo_novo,
             'resumo': {'total_atual': 0, 'total_novo': 0, 'reaproveitadas': 0, 'aproveitamento': 0},
             'disciplinas_reaproveitadas': [],
             'disciplinas_nao_reaproveitadas': [],
@@ -178,13 +214,16 @@ def migracao(request):
         'aproveitadas_pelo_aluno_filtrado': aproveitadas_pelo_aluno_filtrado,
     }
 
+    # Mapeia curriculo_novo para formato com /
+    curriculo_novo_label = VERSION_MAPPING.get(curriculo_novo, curriculo_novo)
+    
     return render(request, 'migracao.html', {
         'message': '',
         'alunos_options': alunos_options,
         'selected_id': selected_id,
         'aluno_nome': aluno_nome,
         'curriculo_atual': curriculo_atual_label,
-        'curriculo_novo': DEFAULT_CURRICULO_VERSION,
+        'curriculo_novo': curriculo_novo_label,  
         'resumo': resumo_filtrado,
         'disciplinas_reaproveitadas': comparacao_filtrada['disciplinas_reaproveitadas'],
         'disciplinas_nao_reaproveitadas': comparacao_filtrada['disciplinas_nao_reaproveitadas'],

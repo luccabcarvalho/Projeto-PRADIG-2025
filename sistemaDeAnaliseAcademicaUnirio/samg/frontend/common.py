@@ -8,19 +8,40 @@ from django.conf import settings
 
 
 USER_ID = 'user1'
-DEFAULT_CURRICULO_VERSION = '20232'
 CURRICULO_FILE = 'curriculos-bsi.csv'
 
 # Mapeamento entre código de versão (20232) e NUM VERSAO no arquivo consolidado (2023/2)
 VERSION_MAPPING = {
     '20232': '2023/2',
-    '20052': '2000/2',
+    '20052': '2005/2',
     '20002': '2000/2',
     '20081': '2008/1',
 }
 
+def obter_versoes_disponiveis():
+    
+    # Ordena as versões com base no mapeamento de NUM VERSAO para código de versão
+    return sorted(VERSION_MAPPING.keys())
+
+
+def obter_proxima_versao(versao_atual):
+
+    # Obtém a lista de versões disponíveis
+    versoes = obter_versoes_disponiveis()
+    
+    if versao_atual not in versoes:
+        return None, False
+    
+    indice_atual = versoes.index(versao_atual)
+    
+    # Verifica se existe uma próxima versão
+    if indice_atual + 1 < len(versoes):
+        return versoes[indice_atual + 1], True
+    else:
+        return None, True  # Versão atual encontrada, mas é a última
+
+
 STATUS_CONCLUIDAS = {
-    'APV - Aprovado',
     'APV- Aprovado',
     'APV - Aprovado sem nota',
     'ADI - Aproveitamento',
@@ -74,7 +95,7 @@ def extract_sigla(value):
 
 
 def versaoCurriculo(value):
-    return re.sub(r'\D', '', '' if pd.isna(value) else str(value)) or DEFAULT_CURRICULO_VERSION
+    return re.sub(r'\D', '', '' if pd.isna(value) else str(value))
 
 
 def carregaBD():

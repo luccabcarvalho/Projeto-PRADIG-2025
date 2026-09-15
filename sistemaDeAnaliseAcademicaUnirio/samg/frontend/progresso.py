@@ -254,10 +254,10 @@ def progresso(request):
 
         concluidas = int(sum(1 for disciplina in disciplinas_periodo if disciplina['concluida']))
         pendentes = int(len(disciplinas_periodo) - concluidas)
-        percentual = round((concluidas / len(disciplinas_periodo)) * 100, 1) if disciplinas_periodo else 0
         carga_total = int(sum((d['carga_horaria'] or 0) for d in disciplinas_periodo))
         carga_cursada = int(sum((d['carga_horaria'] or 0) for d in disciplinas_periodo if d['status_raw'] == 'APV- Aprovado'))
         carga_concluida = int(sum((d['carga_horaria'] or 0) for d in disciplinas_periodo if d['concluida']))
+        percentual = round((carga_cursada / carga_total) * 100, 1) if carga_total else 0
 
         curriculo_grade.append({
             'periodo': int(periodo_ideal) if pd.notna(periodo_ideal) else periodo_ideal,
@@ -300,10 +300,20 @@ def progresso(request):
         pendentes_filtradas = [d for d in disciplinas_filtradas if not d['concluida']]
         total_filtrado = len(disciplinas_filtradas)
         total_concluidas_filtrado = len(concluidas_filtradas)
-        percentual_filtrado = round((total_concluidas_filtrado / total_filtrado) * 100, 1) if total_filtrado else 0
-        carga_total_filtrada = int(sum((d['carga_horaria'] or 0) for d in disciplinas_filtradas))
-        carga_cursada_filtrada = int(sum((d['carga_horaria'] or 0) for d in disciplinas_filtradas if d['status_raw'] == 'APV- Aprovado'))
-        carga_concluida_filtrada = sum((d['carga_horaria'] or 0) for d in disciplinas_filtradas if d['concluida'])
+
+        carga_total_filtrada = int(round(sum((d['carga_horaria'] or 0) for d in disciplinas_filtradas)))
+        carga_cursada_filtrada = int(round(sum(
+            (d['carga_horaria'] or 0)
+            for d in disciplinas_filtradas
+            if d['status_raw'] == 'APV- Aprovado'
+        )))
+        carga_concluida_filtrada = int(round(sum(
+            (d['carga_horaria'] or 0)
+            for d in disciplinas_filtradas
+            if d['concluida']
+        )))
+
+        percentual_filtrado = round((carga_cursada_filtrada / carga_total_filtrada) * 100, 1) if carga_total_filtrada else 0
 
         filtered_curriculo_grade.append({
             'periodo': periodo['periodo'],
@@ -312,23 +322,45 @@ def progresso(request):
             'concluidas': total_concluidas_filtrado,
             'pendentes': len(pendentes_filtradas),
             'percentual': percentual_filtrado,
-            'carga_horaria_total': carga_total_filtrada,
-            'carga_horaria_cursada': carga_cursada_filtrada,
-            'carga_horaria_concluida': carga_concluida_filtrada,
+            'carga_horaria_total': int(carga_total_filtrada),
+            'carga_horaria_cursada': int(carga_cursada_filtrada),
+            'carga_horaria_concluida': int(carga_concluida_filtrada),
             'carga_horaria_pendente': int(max(carga_total_filtrada - carga_cursada_filtrada, 0)),
             'disciplinas': disciplinas_filtradas,
             'disciplinas_concluidas': concluidas_filtradas,
             'disciplinas_pendentes': pendentes_filtradas,
         })
 
-    total_curriculo = sum(periodo['total'] for periodo in filtered_curriculo_grade)
-    total_concluidas = sum(periodo['concluidas'] for periodo in filtered_curriculo_grade)
+    total_curriculo = sum(periodo['total'] for periodo in curriculo_grade)
+    total_concluidas = sum(periodo['concluidas'] for periodo in curriculo_grade)
     total_pendentes = total_curriculo - total_concluidas
-    percentual_geral = round((total_concluidas / total_curriculo) * 100, 1) if total_curriculo else 0
     carga_total_geral = carga_total_curriculo
     carga_cursada_geral = int(historico_carga_cursada)
-    carga_concluida_geral = sum(periodo.get('carga_horaria_concluida', 0) for periodo in filtered_curriculo_grade)
+    carga_concluida_geral = sum(periodo.get('carga_horaria_concluida', 0) for periodo in curriculo_grade)
     carga_pendente_geral = int(max(carga_total_geral - carga_cursada_geral, 0))
+    percentual_geral = round((carga_cursada_geral / carga_total_geral) * 100, 1) if carga_total_geral else 0
+
+    obrigatorias_total = sum(
+        1
+        for periodo in curriculo_grade
+        for disciplina in periodo['disciplinas']
+        if disciplina.get('obrigatoria')
+    )
+    obrigatorias_concluidas = sum(
+        1
+        for periodo in curriculo_grade
+        for disciplina in periodo['disciplinas']
+        if disciplina.get('obrigatoria') and disciplina.get('concluida')
+    )
+    obrigatorias_pendentes = int(max(obrigatorias_total - obrigatorias_concluidas, 0))
+    obrigatorias_percentual = round((obrigatorias_concluidas / obrigatorias_total) * 100, 1) if obrigatorias_total else 0
+
+    outras_total = sum(
+        1
+        for periodo in curriculo_grade
+        for disciplina in periodo['disciplinas']
+        if not disciplina.get('obrigatoria')
+    )
 
     return render(request, 'progresso.html', {
         'message': '',
@@ -348,6 +380,11 @@ def progresso(request):
             'carga_horaria_cursada': carga_cursada_geral,
             'carga_horaria_concluida': carga_concluida_geral,
             'carga_horaria_pendente': carga_pendente_geral,
+            'obrigatorias_total': obrigatorias_total,
+            'obrigatorias_concluidas': obrigatorias_concluidas,
+            'obrigatorias_pendentes': obrigatorias_pendentes,
+            'obrigatorias_percentual': obrigatorias_percentual,
+            'outras_total': outras_total,
         },
         'apenas_pendentes': apenas_pendentes,
         'mostrar_eletivas': mostrar_eletivas,

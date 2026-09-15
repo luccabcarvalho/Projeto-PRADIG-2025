@@ -362,6 +362,13 @@ def compare_curriculos(df_curriculo_atual, df_curriculo_novo, historico_concluid
     # Se não passar o DataFrame de equivalências, carrega automaticamente
     if df_equivalencias is None:
         df_equivalencias = carregaEquivalencias()
+
+    def _carga_horaria_row(row):
+        valor = row.get('CH TOTAL', 0)
+        numero = pd.to_numeric(valor, errors='coerce')
+        if pd.isna(numero):
+            return 0
+        return float(numero)
     
     # Indexa novo currículo por nome normalizado como fallback
     novo_por_nome = {
@@ -429,6 +436,7 @@ def compare_curriculos(df_curriculo_atual, df_curriculo_novo, historico_concluid
             'codigo_atual': codigo_atual,
             'nome_atual': nome_atual,
             'periodo_atual': row.get('PERIODO IDEAL_NUM', ''),
+            'carga_horaria_atual': _carga_horaria_row(row),
             'concluida': concluida,
             'tipo_disciplina': tipo_disciplina,
             'obrigatoria': obrigatoria,
@@ -454,9 +462,12 @@ def compare_curriculos(df_curriculo_atual, df_curriculo_novo, historico_concluid
     total_novo = len(df_curriculo_novo.drop_duplicates(subset=['NOME NORMALIZADO']))
     equivalencias_possiveis_grade = len([item for item in comparacao if item['reaproveitada']])
     aproveitadas_pelo_aluno = len([item for item in comparacao if item['reaproveitada'] and item['concluida']])
+    carga_horaria_total_atual = sum(float(item.get('carga_horaria_atual', 0) or 0) for item in comparacao)
+    carga_horaria_reaproveitavel = sum(float(item.get('carga_horaria_atual', 0) or 0) for item in comparacao if item['reaproveitada'])
+    carga_horaria_aproveitada_pelo_aluno = sum(float(item.get('carga_horaria_atual', 0) or 0) for item in comparacao if item['reaproveitada'] and item['concluida'])
     reaproveitadas = equivalencias_possiveis_grade
-    aproveitamento = round((reaproveitadas / total_atual) * 100, 1) if total_atual else 0
-    aproveitamento_pelo_aluno = round((aproveitadas_pelo_aluno / equivalencias_possiveis_grade) * 100, 1) if equivalencias_possiveis_grade else 0
+    aproveitamento = round((carga_horaria_reaproveitavel / carga_horaria_total_atual) * 100, 1) if carga_horaria_total_atual else 0
+    aproveitamento_pelo_aluno = round((carga_horaria_aproveitada_pelo_aluno / carga_horaria_reaproveitavel) * 100, 1) if carga_horaria_reaproveitavel else 0
 
     return {
         'comparacao': comparacao,
@@ -470,5 +481,8 @@ def compare_curriculos(df_curriculo_atual, df_curriculo_novo, historico_concluid
             'equivalencias_possiveis_grade': equivalencias_possiveis_grade,
             'aproveitadas_pelo_aluno': aproveitadas_pelo_aluno,
             'aproveitamento_pelo_aluno': aproveitamento_pelo_aluno,
+            'carga_horaria_total_atual': carga_horaria_total_atual,
+            'carga_horaria_reaproveitavel': carga_horaria_reaproveitavel,
+            'carga_horaria_aproveitada_pelo_aluno': carga_horaria_aproveitada_pelo_aluno,
         },
     }

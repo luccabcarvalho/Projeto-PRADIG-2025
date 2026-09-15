@@ -36,6 +36,29 @@
         color: #5f6f86;
         margin-top: .25rem;
     }
+    .summary-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+        margin-top: .85rem;
+    }
+    .summary-badge {
+        font-size: .85rem;
+        font-weight: 600;
+        color: #5f6f86;
+    }
+    .summary-progress-wrap {
+        margin-top: .85rem;
+    }
+    .summary-progress {
+        height: 10px;
+        border-radius: 999px;
+        background: #eef3fb;
+        overflow: hidden;
+    }
+    .summary-progress .progress-bar {
+        border-radius: 999px;
+    }
     .period-card {
         border: 0;
         border-radius: 18px;
@@ -93,31 +116,10 @@
         background: linear-gradient(90deg, #198754 0%, #28a745 100%);
         border-radius: 999px;
     }
-    .discipline-group {
-        margin-bottom: 1.25rem;
-    }
     .discipline-group:last-child {
         margin-bottom: 0;
     }
-    .discipline-group h3 {
-        font-size: 1rem;
-        font-weight: 700;
-        margin-bottom: .75rem;
-        color: #1c355e;
-    }
-    .discipline-list {
-        display: flex;
-        flex-direction: column;
-        gap: .65rem;
-    }
-    .discipline-item {
-        display: flex;
-        justify-content: space-between;
-        gap: 1rem;
-        align-items: flex-start;
-        padding: .8rem .9rem;
-        border: 1px solid #e7edf7;
-        border-radius: 14px;
+    .period-body {
         background: #fbfdff;
     }
     
@@ -239,7 +241,7 @@
             demais.addEventListener('change', function () { form.submit(); });
         }
 
-        document.querySelectorAll('.progress-track-fill').forEach(function (bar) {
+        document.querySelectorAll('.progress-track-fill, .summary-progress-fill').forEach(function (bar) {
             const width = bar.getAttribute('data-width') || '0';
             bar.style.width = width + '%';
         });
@@ -320,42 +322,70 @@
         <div class="alert alert-warning border-0 shadow-sm">{{ message }}</div>
     {% else %}
         <div class="row g-3 mb-4">
-            <div class="col-6 col-lg-3">
+            <div class="col-12 col-lg-4">
+                <div class="summary-card card p-3">
+                    <div class="text-muted small">Obrigatórias</div>
+                    <div class="summary-value text-success">{{ curriculoStats.obrigatorias_concluidas }} / {{ curriculoStats.obrigatorias_total }}</div>
+                    <div class="summary-subvalue">Concluídas</div>
+                    <div class="summary-progress-wrap">
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>Progresso das obrigatórias</span>
+                            <span>{{ curriculoStats.obrigatorias_percentual }}%</span>
+                        </div>
+                        <div class="summary-progress progress">
+                            <div
+                                class="progress-bar bg-success summary-progress-fill"
+                                role="progressbar"
+                                data-width="{{ curriculoStats.obrigatorias_percentual }}"
+                                aria-valuenow="{{ curriculoStats.obrigatorias_percentual }}"
+                                aria-valuemin="0"
+                                aria-valuemax="100"
+                            ></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-4">
+                <div class="summary-card card p-3">
+                    <div class="text-muted small">Pendências Reais</div>
+                    <div class="summary-value text-warning">{{ curriculoStats.obrigatorias_pendentes }}</div>
+                    <div class="summary-subvalue text-warning">Obrigatórias pendentes</div>
+                    <div class="summary-subvalue mt-2">Restam para concluir a grade obrigatória</div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-4">
+                <div class="summary-card card p-3">
+                    <div class="text-muted small">Carga Horária</div>
+                    <div class="summary-value">{{ curriculoStats.percentual|floatformat:1 }}%</div>
+                    <div class="summary-subvalue">Carga Horária Integralizada</div>
+                    <div class="summary-subvalue mt-2">{{ curriculoStats.carga_horaria_cursada|floatformat:0 }}h / {{ curriculoStats.carga_horaria_total|floatformat:0 }}h</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-lg-4">
                 <div class="summary-card card p-3">
                     <div class="text-muted small">Disciplinas na grade</div>
                     <div class="summary-value">{{ curriculoStats.total }}</div>
+                    <div class="summary-badges">
+                        <span class="summary-badge">Obrigatórias: {{ curriculoStats.obrigatorias_total }}</span>
+                        <span class="summary-badge">Outras: {{ curriculoStats.outras_total }}</span>
+                    </div>
                 </div>
             </div>
-            <div class="col-6 col-lg-3">
+            <div class="col-12 col-lg-4">
                 <div class="summary-card card p-3">
-                    <div class="text-muted small">Concluídas</div>
-                    <div class="summary-value text-success">{{ curriculoStats.concluidas }}</div>
+                    <div class="text-muted small">Carga Horária Cursada</div>
+                    <div class="summary-value text-success">{{ curriculoStats.carga_horaria_cursada|floatformat:0 }}h</div>
+                    <div class="summary-subvalue">Carga Horária Integralizada</div>
                 </div>
             </div>
-            <div class="col-6 col-lg-3">
+            <div class="col-12 col-lg-4">
                 <div class="summary-card card p-3">
-                    <div class="text-muted small">Pendentes</div>
-                    <div class="summary-value text-warning">{{ curriculoStats.pendentes }}</div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="summary-card card p-3">
-                    <div class="text-muted small">Progresso</div>
-                    <div class="summary-value">{{ curriculoStats.percentual }}%</div>
-                </div>
-            </div>
-            <div class="col-12 col-lg-6">
-                <div class="summary-card card p-3">
-                    <div class="text-muted small">Carga horária cursada</div>
-                    <div class="summary-value">{{ curriculoStats.carga_horaria_cursada }}h</div>
-                    
-                </div>
-            </div>
-            <div class="col-12 col-lg-6">
-                <div class="summary-card card p-3">
-                    <div class="text-muted small">Carga horária pendente</div>
-                    <div class="summary-value">{{ curriculoStats.carga_horaria_pendente }}h</div>
-                    
+                    <div class="text-muted small">Carga Horária Pendente</div>
+                    <div class="summary-value text-warning">{{ curriculoStats.carga_horaria_pendente|floatformat:0 }}h</div>
+                    <div class="summary-subvalue">Ainda a integralizar</div>
                 </div>
             </div>
         </div>

@@ -275,24 +275,38 @@ def progresso(request):
             'disciplinas_pendentes': [d for d in disciplinas_periodo if not d['concluida']],
         })
 
+    all_disciplinas = [
+        disciplina
+        for periodo in curriculo_grade
+        for disciplina in periodo['disciplinas']
+    ]
+    filter_counts = {
+        'pendentes': sum(1 for disciplina in all_disciplinas if not disciplina['concluida']),
+        'eletivas': sum(1 for disciplina in all_disciplinas if disciplina.get('eletiva')),
+        'optativas': sum(1 for disciplina in all_disciplinas if disciplina.get('optativa')),
+        'demais': sum(1 for disciplina in all_disciplinas if disciplina.get('demais')),
+    }
+
     filtered_curriculo_grade = []
     for periodo in curriculo_grade:
         disciplinas_filtradas = []
         for disciplina in periodo['disciplinas']:
-            if disciplina.get('obrigatoria'):
-                disciplinas_filtradas.append(disciplina)
-            elif disciplina.get('eletiva') and mostrar_eletivas:
-                disciplinas_filtradas.append(disciplina)
-            elif disciplina.get('optativa') and mostrar_optativas:
-                disciplinas_filtradas.append(disciplina)
-            elif disciplina.get('demais') and mostrar_demais:
-                disciplinas_filtradas.append(disciplina)
+            deve_incluir = disciplina.get('obrigatoria')
+            if not deve_incluir and disciplina.get('eletiva') and mostrar_eletivas:
+                deve_incluir = True
+            if not deve_incluir and disciplina.get('optativa') and mostrar_optativas:
+                deve_incluir = True
+            if not deve_incluir and disciplina.get('demais') and mostrar_demais:
+                deve_incluir = True
 
-        disciplinas_filtradas = filtrar_disciplinas(
-            disciplinas_filtradas,
-            apenas_obrigatorias=False,
-            apenas_pendentes=apenas_pendentes,
-        )
+            if not deve_incluir:
+                continue
+
+            if apenas_pendentes and disciplina['concluida']:
+                continue
+
+            disciplinas_filtradas.append(disciplina)
+
         if not disciplinas_filtradas:
             continue
 
@@ -390,4 +404,5 @@ def progresso(request):
         'mostrar_eletivas': mostrar_eletivas,
         'mostrar_optativas': mostrar_optativas,
         'mostrar_demais': mostrar_demais,
+        'filter_counts': filter_counts,
     })

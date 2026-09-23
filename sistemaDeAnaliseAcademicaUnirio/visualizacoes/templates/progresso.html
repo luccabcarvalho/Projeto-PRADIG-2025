@@ -305,16 +305,16 @@
             <span class="filter-chip-label">Filtros rápidos</span>
 
             <input class="btn-check" type="checkbox" id="apenas_pendentes" name="apenas_pendentes" value="1" {% if apenas_pendentes %}checked{% endif %}>
-            <label class="btn btn-outline-light filter-chip" for="apenas_pendentes">Pendentes</label>
+            <label class="btn btn-outline-light filter-chip" for="apenas_pendentes">Pendentes ({{ filter_counts.pendentes|default:0 }})</label>
 
             <input class="btn-check" type="checkbox" id="mostrar_eletivas" name="mostrar_eletivas" value="1" {% if mostrar_eletivas %}checked{% endif %}>
-            <label class="btn btn-outline-light filter-chip" for="mostrar_eletivas">Eletivas</label>
+            <label class="btn btn-outline-light filter-chip" for="mostrar_eletivas">Eletivas ({{ filter_counts.eletivas|default:0 }})</label>
 
             <input class="btn-check" type="checkbox" id="mostrar_optativas" name="mostrar_optativas" value="1" {% if mostrar_optativas %}checked{% endif %}>
-            <label class="btn btn-outline-light filter-chip" for="mostrar_optativas">Optativas</label>
+            <label class="btn btn-outline-light filter-chip" for="mostrar_optativas">Optativas ({{ filter_counts.optativas|default:0 }})</label>
 
             <input class="btn-check" type="checkbox" id="mostrar_demais" name="mostrar_demais" value="1" {% if mostrar_demais %}checked{% endif %}>
-            <label class="btn btn-outline-light filter-chip" for="mostrar_demais">Outras</label>
+            <label class="btn btn-outline-light filter-chip" for="mostrar_demais">Outras ({{ filter_counts.demais|default:0 }})</label>
         </div>
     </div>
 
@@ -347,9 +347,9 @@
             </div>
             <div class="col-12 col-lg-4">
                 <div class="summary-card card p-3">
-                    <div class="text-muted small">Pendências Reais</div>
+                    <div class="text-muted small">Obrigatórias</div>
                     <div class="summary-value text-warning">{{ curriculoStats.obrigatorias_pendentes }}</div>
-                    <div class="summary-subvalue text-warning">Obrigatórias pendentes</div>
+                    <div class="summary-subvalue text-warning">Pendentes</div>
                     <div class="summary-subvalue mt-2">Restam para concluir a grade obrigatória</div>
                 </div>
             </div>
@@ -357,7 +357,7 @@
                 <div class="summary-card card p-3">
                     <div class="text-muted small">Carga Horária</div>
                     <div class="summary-value">{{ curriculoStats.percentual|floatformat:1 }}%</div>
-                    <div class="summary-subvalue">Carga Horária Integralizada</div>
+                    <div class="summary-subvalue">Carga horária cursada</div>
                     <div class="summary-subvalue mt-2">{{ curriculoStats.carga_horaria_cursada|floatformat:0 }}h / {{ curriculoStats.carga_horaria_total|floatformat:0 }}h</div>
                 </div>
             </div>
@@ -376,16 +376,16 @@
             </div>
             <div class="col-12 col-lg-4">
                 <div class="summary-card card p-3">
-                    <div class="text-muted small">Carga Horária Cursada</div>
+                    <div class="text-muted small">Carga horária cursada</div>
                     <div class="summary-value text-success">{{ curriculoStats.carga_horaria_cursada|floatformat:0 }}h</div>
-                    <div class="summary-subvalue">Carga Horária Integralizada</div>
+                    <div class="summary-subvalue">Carga horária cursada</div>
                 </div>
             </div>
             <div class="col-12 col-lg-4">
                 <div class="summary-card card p-3">
-                    <div class="text-muted small">Carga Horária Pendente</div>
+                    <div class="text-muted small">Carga horária pendente</div>
                     <div class="summary-value text-warning">{{ curriculoStats.carga_horaria_pendente|floatformat:0 }}h</div>
-                    <div class="summary-subvalue">Ainda a integralizar</div>
+                    <div class="summary-subvalue">Ainda a cursar</div>
                 </div>
             </div>
         </div>

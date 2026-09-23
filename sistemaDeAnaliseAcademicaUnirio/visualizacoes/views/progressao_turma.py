@@ -55,8 +55,8 @@ def progressao_turma(request):
                 equiv_map_reverso[antigo] = []
             equiv_map_reverso[antigo].append(novo)
 
-    df_historico = pd.read_csv(historico_path) # Carregamento dos dados
-    df_alunos = pd.read_csv(alunos_path)
+    df_historico = pd.read_csv(historico_path, sep=None, engine='python') # Carregamento dos dados
+    df_alunos = pd.read_csv(alunos_path, sep=None, engine='python')
 
     df_historico['PERIODO_NUM'] = df_historico['PERIODO'].str.extract(r'(\d)')[0].astype(float) # Extrai o número do período
     df_historico = df_historico.sort_values(['MATR ALUNO', 'COD ATIV CURRIC', 'ANO', 'PERIODO_NUM']) # Ordena o histórico por aluno, disciplina, ano e período
@@ -73,13 +73,14 @@ def progressao_turma(request):
             return None
         return f"{partes[0]} - {partes[1]}" # Retorna no formato da coluna ANO_PERIODO
 
-    # Monta um dicionário de evasão indexado por ID PESSOA para consulta rápida dentro do loop
+    # Monta um dicionário de evasão/ingresso indexado por ID PESSOA para consulta rápida dentro do loop
     df_evasao = (
-        df_alunos[['ID PESSOA', 'FORMA EVASAO', 'PERIODO EVASAO']] # Colunas relevantes
+        df_alunos[['ID PESSOA', 'FORMA EVASAO', 'PERIODO EVASAO', 'PERIODO INGRESSO']] # Colunas relevantes
         .drop_duplicates(subset='ID PESSOA') # Garante singularidade
         .copy()
     )
     df_evasao['ANO_PERIODO_EVASAO'] = df_evasao['PERIODO EVASAO'].apply(evasao_para_ano_periodo)
+    df_evasao['ANO_PERIODO_INGRESSO'] = df_evasao['PERIODO INGRESSO'].apply(evasao_para_ano_periodo)
     evasao_map = df_evasao.set_index('ID PESSOA').to_dict('index')
 
     turma_param = request.GET.get('turma') # Obtém o parâmetro da turma selecionada no dropdown
@@ -169,15 +170,20 @@ def progressao_turma(request):
         nome = dados_aluno['NOME PESSOA'].iloc[0] # Obtém o nome do aluno para usar na legenda do gráfico
         matr = dados_aluno['MATR ALUNO'].iloc[0]  # Extrai a matrícula do dataframe (antes vinha direto do groupby)
 
-        # Busca forma e período de evasão do aluno no dicionário montado anteriormente
+        # Busca forma de evasão, período de evasão e período de ingresso do aluno no dicionário montado anteriormente
         info_ev = evasao_map.get(pessoa_id, {})
         forma_evasao = info_ev.get('FORMA EVASAO', 'Sem evasão') or 'Sem evasão'
         periodo_evasao_ap = info_ev.get('ANO_PERIODO_EVASAO')  # já convertido para o formato "ANO - PERIODO"
+        periodo_ingresso_ap = info_ev.get('ANO_PERIODO_INGRESSO')  # já convertido para o formato "ANO - PERIODO"
 
         periodos_com_dados = sorted(dados_aluno['ANO_PERIODO'].unique(), key=ordenar_periodo) # Cria uma lista com todos os períodos cursados do aluno
         if not periodos_com_dados: # Verifica se lista vazia
             continue
-        primeiro_periodo = periodos_com_dados[0] # Primeiro período cursado pelo aluno
+
+        # A linha do aluno começa no período de ingresso oficial (mesmo que zerada), e não no primeiro
+        # período em que ele teve carga horária aprovada — evita alunos "sumirem" do início do gráfico
+        candidatos_primeiro = [p for p in (periodo_ingresso_ap, periodos_com_dados[0]) if p in periodos]
+        primeiro_periodo = min(candidatos_primeiro, key=ordenar_periodo)
 
         if forma_evasao not in EVASAO_SEM and periodo_evasao_ap and periodo_evasao_ap in periodos:
             ultimo_periodo = periodo_evasao_ap # Se o aluno evadiu, o último período é o de evasão
@@ -376,8 +382,11 @@ def progressao_turma(request):
         font=dict(size=18),
         xaxis_title='Ano - Período',
         yaxis_title='Carga Horária',
-        xaxis=dict(tickfont=dict(size=16)),
+        xaxis=dict(tickfont=dict(size=16), categoryorder='array', categoryarray=periodos),
         yaxis=dict(tickfont=dict(size=16)),
+        # Largura da legenda fixada (em vez de variar com o tamanho do nome do aluno): sem isso, turmas
+        # com nomes mais longos "roubavam" espaço horizontal da área do gráfico, deixando-a menor
+        legend=dict(font=dict(size=12), entrywidth=320, entrywidthmode='pixels'),
         height=800,
         autosize=True,
         margin=dict(l=80, r=20, t=40, b=150)

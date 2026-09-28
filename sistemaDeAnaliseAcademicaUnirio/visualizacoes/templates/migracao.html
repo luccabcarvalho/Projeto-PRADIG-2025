@@ -97,6 +97,31 @@
 		border-color: #ffffff;
 		box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
 	}
+	.collapsible-body {
+		padding: 1.25rem 0;
+		background: #ffffff;
+		display: none;
+		transition: max-height 0.28s ease, opacity 0.22s ease;
+		overflow: hidden;
+	}
+	.panel-card.expanded .collapsible-body { display: block; }
+	.collapsible-header {
+		display: flex;
+		justify-content: space-between;
+		gap: 1rem;
+		align-items: center;
+		cursor: pointer;
+		user-select: none;
+		color: #ffffff;
+	}
+	.collapsible-toggle {
+		color: #ffffff;
+		flex-shrink: 0;
+		white-space: nowrap;
+		font-size: 0.75rem;
+		padding: 0.35rem 0.6rem !important;
+		min-width: auto;
+	}
 	@media (max-width: 991px) {
 		.comparison-grid {
 			grid-template-columns: 1fr;
@@ -133,6 +158,22 @@
 		if (demais) {
 			demais.addEventListener('change', function () { form.submit(); });
 		}
+
+		// Cards colapsáveis: clique no header expand/collapse
+		document.querySelectorAll('.collapsible-header, .collapsible-toggle').forEach(function(el){
+			el.addEventListener('click', function(e){
+				e.preventDefault();
+				e.stopPropagation();
+				const card = el.closest('.panel-card');
+				if (!card) return;
+				const expanded = card.classList.toggle('expanded');
+				const toggleBtn = card.querySelector('.collapsible-toggle');
+				if (toggleBtn) {
+					toggleBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+					toggleBtn.textContent = expanded ? 'Ocultar' : 'Ver';
+				}
+			});
+		});
 	});
 </script>
 {% endblock %}
@@ -162,16 +203,16 @@
 		<div class="filter-chips">
 			<span class="filter-chip-label">Filtros rápidos</span>
 			<input class="btn-check" type="checkbox" id="apenas_pendentes" name="apenas_pendentes" value="1" {% if apenas_pendentes %}checked{% endif %}>
-			<label class="btn btn-outline-light filter-chip" for="apenas_pendentes">Apenas pendentes</label>
+			<label class="btn btn-outline-light filter-chip" for="apenas_pendentes">Pendentes</label>
 
 			<input class="btn-check" type="checkbox" id="mostrar_eletivas" name="mostrar_eletivas" value="1" {% if mostrar_eletivas %}checked{% endif %}>
-			<label class="btn btn-outline-light filter-chip" for="mostrar_eletivas">Mostrar eletivas</label>
+			<label class="btn btn-outline-light filter-chip" for="mostrar_eletivas">Eletivas</label>
 
 			<input class="btn-check" type="checkbox" id="mostrar_optativas" name="mostrar_optativas" value="1" {% if mostrar_optativas %}checked{% endif %}>
-			<label class="btn btn-outline-light filter-chip" for="mostrar_optativas">Mostrar optativas</label>
+			<label class="btn btn-outline-light filter-chip" for="mostrar_optativas">Optativas</label>
 
 			<input class="btn-check" type="checkbox" id="mostrar_demais" name="mostrar_demais" value="1" {% if mostrar_demais %}checked{% endif %}>
-			<label class="btn btn-outline-light filter-chip" for="mostrar_demais">Demais disciplinas</label>
+			<label class="btn btn-outline-light filter-chip" for="mostrar_demais">Outras</label>
 		</div>
 	</div>
 
@@ -227,14 +268,17 @@
 		</div>
 
 		<div class="panel-card card mb-4">
-			<div class="panel-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+			<div class="panel-header collapsible-header">
 				<div>
 					<h2>Disciplinas reaproveitadas</h2>
 					<small>Disciplinas concluídas no currículo atual que possuem equivalente no currículo mais recente</small>
 				</div>
-				<span class="badge badge-soft rounded-pill px-3 py-2">{{ disciplinas_reaproveitadas|length }} itens</span>
+				<div style="display:flex;gap:1rem;align-items:center;">
+					<span class="badge badge-soft rounded-pill px-3 py-2">{{ disciplinas_reaproveitadas|length }} itens</span>
+					<button type="button" class="btn btn-sm btn-outline-light collapsible-toggle" aria-expanded="false">Ver</button>
+				</div>
 			</div>
-			<div class="card-body p-0">
+			<div class="collapsible-body card-body p-0">
 				{% if disciplinas_reaproveitadas %}
 				<div class="table-responsive">
 					<table class="table table-hover mb-0 align-middle">
@@ -281,14 +325,17 @@
 		</div>
 
 		<div class="panel-card card">
-			<div class="panel-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+			<div class="panel-header collapsible-header">
 				<div>
 					<h2>Disciplinas sem reaproveitamento automático</h2>
 					<small>Disciplinas da versão atual que não têm equivalente direto no currículo mais recente</small>
 				</div>
-				<span class="badge bg-light text-dark rounded-pill px-3 py-2">{{ disciplinas_nao_reaproveitadas|length }} itens</span>
+				<div style="display:flex;gap:1rem;align-items:center;">
+					<span class="badge bg-light text-dark rounded-pill px-3 py-2">{{ disciplinas_nao_reaproveitadas|length }} itens</span>
+					<button type="button" class="btn btn-sm btn-outline-light collapsible-toggle" aria-expanded="false">Ver</button>
+				</div>
 			</div>
-			<div class="card-body p-0">
+			<div class="collapsible-body card-body p-0">
 				{% if disciplinas_nao_reaproveitadas %}
 				<div class="table-responsive">
 					<table class="table table-hover mb-0 align-middle">

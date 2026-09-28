@@ -19,9 +19,16 @@ VERSION_MAPPING = {
 }
 
 def obter_versoes_disponiveis():
+    f = _carrega_curriculo_bruto()
+    if df is None or 'NUM VERSAO' not in df.columns:
+        return []
     
+    versoes = df['NUM VERSAO'].astype(str).str.strip().unique()
+    return sorted(versoes, reverse=True)
+
+
     # Ordena as versões com base no mapeamento de NUM VERSAO para código de versão
-    return sorted(VERSION_MAPPING.keys())
+    # return sorted(VERSION_MAPPING.keys())
 
 
 def obter_proxima_versao(versao_atual):

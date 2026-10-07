@@ -91,9 +91,10 @@
 }
 .heatmap-legenda {
     display: flex;
-    gap: 1.2em;
+    gap: 1.4em;
     align-items: center;
-    font-size: 0.98em;
+    font-size: 0.92em;
+    color: #435466;
 }
 .heatmap-legenda-above {
     width: 96%;
@@ -105,23 +106,64 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100%;
+
+    width: calc(100vw - 80px);
+    max-width: none;
+
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
 }
 .heatmap-legenda-item {
     display: flex;
     align-items: center;
-    gap: 0.4em;
+    gap: 0.45em;
+    font-weight: 500;
 }
 .heatmap-legenda-cor {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     border-radius: 4px;
-    border: 1px solid #ccc;
-    margin-right: 0.2em;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
 }
-.cor-aprovado { background: green; }
-.cor-reprovado { background: red; }
-.cor-matricula { background: yellow; }
+.cor-aprovado {background: #4CAF78;}
+.cor-reprovado {background: #D9534F;}
+.cor-matricula {background: #F4C95D;}
+
+.scrollable-plot-container {
+    width: 100%;
+    max-width: none;
+    max-height: 75vh;
+
+    overflow: auto;
+
+    border: 1px solid #dfe5eb;
+    border-radius: 10px;
+    background: #ffffff;
+
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.scrollable-plot-container::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+.scrollable-plot-container::-webkit-scrollbar-track {
+    background: #f7f9fb;
+    border-radius: 8px;
+}
+.scrollable-plot-container::-webkit-scrollbar-thumb {
+    background: #c1ced9;
+    border-radius: 8px;
+    border: 3px solid #f7f9fb;
+}
+.scrollable-plot-container::-webkit-scrollbar-thumb:hover {
+    background: #9bb0c4;
+}
 @media (max-width: 700px) {
     .heatmap-header {
         flex-direction: column;
@@ -145,6 +187,14 @@
         gap: 0.6em;
         margin-left: 0;
         padding-top: 8px;
+    }
+        .heatmap-plot-wrapper {
+        width: 100%;
+        left: auto;
+        transform: none;
+    }
+        .scrollable-plot-container {
+        width: 100%;
     }
 }
 
@@ -188,7 +238,7 @@
         <div class="heatmap-legenda-item"><div class="heatmap-legenda-cor cor-matricula"></div> Matrícula</div>
     </div>
 
-    <div style="display: flex; justify-content: center; width: 100%; margin: 0 auto;">
+    <div class="scrollable-plot-container">
         {{ plot_div|safe }}
     </div>
 </div>

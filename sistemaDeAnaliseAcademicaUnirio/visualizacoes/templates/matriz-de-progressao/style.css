@@ -133,4 +133,31 @@
         margin-left: 0;
         padding-top: 8px;
     }
+    .scrollable-plot-container {
+        width: 100%;
+        max-width: 95vw;
+        max-height: 75vh;
+        overflow: auto; 
+        border: 1px solid #e1e8ed;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .scrollable-plot-container::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+    }
+    .scrollable-plot-container::-webkit-scrollbar-track {
+        background: #f7f9fb;
+        border-radius: 8px;
+    }
+    .scrollable-plot-container::-webkit-scrollbar-thumb {
+        background: #c1ced9;
+        border-radius: 8px;
+        border: 3px solid #f7f9fb;
+    }
+    .scrollable-plot-container::-webkit-scrollbar-thumb:hover {
+        background: #9bb0c4;
+    }
 }

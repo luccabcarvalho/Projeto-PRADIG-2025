@@ -2,282 +2,318 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.conf import settings
 import os
-import pandas as pd
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
+
+USER_ID = 'user1'
+
+FILTRAR_ALUNOS_POR_CURRICULO = True
+
+TIPOS_DISCIPLINA = {
+    'obrigatoria': 'Obrigatória',
+    'optativa': 'Optativa',
+}
+
+def _ler_csv(nome_arquivo, **kwargs):
+    caminho = os.path.join(settings.MEDIA_ROOT, USER_ID, nome_arquivo)
+    return pd.read_csv(caminho, **kwargs)
+
+def _chave_versao(versao):
+    ano, _, semestre = str(versao).partition('/')
+    return (int(ano) if ano.isdigit() else 0, int(semestre) if semestre.isdigit() else 0)
+
+def _versao_para_param(versao):
+    return str(versao).replace('/', '')
+
+def carregar_curriculos():
+    df = _ler_csv('curriculos-bsi.csv', encoding='utf-8', sep=';')
+    df['NUM VERSAO'] = df['NUM VERSAO'].astype(str).str.strip()
+    df['COD DISCIPLINA'] = df['COD DISCIPLINA'].astype(str).str.strip()
+    df['TIPO DISCIPLINA'] = df['TIPO DISCIPLINA'].astype(str).str.strip()
+    df['PERIODO IDEAL'] = pd.to_numeric(df['PERIODO IDEAL'], errors='coerce').fillna(9999)
+    df['NOME CURTO'] = df['NOME DISCIPLINA'].str.split(' - ', n=1).str[-1].str.strip()
+    return df
+
+def dicionario_de_equivalencias():
+    df = _ler_csv('relacaoEquivalenciaDisciplinas.csv', encoding='latin1', sep=';')
+    df_validos = df[df['NOME_DISC_EQUIV'].notna()][['NOME_DISCIPLINA', 'NOME_DISC_EQUIV']]
+    
+    codigos_novos = df_validos['NOME_DISCIPLINA'].str.split(' - ').str[0].str.strip()
+    codigos_antigos = df_validos['NOME_DISC_EQUIV'].str.split(' - ').str[0].str.strip()
+    
+    mapeamento = {} 
+    for antigo, novo in zip(codigos_antigos, codigos_novos):
+        if novo not in mapeamento: 
+            mapeamento[novo] = [] 
+        mapeamento[novo].append(antigo) 
+    return mapeamento
+
+def status_para_num(status):
+    if not isinstance(status, str):
+        return np.nan
+    s = status.strip().upper()
+    
+    if s.startswith(('APV', 'ADI', 'DIS')):
+        return 1
+    if s.startswith(('REP', 'REF')) or (s.startswith('TRA') and 'DISCIPLINA' in s): 
+        return -1
+    if s.startswith('MAT') or s.startswith('ASC'):
+        if 'REPROVADO' in s:
+            return -1
+        return 0
+        
+    return np.nan 
 
 def matriz_de_progressao(request):
     if not request.GET:
         return redirect(f"{reverse('matriz_de_progressao')}?curriculos=20232&tipo_disciplina=obrigatoria")
 
-    USER_ID = 'user1'
-    USER_DIR = os.path.join(settings.MEDIA_ROOT, USER_ID)
-    alunos_path = os.path.join(USER_DIR, 'alunosPorCurso.csv')
-    historico_path = os.path.join(USER_DIR, 'historicoEscolar.csv')
+    df_alunos = _ler_csv('alunosPorCurso.csv', sep=None, engine='python')
+    df_historico = _ler_csv('historicoEscolar.csv', sep=None, engine='python')
+    df_curriculos = carregar_curriculos()
+    equiv_map = dicionario_de_equivalencias()
 
-    CURRICULOS_DIR = os.path.join(settings.MEDIA_ROOT, 'curriculos_bsi')
+    versoes_disponiveis = sorted(df_curriculos['NUM VERSAO'].unique(), key=_chave_versao, reverse=True)
+    param_para_versao = {_versao_para_param(v): v for v in versoes_disponiveis}
 
-    df_alunos = pd.read_csv(alunos_path)
-    df_historico = pd.read_csv(historico_path)
-
-    df_disciplinas_20232 = pd.read_csv(os.path.join(CURRICULOS_DIR, 'curriculo-20232.csv'))
-    df_disciplinas_20052 = pd.read_csv(os.path.join(CURRICULOS_DIR, 'curriculo-20052.csv'))
-    df_disciplinas_20002 = pd.read_csv(os.path.join(CURRICULOS_DIR, 'curriculo-20002.csv'))
-    df_disciplinas_20081 = pd.read_csv(os.path.join(CURRICULOS_DIR, 'curriculo-20081.csv'))
-
-    # --- Filtros ---
     filtro_ativos = request.GET.get('ativos', 'todos')
     filtro_curriculos = request.GET.getlist('curriculos')
     filtro_tipo_disciplina = request.GET.get('tipo_disciplina', 'obrigatoria')
-    curriculos_map = {
-        '20232': df_disciplinas_20232,
-        '20052': df_disciplinas_20052,
-        '20002': df_disciplinas_20002,
-        '20081': df_disciplinas_20081,
-    }
+
+    versoes_selecionadas = [param_para_versao[c] for c in filtro_curriculos if c in param_para_versao]
+    if not versoes_selecionadas:
+        versoes_selecionadas = versoes_disponiveis
+
     curriculos_options = [
-        {'value': '20232', 'label': 'Currículo 2023/2', 'selected': '20232' in filtro_curriculos},
-        {'value': '20052', 'label': 'Currículo 2005/2', 'selected': '20052' in filtro_curriculos},
-        {'value': '20002', 'label': 'Currículo 2000/2', 'selected': '20002' in filtro_curriculos},
-        {'value': '20081', 'label': 'Currículo 2008/1', 'selected': '20081' in filtro_curriculos},
+        {'value': _versao_para_param(v), 'label': f'Currículo {v}', 'selected': _versao_para_param(v) in filtro_curriculos}
+        for v in versoes_disponiveis
     ]
     tipo_disciplina_options = [
         {'value': 'todas', 'label': 'Todas', 'selected': filtro_tipo_disciplina == 'todas'},
         {'value': 'obrigatoria', 'label': 'Obrigatórias', 'selected': filtro_tipo_disciplina == 'obrigatoria'},
         {'value': 'optativa', 'label': 'Optativas', 'selected': filtro_tipo_disciplina == 'optativa'},
     ]
-
-    # Filtrar alunos ativos
-    if filtro_ativos == 'ativos':
-        alunos_ativos = df_alunos[df_alunos['FORMA EVASAO'] == 'Sem evasão']['ID PESSOA'].unique()
-        df_historico = df_historico[df_historico['ID PESSOA'].isin(alunos_ativos)]
-        df_alunos = df_alunos[df_alunos['ID PESSOA'].isin(alunos_ativos)]
-
-    # Filtrar currículos e tipo de disciplina
-    def filtrar_disciplinas(df, curriculo, tipo):
-        if tipo == 'todas':
-            if curriculo == '20002':
-                return df['COD DISCIPLINA']
-            else:
-                return df['COD DISCIPLINA']
-        elif tipo == 'obrigatoria':
-            if curriculo == '20002':
-                return df[df['DESCR ESTRUTURA'] == 'Disciplinas obrigatórias']['COD DISCIPLINA']
-            else:
-                return df[df['TIPO DISCIPLINA'] == 'Obrigatória']['COD DISCIPLINA']
-        elif tipo == 'optativa':
-            if curriculo == '20002':
-                return df[df['DESCR ESTRUTURA'] == 'Disciplinas optativas']['COD DISCIPLINA']
-            else:
-                return df[df['TIPO DISCIPLINA'] == 'Optativa']['COD DISCIPLINA']
-        else:
-            return df['COD DISCIPLINA']
-
-    def ordenar_disciplinas_por_periodo(df, codigos):
-        if 'PERIODO IDEAL' in df.columns:
-            df_filtrado = df[df['COD DISCIPLINA'].isin(codigos)].copy()
-            df_filtrado['PERIODO IDEAL'] = pd.to_numeric(df_filtrado['PERIODO IDEAL'], errors='coerce').fillna(9999)
-            df_filtrado = df_filtrado.sort_values(['PERIODO IDEAL', 'COD DISCIPLINA'])
-            return df_filtrado['COD DISCIPLINA'].tolist()
-        else:
-            return sorted(list(codigos))
-
-    if filtro_curriculos:
-        disciplinas_set = set()
-        disciplinas_periodo = []
-        for curr in filtro_curriculos:
-            df = curriculos_map.get(curr)
-            if df is not None:
-                disciplinas = filtrar_disciplinas(df, curr, filtro_tipo_disciplina)
-                disciplinas_set.update(disciplinas)
-        df_ord = curriculos_map.get(filtro_curriculos[0], df_disciplinas_20232)
-        disciplinas_list = ordenar_disciplinas_por_periodo(df_ord, disciplinas_set)
-    else:
-        disciplinas_set = set()
-        disciplinas_set.update(filtrar_disciplinas(df_disciplinas_20232, '20232', filtro_tipo_disciplina))
-        disciplinas_set.update(filtrar_disciplinas(df_disciplinas_20052, '20052', filtro_tipo_disciplina))
-        disciplinas_set.update(filtrar_disciplinas(df_disciplinas_20002, '20002', filtro_tipo_disciplina))
-        disciplinas_set.update(filtrar_disciplinas(df_disciplinas_20081, '20081', filtro_tipo_disciplina))
-        disciplinas_list = ordenar_disciplinas_por_periodo(df_disciplinas_20232, disciplinas_set)
-
-    df_alunos['MATR ALUNO'] = df_alunos['MATR ALUNO'].astype(str)
-    df_alunos = df_alunos.drop_duplicates(subset=['MATR ALUNO'])
-    df_alunos = df_alunos.sort_values('MATR ALUNO').reset_index(drop=True)
-    df_historico['MATR ALUNO'] = df_historico['MATR ALUNO'].astype(str)
-
-    alunos_dict = dict((matricula, idx) for idx, matricula in enumerate(df_alunos['MATR ALUNO']))
-    disciplinas_dict = dict((cod_disciplina, idx) for idx, cod_disciplina in enumerate(disciplinas_list))
-
-    n_alunos = len(alunos_dict)
-    n_disciplinas = len(disciplinas_dict)
-    matriz_geral = [['' for _ in range(n_disciplinas)] for _ in range(n_alunos)]
-    matriz_tooltips = [[{} for _ in range(n_disciplinas)] for _ in range(n_alunos)]
-
-    for matricula, cod_disciplina, status in zip(df_historico['MATR ALUNO'], df_historico['COD ATIV CURRIC'], df_historico['DESCR SITUACAO']):
-        idx_aluno = alunos_dict.get(str(matricula))
-        idx_disc = disciplinas_dict.get(cod_disciplina)
-        if idx_aluno is not None and idx_disc is not None:
-            matriz_geral[idx_aluno][idx_disc] = status
-
-    for matricula, nome_aluno, cod_disciplina, status, media_final, ano, periodo, nome, nome_disciplina in zip(
-        df_historico['MATR ALUNO'],
-        df_historico['NOME PESSOA'],
-        df_historico['COD ATIV CURRIC'],
-        df_historico['DESCR SITUACAO'],
-        df_historico['MEDIA FINAL'],
-        df_historico['ANO'],
-        df_historico['PERIODO'],
-        df_historico['NOME PESSOA'],
-        df_historico['NOME ATIV CURRIC']
-    ):
-        idx_aluno = alunos_dict.get(str(matricula))
-        idx_disc = disciplinas_dict.get(cod_disciplina)
-        if (
-            idx_aluno is not None and idx_disc is not None
-            and 0 <= idx_aluno < n_alunos
-            and 0 <= idx_disc < n_disciplinas
-        ):
-            matriz_geral[idx_aluno][idx_disc] = status
-            if 'status_list' not in matriz_tooltips[idx_aluno][idx_disc]:
-                matriz_tooltips[idx_aluno][idx_disc]['status_list'] = []
-            matriz_tooltips[idx_aluno][idx_disc]['status_list'].append({
-                'nome_disciplina': nome_disciplina,
-                'status': status,
-                'media_final': media_final,
-                'ano_periodo': f"{ano}.{periodo}",
-                'nome_aluno': nome_aluno
-            })
-
-    alunos_labels = [
-        f"{matricula} - {df_alunos.loc[df_alunos['MATR ALUNO'] == matricula, 'NOME PESSOA'].values[0]}"
-        if not df_alunos.loc[df_alunos['MATR ALUNO'] == matricula, 'NOME PESSOA'].empty else str(matricula)
-        for matricula in df_alunos['MATR ALUNO']
-    ]
-    def get_nome_disciplina(cod):
-        for df in [df_disciplinas_20232, df_disciplinas_20052, df_disciplinas_20002, df_disciplinas_20081]:
-            nome = df.loc[df['COD DISCIPLINA'] == cod, 'NOME DISCIPLINA']
-            if not nome.empty:
-                nome_val = nome.values[0]
-                if ' - ' in nome_val:
-                    return nome_val.split(' - ', 1)[1].strip()
-                return nome_val.strip()
-        return str(cod)
-
-    disciplinas_labels = [get_nome_disciplina(cod) for cod in disciplinas_list]
-
-    aprovados = {
-        'APV - Aprovado', 'APV- Aprovado', 'APV - Aprovado sem nota',
-        'ADI - Aproveitamento', 'ADI - Dispensa com nota',
-        'DIS - Dispensa sem nota', 'ADI - Aproveitamento de créditos da disciplina',
-    }
-    reprovados = {
-        'REP - Reprovado por nota/conceito',
-        'REF - Reprovado por falta',
-        'ASC - Reprovado sem nota',
-        'TRA - Trancamento de disciplina'
-    }
-    matriculado = {'ASC - Matrícula'}
-
-    def status_to_num(status):
-        if status in aprovados:
-            return 1
-        if status in matriculado:
-            return 0
-        if status in reprovados:
-            return -1
-        return np.nan
-
-    matriz_numerica = [
-        [status_to_num(cell) for cell in row]
-        for row in matriz_geral
-    ]
-
-    def tooltip_format(cell_tooltip):
-        if not cell_tooltip or 'status_list' not in cell_tooltip:
-            return ""
-        status_list = cell_tooltip['status_list']
-        if len(status_list) == 1:
-            s = status_list[0]
-            nome_aluno = s.get('nome_aluno', '')
-            nome_disciplina = s.get('nome_disciplina', '')
-            status = s.get('status', '')
-            media = s.get('media_final', '')
-            periodo = s.get('ano_periodo', '')
-            nota_str = f"{media}" if pd.notna(media) else ""
-            return (
-                f"{nome_aluno}<br>"
-                f"{nome_disciplina}<br>"
-                f"  Status: {status}<br>"
-                f"      {periodo}<br>"
-                f"      {nota_str}<br>"
-            )
-        else:
-            s0 = status_list[0]
-            nome_aluno = s0.get('nome_aluno', '')
-            nome_disciplina = s0.get('nome_disciplina', '')
-            historico = []
-            for s in sorted(status_list, key=lambda x: x.get('ano_periodo', ''), reverse=True):
-                status = s.get('status', '')
-                media = s.get('media_final', '')
-                periodo = s.get('ano_periodo', '')
-                nota_str = f"{media}" if pd.notna(media) else ""
-                historico.append(f"{status} ({periodo}) {nota_str}")
-            return (
-                f"{nome_aluno}<br>"
-                f"{nome_disciplina}<br>"
-                f"Histórico: <br>" + "<br>".join(historico)
-            )
-
-    matriz_tooltips_str = [
-        [tooltip_format(cell) for cell in row]
-        for row in matriz_tooltips
-    ]
-
-    alunos_length = len(alunos_labels)
-
-    fig = go.Figure(data=go.Heatmap(
-        z=matriz_numerica,
-        x=disciplinas_labels,
-        y=alunos_labels,
-        text=matriz_tooltips_str,
-        hoverinfo='text',
-        colorscale=[
-            [0.0, 'red'],
-            [0.5, 'yellow'],
-            [1.0, 'green']
-        ],
-        showscale=False
-    ))
-
-    fig.update_layout(
-        font=dict(size=18),
-        xaxis=dict(
-            tickangle=330,
-            tickfont=dict(size=16),
-            fixedrange=True  
-        ),
-        yaxis=dict(
-            tickfont=dict(size=16),
-            range=[alunos_length - 30, alunos_length - 1],
-        ),
-        autosize=True,
-        hovermode="x unified",
-        margin=dict(l=10, r=10, t=10, b=10),
-        height=920,
-        width=2200,
-        dragmode="pan"  
-    )
-
-    plot_div = fig.to_html(full_html=False)
     filtros_options = [
         {'name': 'ativos', 'label': 'Alunos ativos', 'selected': filtro_ativos == 'ativos'},
     ]
-    return render(request, 'matriz-de-progressao/matriz_de_progressao.html', {
-        'plot_div': plot_div,
-        'curriculos_options': curriculos_options,
-        'periodos_options': [],
-        'filtros_options': filtros_options,
-        'curriculos_selecionados': filtro_curriculos,
-        'tipo_disciplina_options': tipo_disciplina_options,
-        'tipo_disciplina_selecionado': filtro_tipo_disciplina,
-    })
+
+    def renderizar(plot_div='', mensagem=''):
+        return render(request, 'matriz-de-progressao/matriz_de_progressao.html', {
+            'plot_div': plot_div,
+            'mensagem': mensagem,
+            'curriculos_options': curriculos_options,
+            'periodos_options': [],
+            'filtros_options': filtros_options,
+            'curriculos_selecionados': filtro_curriculos,
+            'tipo_disciplina_options': tipo_disciplina_options,
+            'tipo_disciplina_selecionado': filtro_tipo_disciplina,
+        })
+
+    origens_por_coluna = {}
+    partes = []
+    
+    for versao in versoes_selecionadas:
+        df_v = df_curriculos[df_curriculos['NUM VERSAO'] == versao]
+        if filtro_tipo_disciplina in TIPOS_DISCIPLINA:
+            df_v = df_v[df_v['TIPO DISCIPLINA'] == TIPOS_DISCIPLINA[filtro_tipo_disciplina]]
+            
+        for cod in df_v['COD DISCIPLINA']:
+            origens = {cod}
+            if cod in equiv_map:
+                origens.update(equiv_map[cod])
+            origens_por_coluna.setdefault(cod, set()).update(origens)
+            
+        partes.append(df_v)
+
+    df_colunas = pd.concat(partes)
+    df_colunas['ORDEM_TIPO'] = np.where(
+        df_colunas['TIPO DISCIPLINA'].str.contains('Obrigatória', case=False, na=False), 
+        1, 
+        2
+    )
+    df_colunas = (
+        df_colunas.sort_values(['ORDEM_TIPO', 'PERIODO IDEAL', 'COD DISCIPLINA'], kind='stable')
+        .drop_duplicates('COD DISCIPLINA')
+    )
+    
+    disciplinas_codigos = df_colunas['COD DISCIPLINA'].tolist()
+    disciplinas_labels = df_colunas['NOME CURTO'].tolist()
+    nome_por_codigo = dict(zip(disciplinas_codigos, disciplinas_labels))
+    if not disciplinas_codigos:
+        return renderizar(mensagem='Não há disciplinas para os filtros selecionados.')
+
+    df_alunos['MATR ALUNO'] = df_alunos['MATR ALUNO'].astype(str).str.strip()
+    df_alunos['NUM VERSAO'] = df_alunos['NUM VERSAO'].astype(str).str.strip()
+    df_historico['MATR ALUNO'] = df_historico['MATR ALUNO'].astype(str).str.strip()
+    df_historico['COD ATIV CURRIC'] = df_historico['COD ATIV CURRIC'].astype(str).str.strip()
+
+    matr_historico = df_historico.drop_duplicates('ID PESSOA').set_index('ID PESSOA')['MATR ALUNO']
+    invalida = ~df_alunos['MATR ALUNO'].str.fullmatch(r'\d+')
+    df_alunos.loc[invalida, 'MATR ALUNO'] = (
+        df_alunos.loc[invalida, 'ID PESSOA'].map(matr_historico).fillna('sem matrícula')
+    )
+
+    if filtro_ativos == 'ativos':
+        df_alunos = df_alunos[df_alunos['FORMA EVASAO'] == 'Sem evasão']
+    if FILTRAR_ALUNOS_POR_CURRICULO and filtro_curriculos:
+        df_alunos = df_alunos[df_alunos['NUM VERSAO'].isin(versoes_selecionadas)]
+
+    df_alunos = (
+        df_alunos.drop_duplicates('ID PESSOA')
+        .loc[lambda d: d['ID PESSOA'].isin(df_historico['ID PESSOA'])] 
+        .sort_values(['MATR ALUNO', 'ID PESSOA'])
+        .reset_index(drop=True)
+    )
+    n_alunos = len(df_alunos)
+    n_disciplinas = len(disciplinas_codigos)
+    if n_alunos == 0:
+        return renderizar(mensagem='Não há alunos para os filtros selecionados.')
+
+    alunos_ids = df_alunos['ID PESSOA'].tolist()
+    nomes_alunos = df_alunos['NOME PESSOA'].tolist()
+    alunos_labels = (df_alunos['MATR ALUNO'] + ' - ' + df_alunos['NOME PESSOA'].astype(str)).tolist()
+    alunos_dict = {id_pessoa: i for i, id_pessoa in enumerate(alunos_ids)}
+    disciplinas_dict = {cod: j for j, cod in enumerate(disciplinas_codigos)}
+
+    pares = pd.DataFrame(
+        [(origem, coluna) for coluna, origens in origens_por_coluna.items() for origem in origens],
+        columns=['COD ATIV CURRIC', 'COD COLUNA'],
+    )
+    reg = df_historico[df_historico['ID PESSOA'].isin(alunos_dict)].merge(pares, on='COD ATIV CURRIC', how='inner')
+
+    z = np.full((n_alunos, n_disciplinas), np.nan)
+    textos = np.full((n_alunos, n_disciplinas), '', dtype=object)
+
+    if not reg.empty:
+        reg = reg.copy()
+        reg['VALOR'] = reg['DESCR SITUACAO'].map(status_para_num)
+
+        periodo_txt = reg['PERIODO'].fillna('').astype(str)
+        semestre = periodo_txt.str.extract(r'(\d)')[0].fillna('?')
+        semestre = pd.Series(np.where(periodo_txt.str.contains('rias', case=False), 'Férias', semestre), index=reg.index)
+        ano = pd.to_numeric(reg['ANO'], errors='coerce').fillna(0).astype(int)
+        reg['ANO_PERIODO'] = ano.astype(str) + '.' + semestre
+        reg['ORDEM'] = ano * 10 + np.where(semestre == '1', 1, 2)
+
+        reg['_r'] = reg['ID PESSOA'].map(alunos_dict)
+        reg['_c'] = reg['COD COLUNA'].map(disciplinas_dict)
+        reg = reg.sort_values('ORDEM', ascending=False, kind='stable') 
+
+        valido = reg.dropna(subset=['VALOR'])
+        chave = [valido['_r'], valido['_c']]
+        ultimo = valido.groupby(chave)['VALOR'].first()
+        aprovado = (valido['VALOR'] == 1).groupby(chave).any()
+        final = ultimo.mask(aprovado.reindex(ultimo.index)) 
+        final = final.fillna(pd.Series(np.where(aprovado.reindex(final.index), 1, np.nan), index=final.index))
+        
+        if len(final):
+            z[final.index.get_level_values(0).astype(int), final.index.get_level_values(1).astype(int)] = final.values
+
+        status = reg['DESCR SITUACAO'].fillna('').astype(str).str.strip()
+    
+        reg['LINHA_HIST'] = status + ' (' + reg['ANO_PERIODO'] + ') '
+        reg['LINHA_UNICA'] = (
+            '  Status: ' + status + '<br>'
+            + reg['ANO_PERIODO']
+        )
+        agrupado = reg.groupby(['_r', '_c'], sort=False).agg(
+            n=('LINHA_HIST', 'size'),
+            historico=('LINHA_HIST', '<br>'.join),
+            unica=('LINHA_UNICA', 'first'),
+        )
+        for (r, c), linha in zip(agrupado.index, agrupado.itertuples(index=False)):
+            cabecalho = f"{nomes_alunos[r]}<br>{nome_por_codigo[disciplinas_codigos[c]]}<br>"
+            if linha.n == 1:
+                textos[r, c] = cabecalho + linha.unica
+            else:
+                textos[r, c] = cabecalho + "Histórico: <br>" + linha.historico
+
+    plot_width = max(1100, n_disciplinas * 50)
+    plot_height = max(550, n_alunos * 32)
+
+    fig = go.Figure(data=go.Heatmap(
+    z=z.tolist(),
+    x=disciplinas_codigos,
+    y=alunos_labels,
+    text=textos.tolist(),
+    hovertemplate='%{text}<extra></extra>',
+
+    colorscale=[
+        [0.0, '#D9534F'],   # Não vencido ou inscrição anterior
+        [0.5, '#F4C95D'],   # Inscrito
+        [1.0, '#4CAF78']    # Vencido
+    ],
+
+    zmin=-1,
+    zmax=1,
+    showscale=False,
+
+    xgap=2,
+    ygap=2
+))
+
+    fig.update_layout(
+    font=dict(
+        family='Arial, sans-serif',
+        size=13,
+        color='#25364A'
+    ),
+
+    xaxis=dict(
+        side='top',
+        type='category',
+        tickmode='array',
+        tickvals=disciplinas_codigos,
+        ticktext=disciplinas_labels,
+        tickangle=-45,
+        tickfont=dict(
+            size=12,
+            color='#34495E'
+        ),
+        fixedrange=True,
+        automargin=True,
+        showgrid=False,
+        zeroline=False
+    ),
+
+    yaxis=dict(
+        tickfont=dict(
+            size=12,
+            color='#34495E'
+        ),
+        fixedrange=True,
+        autorange='reversed',
+        automargin=True,
+        showgrid=False,
+        zeroline=False
+    ),
+
+    autosize=False,
+    width=plot_width,
+    height=plot_height,
+
+    margin=dict(
+        l=10,
+        r=20,
+        t=150,
+        b=20
+    ),
+
+    hovermode='closest',
+
+    hoverlabel=dict(
+        bgcolor='white',
+        bordercolor='#D5DCE3',
+        font=dict(
+            family='Arial, sans-serif',
+            size=13,
+            color='#25364A'
+        ),
+        align='left'
+    ),
+
+    plot_bgcolor='white',
+    paper_bgcolor='white'
+)
+    return renderizar(plot_div=fig.to_html(full_html=False, config={'displayModeBar': False}))

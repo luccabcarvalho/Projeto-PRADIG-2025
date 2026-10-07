@@ -10,28 +10,50 @@ from django.conf import settings
 USER_ID = 'user1'
 CURRICULO_FILE = 'curriculos-bsi.csv'
 
-# Mapeamento entre código de versão (20232) e NUM VERSAO no arquivo consolidado (2023/2)
-VERSION_MAPPING = {
-    '20232': '2023/2',
-    '20052': '2005/2',
-    '20002': '2000/2',
-    '20081': '2008/1',
-}
+def _carrega_curriculo_bruto():
+    base_dir = Path(__file__).resolve().parents[2]
+    curriculo_path = base_dir / 'visualizacoes' / 'data' / CURRICULO_FILE
+    if not curriculo_path.exists():
+        return None
+
+    for read_kwargs in (
+        {'encoding': 'utf-8-sig'},
+        {'sep': ';', 'engine': 'python', 'encoding': 'utf-8-sig'},
+        {'sep': ';', 'engine': 'python', 'encoding': 'latin-1'},
+    ):
+        try:
+            return pd.read_csv(curriculo_path, **read_kwargs)
+        except Exception:
+            continue
+    return None
+
+
+def _build_version_mapping():
+    df = _carrega_curriculo_bruto()
+    if df is None or 'NUM VERSAO' not in df.columns:
+        return {}
+
+    mapping = {}
+    for versao in df['NUM VERSAO'].dropna().astype(str).str.strip().unique():
+        codigo = re.sub(r'\D', '', versao)
+        if codigo:
+            mapping[codigo] = versao
+
+    return dict(
+        sorted(
+            mapping.items(),
+            key=lambda item: int(item[0]) if item[0].isdigit() else item[0],
+        )
+    )
+
+
+VERSION_MAPPING = _build_version_mapping()
 
 def obter_versoes_disponiveis():
-    f = _carrega_curriculo_bruto()
-    if df is None or 'NUM VERSAO' not in df.columns:
-        return []
-    
-    versoes = df['NUM VERSAO'].astype(str).str.strip().unique()
-    return sorted(versoes, reverse=True)
+    return list(VERSION_MAPPING.keys())
 
 
-    # Ordena as versões com base no mapeamento de NUM VERSAO para código de versão
-    # return sorted(VERSION_MAPPING.keys())
-
-
-def obter_proxima_versao(versao_atual):
+def obterProximaVersao(versao_atual):
 
     # Obtém a lista de versões disponíveis
     versoes = obter_versoes_disponiveis()
@@ -76,7 +98,7 @@ def first_existing(paths):
     return None
 
 
-def normalize_text(value):
+def normalizeText(value):
     if pd.isna(value):
         return ''
     text = unicodedata.normalize('NFKD', str(value))
@@ -87,14 +109,14 @@ def normalize_text(value):
     return re.sub(r'\s+', ' ', text).strip()
 
 
-def extract_name(value):
+def extractName(value):
     value = '' if pd.isna(value) else str(value).strip()
     if ' - ' in value:
         return value.split(' - ', 1)[1].strip()
     return value
 
 
-def extract_sigla(value):
+def extractSigla(value):
     value = '' if pd.isna(value) else str(value).strip()
     if ' - ' in value:
         return value.split(' - ', 1)[0].strip()
@@ -209,8 +231,8 @@ def carregaCurriculo(version):
     if 'COD DISCIPLINA' in df.columns:
         df['COD DISCIPLINA'] = df['COD DISCIPLINA'].astype(str).str.strip()
     if 'NOME DISCIPLINA' in df.columns:
-        df['NOME LIMPO'] = df['NOME DISCIPLINA'].apply(extract_name)
-        df['NOME NORMALIZADO'] = df['NOME LIMPO'].apply(normalize_text)
+        df['NOME LIMPO'] = df['NOME DISCIPLINA'].apply(extractName)
+        df['NOME NORMALIZADO'] = df['NOME LIMPO'].apply(normalizeText)
     else:
         df['NOME LIMPO'] = ''
         df['NOME NORMALIZADO'] = ''
@@ -273,7 +295,7 @@ def carregaEquivalencias():
         return None
 
 
-def build_historico_concluido(df_historico, matricula):
+def buildHistoricoConcluido(df_historico, matricula):
     df_historico_aluno = df_historico[df_historico['MATR ALUNO'] == matricula].copy()
     if df_historico_aluno.empty:
         return set()
@@ -289,7 +311,7 @@ def build_historico_concluido(df_historico, matricula):
     )
 
 
-def status_info(status):
+def statusInfo(status):
     status = '' if pd.isna(status) else str(status).strip()
     if status in STATUS_CONCLUIDAS:
         return 'Concluída', 'success', True, False, False
@@ -315,7 +337,7 @@ def filtrar_disciplinas(disciplinas, apenas_obrigatorias=False, apenas_pendentes
     return disciplinas_filtradas
 
 
-def filtrar_resultado_comparacao(
+def filtrarResultadoComparacao(
     resultado_comparacao,
     apenas_obrigatorias=False,
     apenas_pendentes=False,
@@ -353,7 +375,7 @@ def filtrar_resultado_comparacao(
     }
 
 
-def compare_curriculos(df_curriculo_atual, df_curriculo_novo, historico_concluido, df_equivalencias=None):
+def compareCurriculos(df_curriculo_atual, df_curriculo_novo, historico_concluido, df_equivalencias=None):
     """Compara dois currículos e identifica disciplinas equivalentes.
     
     A equivalência é buscada em ordem de prioridade:
@@ -419,7 +441,7 @@ def compare_curriculos(df_curriculo_atual, df_curriculo_novo, historico_concluid
         nome_atual = row.get('NOME LIMPO', '')
         concluida = codigo_atual in historico_concluido
         tipo_disciplina = str(row.get('TIPO DISCIPLINA', '')).strip()
-        tipo_norm = normalize_text(tipo_disciplina)
+        tipo_norm = normalizeText(tipo_disciplina)
         obrigatoria = tipo_norm == 'obrigatoria'
         eletiva = tipo_norm == 'eletiva'
         optativa = tipo_norm == 'optativa'

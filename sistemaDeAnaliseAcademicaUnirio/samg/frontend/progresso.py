@@ -4,15 +4,15 @@ from django.shortcuts import render
 
 from samg.frontend.common import (
     geraListaAlunos,
-    extract_name,
-    extract_sigla,
+    extractName,
+    extractSigla,
     filtrar_disciplinas,
     is_tipo_obrigatoria,
-    normalize_text,
+    normalizeText,
     carregaBD,
     carregaCurriculo,
     getMatriculaAluno,
-    status_info,
+    statusInfo,
     versaoCurriculo,
 )
 
@@ -208,17 +208,17 @@ def progresso(request):
         disciplinas_periodo = []
         for _, row in df_periodo.drop_duplicates(subset=['COD DISCIPLINA'], keep='first').iterrows():
             codigo = str(row.get('COD DISCIPLINA', '')).strip()
-            nome_curto = extract_name(row.get('NOME DISCIPLINA', '')) or codigo
-            sigla = extract_sigla(codigo)
+            nome_curto = extractName(row.get('NOME DISCIPLINA', '')) or codigo
+            sigla = extractSigla(codigo)
             tipo_raw = str(row.get('TIPO DISCIPLINA', '')).strip()
-            tipo_norm = normalize_text(tipo_raw)
+            tipo_norm = normalizeText(tipo_raw)
             obrigatoria = tipo_norm == 'obrigatoria'
             eletiva = tipo_norm == 'eletiva'
             optativa = tipo_norm == 'optativa'
             demais = not (obrigatoria or eletiva or optativa)
             historico = historico_map.get(codigo)
             status_raw = '' if not historico else str(historico.get('DESCR SITUACAO', '')).strip()
-            status_label, status_badge, concluida, cursando, reprovada = status_info(status_raw)
+            status_label, status_badge, concluida, cursando, reprovada = statusInfo(status_raw)
             periodo_real = ''
             media_final = ''
             carga_horaria = obter_carga_horaria(row)

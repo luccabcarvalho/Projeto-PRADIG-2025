@@ -12,6 +12,10 @@
         border-radius: 20px;
         box-shadow: 0 12px 30px rgba(35, 86, 168, 0.18);
     }
+    html.dark-theme .hero-card {
+        background: linear-gradient(135deg, #1b3c6f 0%, #2a5bb8 100%);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    }
     .hero-title {
         font-size: 2rem;
         font-weight: 800;
@@ -26,14 +30,30 @@
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
         height: 100%;
     }
+    html.dark-theme .summary-card {
+        background: var(--bg-secondary) !important;
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+    }
     .summary-value {
         font-size: 2rem;
         font-weight: 800;
         line-height: 1;
     }
+    html.dark-theme .summary-card .summary-value {
+        color: #f8fafc !important;
+    }
+    html.dark-theme .summary-card .summary-value.text-success {
+        color: #34d399 !important;
+    }
+    html.dark-theme .summary-card .summary-value.text-warning {
+        color: #fbbf24 !important;
+    }
+    html.dark-theme .summary-card .summary-value:not(.text-success):not(.text-warning) {
+        color: #f8fafc !important;
+    }
     .summary-subvalue {
         font-size: .92rem;
-        color: #5f6f86;
+        color: var(--text-secondary);
         margin-top: .25rem;
     }
     .summary-badges {
@@ -45,7 +65,7 @@
     .summary-badge {
         font-size: .85rem;
         font-weight: 600;
-        color: #5f6f86;
+        color: var(--text-secondary);
     }
     .summary-progress-wrap {
         margin-top: .85rem;
@@ -53,8 +73,11 @@
     .summary-progress {
         height: 10px;
         border-radius: 999px;
-        background: #eef3fb;
+        background: var(--bg-tertiary);
         overflow: hidden;
+    }
+    html.dark-theme .summary-progress {
+        background: #11182a;
     }
     .summary-progress .progress-bar {
         border-radius: 999px;
@@ -65,6 +88,10 @@
         box-shadow: 0 10px 26px rgba(0, 0, 0, 0.06);
         overflow: hidden;
         height: 100%;
+    }
+    html.dark-theme .period-card {
+        background: var(--bg-secondary) !important;
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
     }
     .period-header {
         background: #2356a8;
@@ -97,16 +124,19 @@
     }
     .period-body {
         padding: 1.25rem;
-        background: #fff;
+        background: var(--bg-primary);
         display: none; /* escondido por padrão (minimizado) */
         transition: max-height 0.28s ease, opacity 0.22s ease;
         overflow: hidden;
     }
     .period-card.expanded .period-body { display: block; }
+    html.dark-theme .period-body {
+        background: var(--bg-secondary);
+    }
     .progress-track {
         height: 10px;
         border-radius: 999px;
-        background: #eef3fb;
+        background: var(--bg-tertiary);
         overflow: hidden;
         margin-bottom: 1rem;
     }
@@ -120,7 +150,7 @@
         margin-bottom: 0;
     }
     .period-body {
-        background: #fbfdff;
+        background: var(--bg-primary);
     }
     
      /* ocultar tipos de disciplina por padrão */
@@ -140,17 +170,21 @@
         font-size: .78rem;
         font-weight: 700;
         margin-bottom: .35rem;
-        background: #e9f1ff;
+        background: var(--bg-tertiary);
         color: #2356a8;
+    }
+    html.dark-theme .discipline-code {
+        background: #151c2d;
+        color: #a7c7f4;
     }
     .discipline-name {
         margin: 0;
         font-weight: 600;
-        color: #173153;
+        color: var(--text-primary);
     }
     .discipline-meta {
         font-size: .85rem;
-        color: #5f6f86;
+        color: var(--text-secondary);
         margin-top: .2rem;
     }
     .discipline-badges {
@@ -166,7 +200,7 @@
     .section-title {
         font-size: 1.05rem;
         font-weight: 800;
-        color: #173153;
+        color: var(--text-primary);
         margin-bottom: .75rem;
     }
     .student-select {
@@ -186,6 +220,16 @@
         font-weight: 700;
         margin-right: .15rem;
     }
+    html.dark-theme .filter-chips {
+        border-top-color: rgba(255, 255, 255, 0.08);
+    }
+    html.dark-theme .filter-chip-label {
+        color: var(--text-secondary);
+    }
+    html.dark-theme .filter-chip {
+        color: #e8eef7;
+        border-color: rgba(255, 255, 255, 0.2);
+    }
     .filter-chip {
         border-radius: 999px;
         padding: .45rem .9rem;
@@ -198,6 +242,11 @@
         color: #2356a8;
         border-color: #ffffff;
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+    }
+    html.dark-theme .btn-check:checked + .filter-chip {
+        background: #dbeafe;
+        color: #173153;
+        border-color: #dbeafe;
     }
     @media (max-width: 767px) {
         .hero-title {

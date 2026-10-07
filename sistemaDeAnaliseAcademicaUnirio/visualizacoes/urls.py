@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from .views import home, matriz_de_progressao, prazos_de_integralizacao, progressao_individual, progressao_turma, gerenciar_arquivos, checar_arquivos_necessarios, progresso, migracao
 from django.contrib.auth.views import LogoutView
+from samg.frontend.theme import toggle_theme
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -9,6 +10,7 @@ urlpatterns = [
 
     path('login/', views.login_google, name='login_google'),
     path('logout/', LogoutView.as_view(), name='logout'),
+    path('toggle-theme/', toggle_theme, name='toggle_theme'),
     path('', home, name='home'),
     path('progresso/', progresso, name='progresso'),
     path('migracao/', migracao, name='migracao'),

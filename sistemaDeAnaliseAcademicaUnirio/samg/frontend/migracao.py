@@ -3,15 +3,15 @@ from django.shortcuts import render
 
 from samg.frontend.common import (
     geraListaAlunos,
-    build_historico_concluido,
-    compare_curriculos,
-    filtrar_resultado_comparacao,
+    buildHistoricoConcluido,
+    compareCurriculos,
+    filtrarResultadoComparacao,
     carregaBD,
     carregaCurriculo,
     carregaEquivalencias,
     getMatriculaAluno,
     versaoCurriculo,
-    obter_proxima_versao,
+    obterProximaVersao,
     VERSION_MAPPING,
 )
 
@@ -89,7 +89,7 @@ def migracao(request):
     curriculo_atual = versaoCurriculo(aluno_row.get('NUM VERSAO'))
 
     # Determina o próximo currículo cronologicamente
-    curriculo_novo, versao_encontrada = obter_proxima_versao(curriculo_atual)
+    curriculo_novo, versao_encontrada = obterProximaVersao(curriculo_atual)
     
     if not versao_encontrada:
         return render(request, 'migracao.html', {
@@ -173,10 +173,10 @@ def migracao(request):
             'mostrar_demais': mostrar_demais,
         })
 
-    historico_concluido = build_historico_concluido(df_historico, selected_id)
+    historico_concluido = buildHistoricoConcluido(df_historico, selected_id)
     df_equivalencias = carregaEquivalencias()
-    resultado_comparacao = compare_curriculos(df_curriculo_atual, df_curriculo_novo, historico_concluido, df_equivalencias)
-    comparacao_filtrada = filtrar_resultado_comparacao(
+    resultado_comparacao = compareCurriculos(df_curriculo_atual, df_curriculo_novo, historico_concluido, df_equivalencias)
+    comparacao_filtrada = filtrarResultadoComparacao(
         resultado_comparacao,
         apenas_obrigatorias=True,
         apenas_pendentes=apenas_pendentes,

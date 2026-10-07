@@ -1,0 +1,284 @@
+/* Tema Claro e Escuro - Variáveis CSS */
+
+:root {
+    /* Tema claro - valores padrão */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-tertiary: #fbfdff;
+    --text-primary: #173153;
+    --text-secondary: #5f6f86;
+    --text-muted: #8b96ac;
+    --border-color: #e5ecf7;
+    --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    --card-shadow-light: 0 4px 12px rgba(0, 0, 0, 0.04);
+    --table-hover-bg: #f6f9ff;
+    --scrollbar-track: #f1f5fb;
+    --scrollbar-thumb: #cbd5e1;
+}
+
+html.dark-theme {
+    /* Tema escuro - melhorado para legibilidade */
+    --bg-primary: #0f1419;
+    --bg-secondary: #1a1f2e;
+    --bg-tertiary: #242d3d;
+    --text-primary: #f0f4f8;
+    --text-secondary: #b8c5d6;
+    --text-muted: #8b96a8;
+    --border-color: #2d3647;
+    --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --card-shadow-light: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --table-hover-bg: #1f2635;
+    --scrollbar-track: #1a1f28;
+    --scrollbar-thumb: #4a5568;
+    background: #0f1419 !important;
+}
+
+html.dark-theme body {
+    background: linear-gradient(180deg, #0a0e16 0%, #0f1419 100%) !important;
+}
+
+/* Aplicar tema em todo o documento */
+body {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Cards */
+.card {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+    box-shadow: var(--card-shadow);
+    color: var(--text-primary);
+}
+
+.card-body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+html.dark-theme .hero-card,
+html.dark-theme .panel-header,
+html.dark-theme .period-header {
+    background: linear-gradient(135deg, #1b3c6f 0%, #2a5bb8 100%) !important;
+}
+
+html.dark-theme .summary-card,
+html.dark-theme .period-card,
+html.dark-theme .panel-card,
+html.dark-theme .card,
+html.dark-theme .card-body,
+html.dark-theme .period-body,
+html.dark-theme .collapsible-body {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+html.dark-theme .summary-value {
+    color: #f8fafc !important;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+}
+
+html.dark-theme .summary-value.text-success {
+    color: #34d399 !important;
+}
+
+html.dark-theme .summary-value.text-warning {
+    color: #fbbf24 !important;
+}
+
+html.dark-theme .summary-value.text-muted {
+    color: var(--text-muted) !important;
+}
+
+html.dark-theme .summary-subvalue,
+html.dark-theme .summary-badge,
+html.dark-theme .discipline-meta,
+html.dark-theme .text-muted,
+html.dark-theme .text-secondary,
+html.dark-theme .table .small,
+html.dark-theme .table .fw-bold + .small {
+    color: var(--text-secondary) !important;
+}
+
+html.dark-theme .badge.bg-light,
+html.dark-theme .badge.badge-soft,
+html.dark-theme .discipline-code {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+html.dark-theme .form-select,
+html.dark-theme .form-control {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+html.dark-theme .btn-outline-light,
+html.dark-theme .btn-light {
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+.summary-card {
+    background-color: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+    box-shadow: var(--card-shadow) !important;
+}
+
+.period-card {
+    background-color: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+}
+
+.period-body {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+.panel-card {
+    background-color: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* Tabelas */
+.table {
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.table thead th {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.table tbody tr:hover {
+    background-color: var(--table-hover-bg) !important;
+}
+
+/* Textos */
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+.text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+html.dark-theme .text-white-50,
+html.dark-theme .filter-chip-label,
+html.dark-theme .navbar-links a,
+html.dark-theme .navbar-links .logout-button {
+    color: var(--text-primary) !important;
+}
+
+/* Alerts */
+.alert {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+/* Formulários */
+.form-control,
+.form-select {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: #2356a8;
+}
+
+.form-label {
+    color: var(--text-primary);
+}
+
+/* Disciplinas */
+.discipline-item {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.discipline-name {
+    color: var(--text-primary);
+}
+
+.discipline-meta {
+    color: var(--text-secondary);
+}
+
+/* Section title */
+.section-title {
+    color: var(--text-primary);
+}
+
+/* Progress bars */
+.progress {
+    background-color: var(--bg-tertiary);
+}
+
+/* Borders */
+hr {
+    border-color: var(--border-color);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+/* Badge soft */
+.badge-soft {
+    background: #e9f1ff;
+    color: #2356a8;
+}
+
+html.dark-theme .badge-soft {
+    background: #1e3a5f;
+    color: #a7c7f4;
+}
+
+/* Transição suave */
+* {
+    transition: background-color 0.28s ease, color 0.28s ease, border-color 0.28s ease;
+}
+html.dark-theme {
+    /* Tema escuro */
+    --bg-primary: #0a0e16;  /* Preto mais puro */
+    --bg-secondary: #1a1f2e;
+    --bg-tertiary: #252d3d;
+    --text-primary: #f0f4f8;
+    --text-secondary: #b8c5d6;
+    --text-muted: #7a8a9e;
+    --border-color: #2d3647;
+    --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    --hero-gradient: linear-gradient(135deg, #1a3a6b 0%, #2a5bb8 100%);
+}
+
+body {
+    background-color: var(--bg-primary) !important;  /* Agora responde ao tema */
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}

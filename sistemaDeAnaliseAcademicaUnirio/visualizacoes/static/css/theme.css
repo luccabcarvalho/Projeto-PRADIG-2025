@@ -116,10 +116,26 @@ html.dark-theme .form-control {
     border-color: var(--border-color) !important;
 }
 
-html.dark-theme .btn-outline-light,
 html.dark-theme .btn-light {
+    background-color: var(--bg-tertiary) !important;
     color: var(--text-primary) !important;
     border-color: var(--border-color) !important;
+}
+
+html.dark-theme .btn-outline-light {
+    color: #f8fafc !important;
+    border-color: rgba(255, 255, 255, 0.45) !important;
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+html.dark-theme .btn-outline-light:hover,
+html.dark-theme .btn-outline-light:focus,
+html.dark-theme .btn-outline-light:active,
+html.dark-theme .btn-outline-light[aria-expanded="true"] {
+    background-color: rgba(255, 255, 255, 0.22) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
 }
 
 .summary-card {
@@ -159,6 +175,41 @@ html.dark-theme .btn-light {
     background-color: var(--table-hover-bg) !important;
 }
 
+html.dark-theme .table {
+    --bs-table-bg: var(--bg-secondary);
+    --bs-table-color: var(--text-primary);
+    --bs-table-border-color: var(--border-color);
+    --bs-table-striped-bg: var(--bg-tertiary);
+    --bs-table-striped-color: var(--text-primary);
+    --bs-table-active-bg: var(--table-hover-bg);
+    --bs-table-active-color: var(--text-primary);
+    --bs-table-hover-bg: var(--table-hover-bg);
+    --bs-table-hover-color: var(--text-primary);
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+    background-color: var(--bg-secondary) !important;
+}
+
+html.dark-theme .table thead th {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+html.dark-theme .table tbody tr,
+html.dark-theme .table tbody td {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+html.dark-theme .table-hover > tbody > tr:hover > * {
+    --bs-table-bg-state: var(--table-hover-bg);
+    --bs-table-color-state: var(--text-primary);
+    background-color: var(--table-hover-bg) !important;
+    color: var(--text-primary) !important;
+}
+
 /* Textos */
 .text-muted {
     color: var(--text-muted) !important;
@@ -176,10 +227,20 @@ html.dark-theme .navbar-links .logout-button {
 }
 
 /* Alerts */
-.alert {
-    background-color: var(--bg-tertiary);
+.alert,
+.alert-light {
+    background-color: var(--bg-secondary);
     color: var(--text-primary);
     border-color: var(--border-color);
+}
+
+html.dark-theme .alert,
+html.dark-theme .alert-light,
+html.dark-theme .curriculo-alert {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: var(--card-shadow) !important;
 }
 
 /* Formulários */

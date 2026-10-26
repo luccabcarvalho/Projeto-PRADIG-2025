@@ -15,6 +15,9 @@ TIPOS_DISCIPLINA = {
     'optativa': 'Optativa',
 }
 
+COD_SEPARADOR = 'separador'
+LABEL_SEPARADOR = '<b>Optativas</b>'
+
 def _ler_csv(nome_arquivo, **kwargs):
     caminho = os.path.join(settings.MEDIA_ROOT, USER_ID, nome_arquivo)
     return pd.read_csv(caminho, **kwargs)
@@ -67,7 +70,7 @@ def status_para_num(status):
 
 def matriz_de_progressao(request):
     if not request.GET:
-        return redirect(f"{reverse('matriz_de_progressao')}?curriculos=20232&tipo_disciplina=obrigatoria")
+        return redirect(f"{reverse('matriz_de_progressao')}?curriculos=20232&tipo_disciplina=todas")
 
     df_alunos = _ler_csv('alunosPorCurso.csv', sep=None, engine='python')
     df_historico = _ler_csv('historicoEscolar.csv', sep=None, engine='python')
@@ -79,7 +82,7 @@ def matriz_de_progressao(request):
 
     filtro_ativos = request.GET.get('ativos', 'todos')
     filtro_curriculos = request.GET.getlist('curriculos')
-    filtro_tipo_disciplina = request.GET.get('tipo_disciplina', 'obrigatoria')
+    filtro_tipo_disciplina = request.GET.get('tipo_disciplina', 'todas')
 
     versoes_selecionadas = [param_para_versao[c] for c in filtro_curriculos if c in param_para_versao]
     if not versoes_selecionadas:
@@ -137,10 +140,7 @@ def matriz_de_progressao(request):
         .drop_duplicates('COD DISCIPLINA')
     )
     
-    disciplinas_codigos = df_colunas['COD DISCIPLINA'].tolist()
-    disciplinas_labels = df_colunas['NOME CURTO'].tolist()
-    nome_por_codigo = dict(zip(disciplinas_codigos, disciplinas_labels))
-    if not disciplinas_codigos:
+    if df_colunas.empty:
         return renderizar(mensagem='Não há disciplinas para os filtros selecionados.')
 
     df_alunos['MATR ALUNO'] = df_alunos['MATR ALUNO'].astype(str).str.strip()
@@ -166,7 +166,6 @@ def matriz_de_progressao(request):
         .reset_index(drop=True)
     )
     n_alunos = len(df_alunos)
-    n_disciplinas = len(disciplinas_codigos)
     if n_alunos == 0:
         return renderizar(mensagem='Não há alunos para os filtros selecionados.')
 
@@ -174,20 +173,39 @@ def matriz_de_progressao(request):
     nomes_alunos = df_alunos['NOME PESSOA'].tolist()
     alunos_labels = (df_alunos['MATR ALUNO'] + ' - ' + df_alunos['NOME PESSOA'].astype(str)).tolist()
     alunos_dict = {id_pessoa: i for i, id_pessoa in enumerate(alunos_ids)}
-    disciplinas_dict = {cod: j for j, cod in enumerate(disciplinas_codigos)}
 
     pares = pd.DataFrame(
         [(origem, coluna) for coluna, origens in origens_por_coluna.items() for origem in origens],
         columns=['COD ATIV CURRIC', 'COD COLUNA'],
     )
     reg = df_historico[df_historico['ID PESSOA'].isin(alunos_dict)].merge(pares, on='COD ATIV CURRIC', how='inner')
+    reg['VALOR'] = reg['DESCR SITUACAO'].map(status_para_num)
+
+    procura = reg.dropna(subset=['VALOR']).groupby('COD COLUNA')['ID PESSOA'].nunique()
+    df_colunas['PROCURA'] = df_colunas['COD DISCIPLINA'].map(procura).fillna(0)
+    df_colunas['ORDEM_PROCURA'] = np.where(df_colunas['ORDEM_TIPO'] == 1, 0, -df_colunas['PROCURA'])
+    df_colunas = df_colunas.sort_values(
+        ['ORDEM_TIPO', 'ORDEM_PROCURA', 'PERIODO IDEAL', 'COD DISCIPLINA'], 
+        kind='stable'
+    )
+
+    disciplinas_codigos = df_colunas['COD DISCIPLINA'].tolist()
+    disciplinas_labels = df_colunas['NOME CURTO'].tolist()
+    nome_por_codigo = dict(zip(disciplinas_codigos, disciplinas_labels))
+
+    n_obrigatorias = int((df_colunas['ORDEM_TIPO'] == 1).sum())
+    if 0 < n_obrigatorias < len(disciplinas_codigos):
+        disciplinas_codigos.insert(n_obrigatorias, COD_SEPARADOR)
+        disciplinas_labels.insert(n_obrigatorias, LABEL_SEPARADOR)
+
+    n_disciplinas = len(disciplinas_codigos)
+    disciplinas_dict = {cod: j for j, cod in enumerate(disciplinas_codigos)}
 
     z = np.full((n_alunos, n_disciplinas), np.nan)
     textos = np.full((n_alunos, n_disciplinas), '', dtype=object)
 
     if not reg.empty:
         reg = reg.copy()
-        reg['VALOR'] = reg['DESCR SITUACAO'].map(status_para_num)
 
         periodo_txt = reg['PERIODO'].fillna('').astype(str)
         semestre = periodo_txt.str.extract(r'(\d)')[0].fillna('?')
@@ -252,6 +270,16 @@ def matriz_de_progressao(request):
     xgap=2,
     ygap=2
 ))
+
+    if COD_SEPARADOR in disciplinas_dict:
+        pos_separador = disciplinas_dict[COD_SEPARADOR]
+        fig.add_vrect(
+            x0=pos_separador - 0.5,
+            x1=pos_separador + 0.5,
+            fillcolor='#E3E9EF',
+            line_width=0,
+            layer='above'
+        )
 
     fig.update_layout(
     font=dict(

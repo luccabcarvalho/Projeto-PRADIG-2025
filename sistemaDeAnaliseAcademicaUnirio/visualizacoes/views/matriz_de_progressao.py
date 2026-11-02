@@ -18,6 +18,9 @@ TIPOS_DISCIPLINA = {
 COD_SEPARADOR = 'separador'
 LABEL_SEPARADOR = '<b>Optativas</b>'
 
+PREFIXO_COD_OPTATIVA = 'optativa_'
+PREFIXO_LABEL_OPTATIVA = 'Optativa '
+
 def _ler_csv(nome_arquivo, **kwargs):
     caminho = os.path.join(settings.MEDIA_ROOT, USER_ID, nome_arquivo)
     return pd.read_csv(caminho, **kwargs)
@@ -67,6 +70,83 @@ def status_para_num(status):
         return 0
         
     return np.nan 
+
+def _formatar_notas(serie):
+    """Converte a coluna de nota em texto no padrão brasileiro (ex.: '7,4').
+    Devolve '' quando a cursagem não tem nota."""
+    texto = serie.astype(str).str.strip()
+    vazio = serie.isna() | texto.str.lower().isin(['', 'nan', 'none', '<na>'])
+    numero = pd.to_numeric(texto.str.replace(',', '.', regex=False), errors='coerce')
+    formatado = numero.map(lambda v: f'{v:g}'.replace('.', ',') if pd.notna(v) else '')
+    return formatado.where(numero.notna(), texto).where(~vazio, '')
+
+def _preparar_registros(reg):
+    """Cria período, ordem cronológica e a linha de hover de cada cursagem.
+    Devolve os registros ordenados da cursagem mais recente para a mais antiga."""
+    reg = reg.copy()
+
+    periodo_txt = reg['PERIODO'].fillna('').astype(str)
+    semestre = periodo_txt.str.extract(r'(\d)')[0].fillna('?')
+    semestre = pd.Series(np.where(periodo_txt.str.contains('rias', case=False), 'Férias', semestre), index=reg.index)
+    ano = pd.to_numeric(reg['ANO'], errors='coerce').fillna(0).astype(int)
+    reg['ANO_PERIODO'] = ano.astype(str) + '.' + semestre
+    reg['ORDEM'] = ano * 10 + np.where(semestre == '1', 1, 2)
+
+    status = reg['DESCR SITUACAO'].fillna('').astype(str).str.strip()
+    if 'MEDIA FINAL' in reg.columns:
+        nota = _formatar_notas(reg['MEDIA FINAL'])
+    else:
+        nota = pd.Series('', index=reg.index)
+    sufixo_nota = (' (nota ' + nota + ')').where(nota != '', '')
+
+    # • período: situação (nota, se houver)
+    reg['LINHA_HIST'] = '• ' + reg['ANO_PERIODO'] + ': ' + status + sufixo_nota
+
+    return reg.sort_values('ORDEM', ascending=False, kind='stable')
+
+def _valor_final(valido, chaves):
+    """Valor final de cada célula: 1 se houve alguma aprovação; caso contrário, o valor
+    da cursagem mais recente. 'valido' deve estar ordenado do mais recente ao mais antigo."""
+    ultimo = valido.groupby(chaves)['VALOR'].first()
+    aprovado = valido.assign(_ok=valido['VALOR'] == 1).groupby(chaves)['_ok'].any()
+    return ultimo.mask(aprovado.reindex(ultimo.index), 1)
+
+def _agrupar_optativas(origens_por_coluna, codigos_optativas):
+    """Une optativas ligadas por equivalência (ex.: código antigo e novo da mesma disciplina),
+    para que uma mesma optativa ocupe uma única posição 'Optativa N' do aluno."""
+    pai = {cod: cod for cod in codigos_optativas}
+
+    def achar(x):
+        while pai[x] != x:
+            pai[x] = pai[pai[x]]
+            x = pai[x]
+        return x
+
+    dono = {}
+    for cod in codigos_optativas:
+        for origem in origens_por_coluna[cod]:
+            if origem in dono:
+                pai[achar(cod)] = achar(dono[origem])
+            else:
+                dono[origem] = cod
+    return {cod: achar(cod) for cod in codigos_optativas}
+
+def _slots_optativas(reg_opt):
+    """Uma linha por (aluno, optativa) com o valor final da célula e a posição dela na
+    linha do aluno: Optativa 1, 2, 3... por ordem cronológica da primeira cursagem."""
+    valido = reg_opt.dropna(subset=['VALOR'])
+    colunas = ['_r', '_grupo', 'VALOR', '_primeira', '_slot']
+    if valido.empty:
+        return pd.DataFrame(columns=colunas)
+
+    chaves = ['_r', '_grupo']
+    final = _valor_final(valido, chaves).reset_index()
+    primeira = valido.groupby(chaves)['ORDEM'].min().rename('_primeira').reset_index()
+
+    slots = final.merge(primeira, on=chaves)
+    slots = slots.sort_values(['_r', '_primeira', '_grupo'], kind='stable')
+    slots['_slot'] = slots.groupby('_r').cumcount()
+    return slots[colunas]
 
 def matriz_de_progressao(request):
     if not request.GET:
@@ -174,29 +254,62 @@ def matriz_de_progressao(request):
     alunos_labels = (df_alunos['MATR ALUNO'] + ' - ' + df_alunos['NOME PESSOA'].astype(str)).tolist()
     alunos_dict = {id_pessoa: i for i, id_pessoa in enumerate(alunos_ids)}
 
+    nome_por_codigo = dict(zip(df_colunas['COD DISCIPLINA'], df_colunas['NOME CURTO']))
+    obrigatorias = df_colunas[df_colunas['ORDEM_TIPO'] == 1]
+    optativas = df_colunas[df_colunas['ORDEM_TIPO'] == 2]
+    grupo_optativa = _agrupar_optativas(origens_por_coluna, optativas['COD DISCIPLINA'].tolist())
+
     pares = pd.DataFrame(
         [(origem, coluna) for coluna, origens in origens_por_coluna.items() for origem in origens],
         columns=['COD ATIV CURRIC', 'COD COLUNA'],
     )
-    reg = df_historico[df_historico['ID PESSOA'].isin(alunos_dict)].merge(pares, on='COD ATIV CURRIC', how='inner')
+    historico_alunos = (
+        df_historico[df_historico['ID PESSOA'].isin(alunos_dict)]
+        .rename_axis('_rid')
+        .reset_index()
+    )
+    reg = historico_alunos.merge(pares, on='COD ATIV CURRIC', how='inner')
     reg['VALOR'] = reg['DESCR SITUACAO'].map(status_para_num)
 
-    procura = reg.dropna(subset=['VALOR']).groupby('COD COLUNA')['ID PESSOA'].nunique()
-    df_colunas['PROCURA'] = df_colunas['COD DISCIPLINA'].map(procura).fillna(0)
-    df_colunas['ORDEM_PROCURA'] = np.where(df_colunas['ORDEM_TIPO'] == 1, 0, -df_colunas['PROCURA'])
-    df_colunas = df_colunas.sort_values(
-        ['ORDEM_TIPO', 'ORDEM_PROCURA', 'PERIODO IDEAL', 'COD DISCIPLINA'], 
-        kind='stable'
-    )
+    reg_obr = reg.iloc[0:0]
+    reg_opt = reg.iloc[0:0]
+    slots = pd.DataFrame(columns=['_r', '_grupo', 'VALOR', '_primeira', '_slot'])
+    n_slots = 0
 
-    disciplinas_codigos = df_colunas['COD DISCIPLINA'].tolist()
-    disciplinas_labels = df_colunas['NOME CURTO'].tolist()
-    nome_por_codigo = dict(zip(disciplinas_codigos, disciplinas_labels))
+    if not reg.empty:
+        reg = _preparar_registros(reg)
+        reg['_r'] = reg['ID PESSOA'].map(alunos_dict)
 
-    n_obrigatorias = int((df_colunas['ORDEM_TIPO'] == 1).sum())
-    if 0 < n_obrigatorias < len(disciplinas_codigos):
-        disciplinas_codigos.insert(n_obrigatorias, COD_SEPARADOR)
-        disciplinas_labels.insert(n_obrigatorias, LABEL_SEPARADOR)
+        eh_optativa = reg['COD COLUNA'].isin(grupo_optativa)
+        reg_obr = reg[~eh_optativa]
+
+        # Optativas ligadas por equivalência contam como uma só; um mesmo registro do
+        # histórico nunca ocupa duas posições (preferindo o código exato cursado).
+        reg_opt = reg[eh_optativa].copy()
+        reg_opt['_grupo'] = reg_opt['COD COLUNA'].map(grupo_optativa)
+        reg_opt['_exato'] = reg_opt['COD ATIV CURRIC'] == reg_opt['COD COLUNA']
+        reg_opt = (
+            reg_opt.sort_values('_exato', ascending=False, kind='stable')
+            .drop_duplicates(['_rid', '_grupo'])
+            .sort_values('ORDEM', ascending=False, kind='stable')
+        )
+
+        slots = _slots_optativas(reg_opt)
+        n_slots = int(slots['_slot'].max()) + 1 if len(slots) else 0
+
+    disciplinas_codigos = obrigatorias['COD DISCIPLINA'].tolist()
+    disciplinas_labels = obrigatorias['NOME CURTO'].tolist()
+
+    if disciplinas_codigos and n_slots:
+        disciplinas_codigos.append(COD_SEPARADOR)
+        disciplinas_labels.append(LABEL_SEPARADOR)
+
+    deslocamento_optativas = len(disciplinas_codigos)
+    disciplinas_codigos += [f'{PREFIXO_COD_OPTATIVA}{i}' for i in range(1, n_slots + 1)]
+    disciplinas_labels += [f'{PREFIXO_LABEL_OPTATIVA}{i}' for i in range(1, n_slots + 1)]
+
+    if not disciplinas_codigos:
+        return renderizar(mensagem='Nenhum aluno cursou optativas para os filtros selecionados.')
 
     n_disciplinas = len(disciplinas_codigos)
     disciplinas_dict = {cod: j for j, cod in enumerate(disciplinas_codigos)}
@@ -204,48 +317,35 @@ def matriz_de_progressao(request):
     z = np.full((n_alunos, n_disciplinas), np.nan)
     textos = np.full((n_alunos, n_disciplinas), '', dtype=object)
 
-    if not reg.empty:
-        reg = reg.copy()
+    # --- Obrigatórias: uma coluna por disciplina ---
+    if not reg_obr.empty:
+        reg_obr = reg_obr.assign(_c=reg_obr['COD COLUNA'].map(disciplinas_dict).astype(int))
 
-        periodo_txt = reg['PERIODO'].fillna('').astype(str)
-        semestre = periodo_txt.str.extract(r'(\d)')[0].fillna('?')
-        semestre = pd.Series(np.where(periodo_txt.str.contains('rias', case=False), 'Férias', semestre), index=reg.index)
-        ano = pd.to_numeric(reg['ANO'], errors='coerce').fillna(0).astype(int)
-        reg['ANO_PERIODO'] = ano.astype(str) + '.' + semestre
-        reg['ORDEM'] = ano * 10 + np.where(semestre == '1', 1, 2)
+        valido = reg_obr.dropna(subset=['VALOR'])
+        if not valido.empty:
+            final = _valor_final(valido, ['_r', '_c']).reset_index()
+            z[final['_r'].to_numpy(int), final['_c'].to_numpy(int)] = final['VALOR'].to_numpy()
 
-        reg['_r'] = reg['ID PESSOA'].map(alunos_dict)
-        reg['_c'] = reg['COD COLUNA'].map(disciplinas_dict)
-        reg = reg.sort_values('ORDEM', ascending=False, kind='stable') 
+        historicos = reg_obr.groupby(['_r', '_c'], sort=False)['LINHA_HIST'].agg('<br>'.join)
+        for (r, c), historico in historicos.items():
+            nome_disciplina = nome_por_codigo[disciplinas_codigos[c]]
+            textos[r, c] = f"{nomes_alunos[r]}<br>{nome_disciplina}<br>{historico}"
 
-        valido = reg.dropna(subset=['VALOR'])
-        chave = [valido['_r'], valido['_c']]
-        ultimo = valido.groupby(chave)['VALOR'].first()
-        aprovado = (valido['VALOR'] == 1).groupby(chave).any()
-        final = ultimo.mask(aprovado.reindex(ultimo.index)) 
-        final = final.fillna(pd.Series(np.where(aprovado.reindex(final.index), 1, np.nan), index=final.index))
-        
-        if len(final):
-            z[final.index.get_level_values(0).astype(int), final.index.get_level_values(1).astype(int)] = final.values
+    # --- Optativas: colunas genéricas "Optativa N", em ordem cronológica por aluno ---
+    if n_slots:
+        colunas_slot = deslocamento_optativas + slots['_slot'].to_numpy(int)
+        z[slots['_r'].to_numpy(int), colunas_slot] = slots['VALOR'].to_numpy()
 
-        status = reg['DESCR SITUACAO'].fillna('').astype(str).str.strip()
-    
-        reg['LINHA_HIST'] = status + ' (' + reg['ANO_PERIODO'] + ') '
-        reg['LINHA_UNICA'] = (
-            '  Status: ' + status + '<br>'
-            + reg['ANO_PERIODO']
-        )
-        agrupado = reg.groupby(['_r', '_c'], sort=False).agg(
-            n=('LINHA_HIST', 'size'),
+        reg_slots = reg_opt.merge(slots[['_r', '_grupo', '_slot']], on=['_r', '_grupo'], how='inner')
+        agrupado = reg_slots.groupby(['_r', '_slot'], sort=False).agg(
             historico=('LINHA_HIST', '<br>'.join),
-            unica=('LINHA_UNICA', 'first'),
+            codigo=('COD COLUNA', 'first'),
         )
-        for (r, c), linha in zip(agrupado.index, agrupado.itertuples(index=False)):
-            cabecalho = f"{nomes_alunos[r]}<br>{nome_por_codigo[disciplinas_codigos[c]]}<br>"
-            if linha.n == 1:
-                textos[r, c] = cabecalho + linha.unica
-            else:
-                textos[r, c] = cabecalho + "Histórico: <br>" + linha.historico
+        for (r, s), linha in zip(agrupado.index, agrupado.itertuples(index=False)):
+            nome_optativa = nome_por_codigo[linha.codigo]
+            textos[r, deslocamento_optativas + s] = (
+                f"{nomes_alunos[r]}<br><b>{nome_optativa}</b><br>{linha.historico}"
+            )
 
     plot_width = max(1100, n_disciplinas * 50)
     plot_height = max(550, n_alunos * 32)

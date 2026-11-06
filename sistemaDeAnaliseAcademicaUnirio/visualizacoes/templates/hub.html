@@ -1,38 +1,509 @@
 {% extends "base_samg.html" %}
+{% load static %}
 {% load socialaccount %}
 
-{% block title %}Login{% endblock %}
+{% block title %}Portal Acadêmico — SAMG & SAGA | UNIRIO{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .hub-wrapper {
+        min-height: calc(100vh - 40px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2.5rem 1rem 3rem;
+        position: relative;
+    }
+
+    .hub-topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 960px;
+        width: 100%;
+        margin: 0 auto 2.15rem;
+    }
+
+    .hub-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.9rem;
+    }
+
+    .hub-brand-img {
+        height: 38px;
+        width: auto;
+        object-fit: contain;
+    }
+
+    .hub-brand-slash {
+        height: 32px;
+    }
+
+    .hub-brand-unit {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.18;
+    }
+
+    .hub-brand-sigla {
+        font-size: 0.92rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: var(--unirio-blue);
+    }
+
+    html.dark-theme .hub-brand-sigla {
+        color: #f0f4f8;
+    }
+
+    .hub-brand-name {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .hub-theme-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 0.95rem;
+        border-radius: 999px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        text-decoration: none;
+        font-size: 0.88rem;
+        font-weight: 600;
+        box-shadow: var(--card-shadow-light);
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .hub-theme-toggle:hover {
+        transform: translateY(-1px);
+        border-color: #2356a8;
+        color: var(--text-primary);
+    }
+
+    .hub-header {
+        text-align: center;
+        max-width: 680px;
+        margin: 0 auto 2.5rem;
+    }
+
+    .hub-title {
+        font-size: 2.25rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        letter-spacing: -0.5px;
+        margin-bottom: 0.65rem;
+    }
+
+    .hub-subtitle {
+        font-size: 1.05rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .hub-messages {
+        max-width: 960px;
+        width: 100%;
+        margin: 0 auto 1.5rem;
+    }
+
+    .hub-alert {
+        padding: 0.85rem 1.15rem;
+        border-radius: 12px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-left: 4px solid #2356a8;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        margin-bottom: 0.75rem;
+        box-shadow: var(--card-shadow-light);
+    }
+
+    .hub-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.75rem;
+        max-width: 960px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    .portal-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 22px;
+        padding: 2.25rem 2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: var(--card-shadow);
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .portal-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 18px 38px rgba(35, 86, 168, 0.14);
+        border-color: rgba(35, 86, 168, 0.45);
+    }
+
+    html.dark-theme .portal-card:hover {
+        box-shadow: 0 18px 38px rgba(0, 0, 0, 0.55);
+        border-color: rgba(96, 165, 250, 0.5);
+    }
+
+    .portal-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+    }
+
+    .portal-card--samg::before {
+        background: linear-gradient(90deg, #2356a8 0%, #3a7bd5 100%);
+    }
+
+    .portal-card--saga::before {
+        background: linear-gradient(90deg, #0f4c81 0%, #1e88e5 100%);
+    }
+
+    .portal-card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.35rem;
+    }
+
+    .portal-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.55rem;
+        background: linear-gradient(135deg, rgba(35, 86, 168, 0.12) 0%, rgba(58, 123, 213, 0.2) 100%);
+        color: #2356a8;
+    }
+
+    html.dark-theme .portal-icon {
+        background: linear-gradient(135deg, rgba(35, 86, 168, 0.28) 0%, rgba(58, 123, 213, 0.38) 100%);
+        color: #93c5fd;
+    }
+
+    .portal-badge {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        padding: 0.35rem 0.8rem;
+        border-radius: 999px;
+        background: var(--bg-tertiary);
+        color: #2356a8;
+        border: 1px solid var(--border-color);
+    }
+
+    html.dark-theme .portal-badge {
+        background: #151c2d;
+        color: #93c5fd;
+    }
+
+    .portal-acronym {
+        font-size: 1.65rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin: 0 0 0.2rem;
+        letter-spacing: 0.5px;
+    }
+
+    .portal-fullname {
+        font-size: 0.92rem;
+        font-weight: 600;
+        color: #2356a8;
+        margin-bottom: 0.9rem;
+    }
+
+    html.dark-theme .portal-fullname {
+        color: #93c5fd;
+    }
+
+    .portal-desc {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 1.35rem;
+    }
+
+    .portal-features {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 1.85rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+    }
+
+    .portal-features li {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 0.88rem;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .portal-features li i {
+        color: #2356a8;
+        font-size: 0.85rem;
+        width: 16px;
+        text-align: center;
+    }
+
+    html.dark-theme .portal-features li i {
+        color: #60a5fa;
+    }
+
+    .portal-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.7rem;
+        width: 100%;
+        padding: 0.88rem 1.25rem;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.96rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .portal-cta--google {
+        background: linear-gradient(135deg, #2356a8 0%, #3a7bd5 100%);
+        color: #ffffff !important;
+        border: 1px solid transparent;
+        box-shadow: 0 6px 18px rgba(35, 86, 168, 0.25);
+    }
+
+    .portal-cta--google:hover {
+        filter: brightness(1.07);
+        box-shadow: 0 8px 22px rgba(35, 86, 168, 0.35);
+        transform: translateY(-1px);
+    }
+
+    .google-icon-pill {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #ffffff;
+        color: #DB4437;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.88rem;
+        flex-shrink: 0;
+    }
+
+    .portal-cta--saga {
+        background: var(--bg-tertiary);
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border-color);
+    }
+
+    .portal-cta--saga:hover {
+        background: #2356a8;
+        color: #ffffff !important;
+        border-color: #2356a8;
+        transform: translateY(-1px);
+    }
+
+    html.dark-theme .portal-cta--saga:hover {
+        background: #2a5bb8;
+        border-color: #3a7bd5;
+    }
+
+    .portal-hint {
+        display: block;
+        text-align: center;
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        margin-top: 0.65rem;
+    }
+
+    .hub-footer {
+        max-width: 960px;
+        width: 100%;
+        margin: 2.5rem auto 0;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .hub-footer-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .hub-footer-img {
+        height: 34px;
+        width: auto;
+        object-fit: contain;
+    }
+
+    @media (max-width: 767px) {
+        .hub-grid {
+            grid-template-columns: 1fr;
+        }
+        .hub-title {
+            font-size: 1.75rem;
+        }
+        .hub-topbar {
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+        .hub-brand-img {
+            height: 34px;
+        }
+        .hub-footer {
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div style="display:flex;justify-content:center;align-items:center;min-height:calc(100vh - 120px);padding:2rem 1rem;">
-    <div style="background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.08);padding:2.2rem;max-width:460px;width:100%;text-align:center;">
-        <div style="font-size:2.2rem;color:#2356a8;margin-bottom:0.8rem;">
-            <i class="fas fa-user-shield"></i>
-        </div>
-        <h1 style="font-size:1.8rem;margin:0 0 0.6rem 0;color:#003366;">Qual sistema deseja entrar?</h1>
-        <p style="font-size:1.02rem;color:#444;line-height:1.5;margin-bottom:1.6rem;">
-            Entre com sua conta Google para acessar as visualizações acadêmicas.
-        </p>
-
-        {% if messages %}
-            <div style="margin-bottom:1rem;text-align:left;">
-                {% for message in messages %}
-                    <div style="padding:0.7rem 0.9rem;margin-bottom:0.6rem;border-radius:8px;background:#f5f7fb;color:#003366;">
-                        {{ message }}
-                    </div>
-                {% endfor %}
+<div class="hub-wrapper">
+    <!-- Barra superior com assinatura institucional UNIRIO e alternador de tema -->
+    <div class="hub-topbar">
+        <div class="hub-brand" aria-label="UNIRIO — Escola de Informática Aplicada (BSI)">
+            <img src="{% static 'img/unirio/unirio-horizontal-positiva.png' %}" alt="UNIRIO - Universidade Federal do Estado do Rio de Janeiro" class="hub-brand-img unirio-logo-pos">
+            <img src="{% static 'img/unirio/unirio-horizontal-negativa.png' %}" alt="UNIRIO - Universidade Federal do Estado do Rio de Janeiro" class="hub-brand-img unirio-logo-neg">
+            <span class="unirio-brand-slash hub-brand-slash" aria-hidden="true"></span>
+            <div class="hub-brand-unit">
+                <span class="hub-brand-sigla">EIA • BSI</span>
+                <span class="hub-brand-name">Escola de Informática Aplicada</span>
             </div>
-        {% endif %}
-
-        {% provider_login_url 'google' process='login' as google_login_url %}
-        <a href="{{ google_login_url }}&next=/visualizacoes/progresso/" style="display:inline-flex;align-items:center;justify-content:center;gap:0.6rem;background:#fff;color:#333;border:1px solid #d6d6d6;border-radius:8px;padding:0.8rem 1.2rem;text-decoration:none;font-weight:600;min-width:240px;">
-            <i class="fab fa-google" style="color:#DB4437;"></i>
-            Acesso ao SAMG - Google
+        </div>
+        <a href="{% url 'toggle_theme' %}" class="hub-theme-toggle" title="Alternar entre tema claro e escuro">
+            {% if user_theme == 'dark' %}
+                <i class="fas fa-sun" style="color: #fbbf24;"></i>
+            {% else %}
+                <i class="fas fa-moon" style="color: #004169;"></i>
+            {% endif %}
         </a>
-        <a href="{% url 'home' %}"  style="display:inline-flex;align-items:center;justify-content:center;gap:0.6rem;background:#fff;color:#333;border:1px solid #d6d6d6;border-radius:8px;padding:0.8rem 1.2rem;text-decoration:none;font-weight:600;min-width:240px;">
-        <i class="feature-icon" style="color:#003366;"> </i>
-            Acesso ao SAGA     
-        </a> 
     </div>
+
+    <!-- Cabeçalho principal do Hub -->
+    <div class="hub-header">
+        <h1 class="hub-title">Portal de Monitoramento e Gestão Acadêmica</h1>
+        <p class="hub-subtitle">
+            Selecione o ambiente adequado ao seu perfil para consultar indicadores curriculares, simular migrações de grade ou analisar o desempenho das turmas.
+        </p>
+    </div>
+
+    {% if messages %}
+    <div class="hub-messages">
+        {% for message in messages %}
+            <div class="hub-alert">
+                <i class="fas fa-info-circle me-2"></i>{{ message }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% provider_login_url 'google' process='login' as google_login_url %}
+
+    <!-- Grade com os 2 sistemas separados por perfil de uso -->
+    <div class="hub-grid">
+        <!-- Card 1: SAMG (Visão Discente / Tutoria) -->
+        <div class="portal-card portal-card--samg">
+            <div>
+                <div class="portal-card-top">
+                    <div class="portal-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <span class="portal-badge">Visão Discente</span>
+                </div>
+                <h2 class="portal-acronym">SAMG</h2>
+                <div class="portal-fullname">Sistema de Apoio ao Monitoramento de Graduação</div>
+                <p class="portal-desc">
+                    Voltado aos estudantes para acompanhamento detalhado da integralização curricular e simulação de transição entre versões de currículo.
+                </p>
+                <ul class="portal-features">
+                    <li><i class="fas fa-check-circle"></i> Progresso de disciplinas e carga horária por período</li>
+                    <li><i class="fas fa-exchange-alt"></i> Simulador de migração e equivalências curriculares</li>
+                    <li><i class="fas fa-filter"></i> Filtros rápidos por obrigatórias, optativas, eletivas e pendentes</li>
+                </ul>
+            </div>
+            <div>
+                <a href="{{ google_login_url }}&next=/visualizacoes/progresso/" class="portal-cta portal-cta--google">
+                    <span class="google-icon-pill">
+                        <i class="fab fa-google"></i>
+                    </span>
+                    <span>Entrar no SAMG com Google</span>
+                </a>
+                <span class="portal-hint">Requer autenticação com sua conta Google</span>
+            </div>
+        </div>
+
+        <!-- Card 2: SAGA (Visão Docente / Coordenação) -->
+        <div class="portal-card portal-card--saga">
+            <div>
+                <div class="portal-card-top">
+                    <div class="portal-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <span class="portal-badge">Visão Docente &amp; Gestão</span>
+                </div>
+                <h2 class="portal-acronym">SAGA</h2>
+                <div class="portal-fullname">Sistema de Apoio à Gestão Acadêmica</div>
+                <p class="portal-desc">
+                    Voltado ao corpo docente e à coordenação para análise gerencial de desempenho, retenção, integralização e atualização das bases de dados.
+                </p>
+                <ul class="portal-features">
+                    <li><i class="fas fa-th"></i> Matriz de progressão (Heatmap) e desempenho por turma</li>
+                    <li><i class="fas fa-clock"></i> Monitoramento de prazos de integralização curricular</li>
+                    <li><i class="fas fa-file-csv"></i> Central de gerenciamento dos arquivos CSV oficiais</li>
+                </ul>
+            </div>
+            <div>
+                <a href="{% url 'home' %}" class="portal-cta portal-cta--saga">
+                    <span>Acessar Painel do SAGA</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <span class="portal-hint">Acesso direto aos painéis analíticos e gerência de dados</span>
+            </div>
+        </div>
+    </div>
+
+    <footer class="hub-footer">
+        <div class="hub-footer-brand">
+            <img src="{% static 'img/unirio/unirio-horizontal-positiva.png' %}" alt="UNIRIO" class="hub-footer-img unirio-logo-pos">
+            <img src="{% static 'img/unirio/unirio-horizontal-negativa.png' %}" alt="UNIRIO" class="hub-footer-img unirio-logo-neg">
+            <span class="unirio-brand-slash" style="height: 24px;" aria-hidden="true"></span>
+            <span>Centro de Ciências Exatas e Tecnologia (CCET)</span>
+        </div>
+        <div>
+            Projeto PRADIG • Bacharelado em Sistemas de Informação — UNIRIO
+        </div>
+    </footer>
 </div>
 {% endblock %}

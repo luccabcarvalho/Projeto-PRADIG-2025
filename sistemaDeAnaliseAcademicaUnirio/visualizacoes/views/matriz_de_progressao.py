@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.conf import settings
+from html import escape
 import os
 import numpy as np
 import pandas as pd
@@ -16,10 +17,22 @@ TIPOS_DISCIPLINA = {
 }
 
 COD_SEPARADOR = 'separador'
-LABEL_SEPARADOR = '<b>Optativas</b>'
+LABEL_SEPARADOR = 'Optativas'
 
-PREFIXO_COD_OPTATIVA = 'optativa_'
-PREFIXO_LABEL_OPTATIVA = 'Optativa '
+# Ordem das cores na fila de optativas de cada aluno: verde (vencido), amarelo (inscrito), vermelho (não vencido)
+ORDEM_COR = {1: 0, 0: 1, -1: 2}
+
+CSS_MATRIZ = '''
+<style>
+.matriz-grade { display: grid; grid-template-columns: max-content max-content; width: max-content; background: white; font-family: Arial, sans-serif; font-size: 12px; color: #34495E; }
+.matriz-canto { position: sticky; top: 0; left: 0; z-index: 4; background: white; }
+.matriz-topo { position: sticky; top: 0; z-index: 3; background: white; height: var(--altura-topo); width: var(--largura-plot); }
+.matriz-esq { position: sticky; left: 0; z-index: 2; background: white; }
+.matriz-esq div { height: var(--altura-celula); line-height: var(--altura-celula); padding: 0 8px 0 10px; text-align: right; white-space: nowrap; }
+.matriz-rotulo { position: absolute; bottom: 4px; transform-origin: left bottom; transform: rotate(-45deg); white-space: nowrap; }
+.matriz-separador { font-weight: bold; }
+</style>
+'''
 
 def _ler_csv(nome_arquivo, **kwargs):
     caminho = os.path.join(settings.MEDIA_ROOT, USER_ID, nome_arquivo)
@@ -31,6 +44,38 @@ def _chave_versao(versao):
 
 def _versao_para_param(versao):
     return str(versao).replace('/', '')
+
+def _largura_texto(texto, tamanho_fonte=12):
+    # Estimativa da largura (px) de um texto em Arial: maiúsculas ocupam mais que minúsculas, espaços e pontuação menos
+    return tamanho_fonte * sum(0.72 if c.isupper() else 0.28 if c in ' .,:;-/' else 0.56 for c in texto)
+
+def montar_matriz_html(plot_div, alunos_labels, disciplinas_codigos, disciplinas_labels, plot_width, plot_height):
+    # O Plotly não tem eixo fixo, então os nomes saem do gráfico e viram HTML com position: sticky
+    # (alunos presos à esquerda, disciplinas presas ao topo) alinhado com as células do heatmap
+    largura_celula = plot_width / len(disciplinas_codigos)
+    altura_celula = plot_height / len(alunos_labels)
+    altura_topo = int(max(_largura_texto(label) for label in disciplinas_labels) * 0.7071) + 24
+    margem_direita = max(0, int(_largura_texto(disciplinas_labels[-1]) * 0.7071 - largura_celula / 2)) + 12
+
+    rotulos_disciplinas = ''
+    for j, (cod, label) in enumerate(zip(disciplinas_codigos, disciplinas_labels)):
+        classe = 'matriz-rotulo matriz-separador' if cod == COD_SEPARADOR else 'matriz-rotulo'
+        rotulos_disciplinas += f'<span class="{classe}" style="left:{(j + 0.5) * largura_celula:.2f}px">{escape(label)}</span>'
+    rotulos_alunos = ''.join(f'<div>{escape(label)}</div>' for label in alunos_labels)
+
+    estilo = (
+        f'--altura-topo:{altura_topo}px; --altura-celula:{altura_celula:.4f}px; '
+        f'--largura-plot:{plot_width}px; padding-right:{margem_direita}px'
+    )
+    return (
+        CSS_MATRIZ
+        + f'<div class="matriz-grade" style="{estilo}">'
+        + '<div class="matriz-canto"></div>'
+        + f'<div class="matriz-topo">{rotulos_disciplinas}</div>'
+        + f'<div class="matriz-esq">{rotulos_alunos}</div>'
+        + f'<div class="matriz-plot">{plot_div}</div>'
+        + '</div>'
+    )
 
 def carregar_curriculos():
     df = _ler_csv('curriculos-bsi.csv', encoding='utf-8', sep=';')
@@ -70,83 +115,6 @@ def status_para_num(status):
         return 0
         
     return np.nan 
-
-def _formatar_notas(serie):
-    """Converte a coluna de nota em texto no padrão brasileiro (ex.: '7,4').
-    Devolve '' quando a cursagem não tem nota."""
-    texto = serie.astype(str).str.strip()
-    vazio = serie.isna() | texto.str.lower().isin(['', 'nan', 'none', '<na>'])
-    numero = pd.to_numeric(texto.str.replace(',', '.', regex=False), errors='coerce')
-    formatado = numero.map(lambda v: f'{v:g}'.replace('.', ',') if pd.notna(v) else '')
-    return formatado.where(numero.notna(), texto).where(~vazio, '')
-
-def _preparar_registros(reg):
-    """Cria período, ordem cronológica e a linha de hover de cada cursagem.
-    Devolve os registros ordenados da cursagem mais recente para a mais antiga."""
-    reg = reg.copy()
-
-    periodo_txt = reg['PERIODO'].fillna('').astype(str)
-    semestre = periodo_txt.str.extract(r'(\d)')[0].fillna('?')
-    semestre = pd.Series(np.where(periodo_txt.str.contains('rias', case=False), 'Férias', semestre), index=reg.index)
-    ano = pd.to_numeric(reg['ANO'], errors='coerce').fillna(0).astype(int)
-    reg['ANO_PERIODO'] = ano.astype(str) + '.' + semestre
-    reg['ORDEM'] = ano * 10 + np.where(semestre == '1', 1, 2)
-
-    status = reg['DESCR SITUACAO'].fillna('').astype(str).str.strip()
-    if 'MEDIA FINAL' in reg.columns:
-        nota = _formatar_notas(reg['MEDIA FINAL'])
-    else:
-        nota = pd.Series('', index=reg.index)
-    sufixo_nota = (' (nota ' + nota + ')').where(nota != '', '')
-
-    # • período: situação (nota, se houver)
-    reg['LINHA_HIST'] = '• ' + reg['ANO_PERIODO'] + ': ' + status + sufixo_nota
-
-    return reg.sort_values('ORDEM', ascending=False, kind='stable')
-
-def _valor_final(valido, chaves):
-    """Valor final de cada célula: 1 se houve alguma aprovação; caso contrário, o valor
-    da cursagem mais recente. 'valido' deve estar ordenado do mais recente ao mais antigo."""
-    ultimo = valido.groupby(chaves)['VALOR'].first()
-    aprovado = valido.assign(_ok=valido['VALOR'] == 1).groupby(chaves)['_ok'].any()
-    return ultimo.mask(aprovado.reindex(ultimo.index), 1)
-
-def _agrupar_optativas(origens_por_coluna, codigos_optativas):
-    """Une optativas ligadas por equivalência (ex.: código antigo e novo da mesma disciplina),
-    para que uma mesma optativa ocupe uma única posição 'Optativa N' do aluno."""
-    pai = {cod: cod for cod in codigos_optativas}
-
-    def achar(x):
-        while pai[x] != x:
-            pai[x] = pai[pai[x]]
-            x = pai[x]
-        return x
-
-    dono = {}
-    for cod in codigos_optativas:
-        for origem in origens_por_coluna[cod]:
-            if origem in dono:
-                pai[achar(cod)] = achar(dono[origem])
-            else:
-                dono[origem] = cod
-    return {cod: achar(cod) for cod in codigos_optativas}
-
-def _slots_optativas(reg_opt):
-    """Uma linha por (aluno, optativa) com o valor final da célula e a posição dela na
-    linha do aluno: Optativa 1, 2, 3... por ordem cronológica da primeira cursagem."""
-    valido = reg_opt.dropna(subset=['VALOR'])
-    colunas = ['_r', '_grupo', 'VALOR', '_primeira', '_slot']
-    if valido.empty:
-        return pd.DataFrame(columns=colunas)
-
-    chaves = ['_r', '_grupo']
-    final = _valor_final(valido, chaves).reset_index()
-    primeira = valido.groupby(chaves)['ORDEM'].min().rename('_primeira').reset_index()
-
-    slots = final.merge(primeira, on=chaves)
-    slots = slots.sort_values(['_r', '_primeira', '_grupo'], kind='stable')
-    slots['_slot'] = slots.groupby('_r').cumcount()
-    return slots[colunas]
 
 def matriz_de_progressao(request):
     if not request.GET:
@@ -254,59 +222,54 @@ def matriz_de_progressao(request):
     alunos_labels = (df_alunos['MATR ALUNO'] + ' - ' + df_alunos['NOME PESSOA'].astype(str)).tolist()
     alunos_dict = {id_pessoa: i for i, id_pessoa in enumerate(alunos_ids)}
 
-    nome_por_codigo = dict(zip(df_colunas['COD DISCIPLINA'], df_colunas['NOME CURTO']))
-    obrigatorias = df_colunas[df_colunas['ORDEM_TIPO'] == 1]
-    optativas = df_colunas[df_colunas['ORDEM_TIPO'] == 2]
-    grupo_optativa = _agrupar_optativas(origens_por_coluna, optativas['COD DISCIPLINA'].tolist())
-
     pares = pd.DataFrame(
         [(origem, coluna) for coluna, origens in origens_por_coluna.items() for origem in origens],
         columns=['COD ATIV CURRIC', 'COD COLUNA'],
     )
-    historico_alunos = (
-        df_historico[df_historico['ID PESSOA'].isin(alunos_dict)]
-        .rename_axis('_rid')
-        .reset_index()
-    )
-    reg = historico_alunos.merge(pares, on='COD ATIV CURRIC', how='inner')
+    reg = df_historico[df_historico['ID PESSOA'].isin(alunos_dict)].merge(pares, on='COD ATIV CURRIC', how='inner')
     reg['VALOR'] = reg['DESCR SITUACAO'].map(status_para_num)
+    reg['_r'] = reg['ID PESSOA'].map(alunos_dict)
 
-    reg_obr = reg.iloc[0:0]
-    reg_opt = reg.iloc[0:0]
-    slots = pd.DataFrame(columns=['_r', '_grupo', 'VALOR', '_primeira', '_slot'])
-    n_slots = 0
+    periodo_txt = reg['PERIODO'].fillna('').astype(str)
+    semestre = periodo_txt.str.extract(r'(\d)')[0].fillna('?')
+    semestre = pd.Series(np.where(periodo_txt.str.contains('rias', case=False), 'Férias', semestre), index=reg.index)
+    ano = pd.to_numeric(reg['ANO'], errors='coerce').fillna(0).astype(int)
+    reg['ANO_PERIODO'] = ano.astype(str) + '.' + semestre
+    reg['ORDEM'] = ano * 10 + np.where(semestre == '1', 1, 2)
+    reg = reg.sort_values('ORDEM', ascending=False, kind='stable') 
 
-    if not reg.empty:
-        reg = _preparar_registros(reg)
-        reg['_r'] = reg['ID PESSOA'].map(alunos_dict)
+    # Situação final de cada aluno em cada disciplina (a cor da célula)
+    valido = reg.dropna(subset=['VALOR'])
+    chave = [valido['_r'], valido['COD COLUNA']]
+    ultimo = valido.groupby(chave)['VALOR'].first()
+    aprovado = (valido['VALOR'] == 1).groupby(chave).any()
+    final = ultimo.mask(aprovado.reindex(ultimo.index)) 
+    final = final.fillna(pd.Series(np.where(aprovado.reindex(final.index), 1, np.nan), index=final.index))
+    primeira = valido.groupby(chave)['ORDEM'].min()
 
-        eh_optativa = reg['COD COLUNA'].isin(grupo_optativa)
-        reg_obr = reg[~eh_optativa]
+    # Fila de optativas de cada aluno: verdes, amarelas e vermelhas; dentro de cada cor, 
+    # pela primeira vez em que a disciplina aparece no histórico (desempate pelo código)
+    optativas_codigos = df_colunas.loc[df_colunas['ORDEM_TIPO'] == 2, 'COD DISCIPLINA'].tolist()
+    fila_optativas = pd.DataFrame({'VALOR': final, 'PRIMEIRA': primeira}).reset_index()
+    fila_optativas = fila_optativas[fila_optativas['COD COLUNA'].isin(optativas_codigos)].copy()
+    fila_optativas['COR'] = fila_optativas['VALOR'].map(ORDEM_COR)
+    fila_optativas = fila_optativas.sort_values(['_r', 'COR', 'PRIMEIRA', 'COD COLUNA'], kind='stable')
+    fila_optativas['_slot'] = fila_optativas.groupby('_r').cumcount()
+    n_optativas = int(fila_optativas['_slot'].max()) + 1 if len(fila_optativas) else 0
 
-        # Optativas ligadas por equivalência contam como uma só; um mesmo registro do
-        # histórico nunca ocupa duas posições (preferindo o código exato cursado).
-        reg_opt = reg[eh_optativa].copy()
-        reg_opt['_grupo'] = reg_opt['COD COLUNA'].map(grupo_optativa)
-        reg_opt['_exato'] = reg_opt['COD ATIV CURRIC'] == reg_opt['COD COLUNA']
-        reg_opt = (
-            reg_opt.sort_values('_exato', ascending=False, kind='stable')
-            .drop_duplicates(['_rid', '_grupo'])
-            .sort_values('ORDEM', ascending=False, kind='stable')
-        )
-
-        slots = _slots_optativas(reg_opt)
-        n_slots = int(slots['_slot'].max()) + 1 if len(slots) else 0
-
+    obrigatorias = df_colunas[df_colunas['ORDEM_TIPO'] == 1]
     disciplinas_codigos = obrigatorias['COD DISCIPLINA'].tolist()
     disciplinas_labels = obrigatorias['NOME CURTO'].tolist()
+    nome_por_codigo = dict(zip(df_colunas['COD DISCIPLINA'], df_colunas['NOME CURTO']))
 
-    if disciplinas_codigos and n_slots:
-        disciplinas_codigos.append(COD_SEPARADOR)
-        disciplinas_labels.append(LABEL_SEPARADOR)
-
-    deslocamento_optativas = len(disciplinas_codigos)
-    disciplinas_codigos += [f'{PREFIXO_COD_OPTATIVA}{i}' for i in range(1, n_slots + 1)]
-    disciplinas_labels += [f'{PREFIXO_LABEL_OPTATIVA}{i}' for i in range(1, n_slots + 1)]
+    primeira_optativa = len(disciplinas_codigos) + (1 if disciplinas_codigos else 0)
+    if n_optativas:
+        if disciplinas_codigos:
+            disciplinas_codigos.append(COD_SEPARADOR)
+            disciplinas_labels.append(LABEL_SEPARADOR)
+        for k in range(1, n_optativas + 1):
+            disciplinas_codigos.append(f'optativa_{k}')
+            disciplinas_labels.append(f'Optativa {k}')
 
     if not disciplinas_codigos:
         return renderizar(mensagem='Nenhum aluno cursou optativas para os filtros selecionados.')
@@ -317,35 +280,26 @@ def matriz_de_progressao(request):
     z = np.full((n_alunos, n_disciplinas), np.nan)
     textos = np.full((n_alunos, n_disciplinas), '', dtype=object)
 
-    # --- Obrigatórias: uma coluna por disciplina ---
-    if not reg_obr.empty:
-        reg_obr = reg_obr.assign(_c=reg_obr['COD COLUNA'].map(disciplinas_dict).astype(int))
+    if not reg.empty:
+        reg = reg.merge(fila_optativas[['_r', 'COD COLUNA', '_slot']], on=['_r', 'COD COLUNA'], how='left')
+        reg['_c'] = reg['COD COLUNA'].map(disciplinas_dict).fillna(primeira_optativa + reg['_slot'])
+        reg = reg.dropna(subset=['_c']).astype({'_c': int})
 
-        valido = reg_obr.dropna(subset=['VALOR'])
-        if not valido.empty:
-            final = _valor_final(valido, ['_r', '_c']).reset_index()
-            z[final['_r'].to_numpy(int), final['_c'].to_numpy(int)] = final['VALOR'].to_numpy()
+        if len(final):
+            coluna_do_par = reg.drop_duplicates(['_r', 'COD COLUNA']).set_index(['_r', 'COD COLUNA'])['_c']
+            z[final.index.get_level_values(0).astype(int), coluna_do_par.reindex(final.index).astype(int).values] = final.values
 
-        historicos = reg_obr.groupby(['_r', '_c'], sort=False)['LINHA_HIST'].agg('<br>'.join)
-        for (r, c), historico in historicos.items():
-            nome_disciplina = nome_por_codigo[disciplinas_codigos[c]]
-            textos[r, c] = f"{nomes_alunos[r]}<br>{nome_disciplina}<br>{historico}"
+        status = reg['DESCR SITUACAO'].fillna('').astype(str).str.strip()
+        nota = reg['MEDIA FINAL'].fillna('').astype(str).str.strip()
+        nota = (' (nota: ' + nota + ')').where(nota != '', '')
 
-    # --- Optativas: colunas genéricas "Optativa N", em ordem cronológica por aluno ---
-    if n_slots:
-        colunas_slot = deslocamento_optativas + slots['_slot'].to_numpy(int)
-        z[slots['_r'].to_numpy(int), colunas_slot] = slots['VALOR'].to_numpy()
-
-        reg_slots = reg_opt.merge(slots[['_r', '_grupo', '_slot']], on=['_r', '_grupo'], how='inner')
-        agrupado = reg_slots.groupby(['_r', '_slot'], sort=False).agg(
+        reg['LINHA_HIST'] = '• ' + reg['ANO_PERIODO'] + ' - ' + status + nota
+        agrupado = reg.groupby(['_r', '_c'], sort=False).agg(
+            cod=('COD COLUNA', 'first'),
             historico=('LINHA_HIST', '<br>'.join),
-            codigo=('COD COLUNA', 'first'),
         )
-        for (r, s), linha in zip(agrupado.index, agrupado.itertuples(index=False)):
-            nome_optativa = nome_por_codigo[linha.codigo]
-            textos[r, deslocamento_optativas + s] = (
-                f"{nomes_alunos[r]}<br><b>{nome_optativa}</b><br>{linha.historico}"
-            )
+        for (r, c), linha in zip(agrupado.index, agrupado.itertuples(index=False)):
+            textos[r, c] = f"{nomes_alunos[r]}<br>{nome_por_codigo[linha.cod]}<br>{linha.historico}"
 
     plot_width = max(1100, n_disciplinas * 50)
     plot_height = max(550, n_alunos * 32)
@@ -389,32 +343,16 @@ def matriz_de_progressao(request):
     ),
 
     xaxis=dict(
-        side='top',
         type='category',
-        tickmode='array',
-        tickvals=disciplinas_codigos,
-        ticktext=disciplinas_labels,
-        tickangle=-45,
-        tickfont=dict(
-            size=12,
-            color='#34495E'
-        ),
-        fixedrange=True,
-        automargin=True,
-        showgrid=False,
-        zeroline=False
+        visible=False,
+        fixedrange=True
     ),
 
     yaxis=dict(
-        tickfont=dict(
-            size=12,
-            color='#34495E'
-        ),
-        fixedrange=True,
+        type='category',
         autorange='reversed',
-        automargin=True,
-        showgrid=False,
-        zeroline=False
+        visible=False,
+        fixedrange=True
     ),
 
     autosize=False,
@@ -422,10 +360,10 @@ def matriz_de_progressao(request):
     height=plot_height,
 
     margin=dict(
-        l=10,
-        r=20,
-        t=150,
-        b=20
+        l=0,
+        r=0,
+        t=0,
+        b=0
     ),
 
     hovermode='closest',
@@ -444,4 +382,5 @@ def matriz_de_progressao(request):
     plot_bgcolor='white',
     paper_bgcolor='white'
 )
-    return renderizar(plot_div=fig.to_html(full_html=False, config={'displayModeBar': False}))
+    plot_div = fig.to_html(full_html=False, config={'displayModeBar': False})
+    return renderizar(plot_div=montar_matriz_html(plot_div, alunos_labels, disciplinas_codigos, disciplinas_labels, plot_width, plot_height))

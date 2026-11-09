@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.conf import settings
-from html import escape
 import os
 import numpy as np
 import pandas as pd
@@ -22,18 +21,6 @@ LABEL_SEPARADOR = 'Optativas'
 # Ordem das cores na fila de optativas de cada aluno: verde (vencido), amarelo (inscrito), vermelho (não vencido)
 ORDEM_COR = {1: 0, 0: 1, -1: 2}
 
-CSS_MATRIZ = '''
-<style>
-.matriz-grade { display: grid; grid-template-columns: max-content max-content; width: max-content; background: white; font-family: Arial, sans-serif; font-size: 12px; color: #34495E; }
-.matriz-canto { position: sticky; top: 0; left: 0; z-index: 4; background: white; }
-.matriz-topo { position: sticky; top: 0; z-index: 3; background: white; height: var(--altura-topo); width: var(--largura-plot); }
-.matriz-esq { position: sticky; left: 0; z-index: 2; background: white; }
-.matriz-esq div { height: var(--altura-celula); line-height: var(--altura-celula); padding: 0 8px 0 10px; text-align: right; white-space: nowrap; }
-.matriz-rotulo { position: absolute; bottom: 4px; transform-origin: left bottom; transform: rotate(-45deg); white-space: nowrap; }
-.matriz-separador { font-weight: bold; }
-</style>
-'''
-
 def _ler_csv(nome_arquivo, **kwargs):
     caminho = os.path.join(settings.MEDIA_ROOT, USER_ID, nome_arquivo)
     return pd.read_csv(caminho, **kwargs)
@@ -49,33 +36,22 @@ def _largura_texto(texto, tamanho_fonte=12):
     # Estimativa da largura (px) de um texto em Arial: maiúsculas ocupam mais que minúsculas, espaços e pontuação menos
     return tamanho_fonte * sum(0.72 if c.isupper() else 0.28 if c in ' .,:;-/' else 0.56 for c in texto)
 
-def montar_matriz_html(plot_div, alunos_labels, disciplinas_codigos, disciplinas_labels, plot_width, plot_height):
-    # O Plotly não tem eixo fixo, então os nomes saem do gráfico e viram HTML com position: sticky
-    # (alunos presos à esquerda, disciplinas presas ao topo) alinhado com as células do heatmap
+def montar_matriz(alunos_labels, disciplinas_codigos, disciplinas_labels, plot_width, plot_height):
+    # O Plotly não tem eixo fixo, então os nomes ficam fora do gráfico (o template desenha com position: sticky)
+    # e são alinhados às células pelas mesmas medidas: cada coluna tem largura_celula e cada linha altura_celula
     largura_celula = plot_width / len(disciplinas_codigos)
     altura_celula = plot_height / len(alunos_labels)
-    altura_topo = int(max(_largura_texto(label) for label in disciplinas_labels) * 0.7071) + 24
-    margem_direita = max(0, int(_largura_texto(disciplinas_labels[-1]) * 0.7071 - largura_celula / 2)) + 12
-
-    rotulos_disciplinas = ''
-    for j, (cod, label) in enumerate(zip(disciplinas_codigos, disciplinas_labels)):
-        classe = 'matriz-rotulo matriz-separador' if cod == COD_SEPARADOR else 'matriz-rotulo'
-        rotulos_disciplinas += f'<span class="{classe}" style="left:{(j + 0.5) * largura_celula:.2f}px">{escape(label)}</span>'
-    rotulos_alunos = ''.join(f'<div>{escape(label)}</div>' for label in alunos_labels)
-
-    estilo = (
-        f'--altura-topo:{altura_topo}px; --altura-celula:{altura_celula:.4f}px; '
-        f'--largura-plot:{plot_width}px; padding-right:{margem_direita}px'
-    )
-    return (
-        CSS_MATRIZ
-        + f'<div class="matriz-grade" style="{estilo}">'
-        + '<div class="matriz-canto"></div>'
-        + f'<div class="matriz-topo">{rotulos_disciplinas}</div>'
-        + f'<div class="matriz-esq">{rotulos_alunos}</div>'
-        + f'<div class="matriz-plot">{plot_div}</div>'
-        + '</div>'
-    )
+    return {
+        'alunos': alunos_labels,
+        'disciplinas': [
+            {'label': label, 'left': round((j + 0.5) * largura_celula, 2), 'separador': cod == COD_SEPARADOR}
+            for j, (cod, label) in enumerate(zip(disciplinas_codigos, disciplinas_labels))
+        ],
+        'altura_topo': int(max(_largura_texto(label) for label in disciplinas_labels) * 0.7071) + 24,
+        'altura_celula': round(altura_celula, 4),
+        'largura_plot': plot_width,
+        'margem_direita': max(0, int(_largura_texto(disciplinas_labels[-1]) * 0.7071 - largura_celula / 2)) + 12,
+    }
 
 def carregar_curriculos():
     df = _ler_csv('curriculos-bsi.csv', encoding='utf-8', sep=';')
@@ -149,9 +125,10 @@ def matriz_de_progressao(request):
         {'name': 'ativos', 'label': 'Alunos ativos', 'selected': filtro_ativos == 'ativos'},
     ]
 
-    def renderizar(plot_div='', mensagem=''):
+    def renderizar(plot_div='', mensagem='', matriz=None):
         return render(request, 'matriz-de-progressao/matriz_de_progressao.html', {
             'plot_div': plot_div,
+            'matriz': matriz,
             'mensagem': mensagem,
             'curriculos_options': curriculos_options,
             'periodos_options': [],
@@ -383,4 +360,4 @@ def matriz_de_progressao(request):
     paper_bgcolor='white'
 )
     plot_div = fig.to_html(full_html=False, config={'displayModeBar': False})
-    return renderizar(plot_div=montar_matriz_html(plot_div, alunos_labels, disciplinas_codigos, disciplinas_labels, plot_width, plot_height))
+    return renderizar(plot_div=plot_div, matriz=montar_matriz(alunos_labels, disciplinas_codigos, disciplinas_labels, plot_width, plot_height))

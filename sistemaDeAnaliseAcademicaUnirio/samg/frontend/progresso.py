@@ -280,66 +280,96 @@ def progresso(request):
         for periodo in curriculo_grade
         for disciplina in periodo['disciplinas']
     ]
+
+    def _pertence_tipos_ativos(disciplina):
+        if disciplina.get('obrigatoria'):
+            return True
+        if disciplina.get('eletiva') and mostrar_eletivas:
+            return True
+        if disciplina.get('optativa') and mostrar_optativas:
+            return True
+        if disciplina.get('demais') and mostrar_demais:
+            return True
+        return False
+
     filter_counts = {
-        'pendentes': sum(1 for disciplina in all_disciplinas if not disciplina['concluida']),
-        'eletivas': sum(1 for disciplina in all_disciplinas if disciplina.get('eletiva')),
-        'optativas': sum(1 for disciplina in all_disciplinas if disciplina.get('optativa')),
-        'demais': sum(1 for disciplina in all_disciplinas if disciplina.get('demais')),
+        'pendentes': sum(
+            1
+            for disciplina in all_disciplinas
+            if _pertence_tipos_ativos(disciplina) and not disciplina['concluida']
+        ),
+        'eletivas': sum(
+            1
+            for disciplina in all_disciplinas
+            if disciplina.get('eletiva') and (not apenas_pendentes or not disciplina['concluida'])
+        ),
+        'optativas': sum(
+            1
+            for disciplina in all_disciplinas
+            if disciplina.get('optativa') and (not apenas_pendentes or not disciplina['concluida'])
+        ),
+        'demais': sum(
+            1
+            for disciplina in all_disciplinas
+            if disciplina.get('demais') and (not apenas_pendentes or not disciplina['concluida'])
+        ),
     }
 
     filtered_curriculo_grade = []
     for periodo in curriculo_grade:
-        disciplinas_filtradas = []
-        for disciplina in periodo['disciplinas']:
-            deve_incluir = disciplina.get('obrigatoria')
-            if not deve_incluir and disciplina.get('eletiva') and mostrar_eletivas:
-                deve_incluir = True
-            if not deve_incluir and disciplina.get('optativa') and mostrar_optativas:
-                deve_incluir = True
-            if not deve_incluir and disciplina.get('demais') and mostrar_demais:
-                deve_incluir = True
+        disciplinas_tipos = [
+            disciplina
+            for disciplina in periodo['disciplinas']
+            if _pertence_tipos_ativos(disciplina)
+        ]
+        if not disciplinas_tipos:
+            continue
 
-            if not deve_incluir:
-                continue
-
-            if apenas_pendentes and disciplina['concluida']:
-                continue
-
-            disciplinas_filtradas.append(disciplina)
-
+        disciplinas_filtradas = [
+            disciplina
+            for disciplina in disciplinas_tipos
+            if not (apenas_pendentes and disciplina['concluida'])
+        ]
         if not disciplinas_filtradas:
             continue
 
+        concluidas_tipos = [d for d in disciplinas_tipos if d['concluida']]
         concluidas_filtradas = [d for d in disciplinas_filtradas if d['concluida']]
         pendentes_filtradas = [d for d in disciplinas_filtradas if not d['concluida']]
         total_filtrado = len(disciplinas_filtradas)
-        total_concluidas_filtrado = len(concluidas_filtradas)
+        total_tipos = len(disciplinas_tipos)
+        total_concluidas_tipos = len(concluidas_tipos)
 
-        carga_total_filtrada = int(round(sum((d['carga_horaria'] or 0) for d in disciplinas_filtradas)))
-        carga_cursada_filtrada = int(round(sum(
+        carga_total_tipos = int(round(sum((d['carga_horaria'] or 0) for d in disciplinas_tipos)))
+        carga_cursada_tipos = int(round(sum(
             (d['carga_horaria'] or 0)
-            for d in disciplinas_filtradas
+            for d in disciplinas_tipos
             if d['status_raw'] == 'APV- Aprovado'
         )))
-        carga_concluida_filtrada = int(round(sum(
+        carga_concluida_tipos = int(round(sum(
             (d['carga_horaria'] or 0)
-            for d in disciplinas_filtradas
+            for d in disciplinas_tipos
             if d['concluida']
         )))
+        carga_pendente_filtrada = int(round(sum(
+            (d['carga_horaria'] or 0)
+            for d in pendentes_filtradas
+        )))
 
-        percentual_filtrado = round((carga_cursada_filtrada / carga_total_filtrada) * 100, 1) if carga_total_filtrada else 0
+        percentual_filtrado = round((carga_cursada_tipos / carga_total_tipos) * 100, 1) if carga_total_tipos else 0
 
         filtered_curriculo_grade.append({
             'periodo': periodo['periodo'],
             'periodo_label': periodo['periodo_label'],
             'total': total_filtrado,
-            'concluidas': total_concluidas_filtrado,
+            'total_tipos': total_tipos,
+            'concluidas': total_concluidas_tipos,
             'pendentes': len(pendentes_filtradas),
             'percentual': percentual_filtrado,
-            'carga_horaria_total': int(carga_total_filtrada),
-            'carga_horaria_cursada': int(carga_cursada_filtrada),
-            'carga_horaria_concluida': int(carga_concluida_filtrada),
-            'carga_horaria_pendente': int(max(carga_total_filtrada - carga_cursada_filtrada, 0)),
+            'carga_horaria_total': int(carga_total_tipos),
+            'carga_horaria_cursada': int(carga_cursada_tipos),
+            'carga_horaria_concluida': int(carga_concluida_tipos),
+            'carga_horaria_pendente': int(carga_pendente_filtrada),
             'disciplinas': disciplinas_filtradas,
             'disciplinas_concluidas': concluidas_filtradas,
             'disciplinas_pendentes': pendentes_filtradas,

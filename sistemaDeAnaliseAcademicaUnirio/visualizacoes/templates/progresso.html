@@ -187,18 +187,30 @@
         background: linear-gradient(90deg, #198754 0%, #28a745 100%);
         border-radius: 999px;
     }
+    .discipline-group {
+        margin-bottom: 1.25rem;
+    }
     .discipline-group:last-child {
         margin-bottom: 0;
     }
     .period-body {
         background: var(--bg-primary);
     }
-    
-     /* ocultar tipos de disciplina por padrão */
-     .eletiva, .optativa, .demais { display: none; }
-     .samg_show_eletivas .eletiva { display: flex; }
-     .samg_show_optativas .optativa { display: flex; }
-     .samg_show_demais .demais { display: flex; }
+    .discipline-list {
+        display: flex;
+        flex-direction: column;
+        gap: .65rem;
+    }
+    .discipline-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: flex-start;
+        padding: .8rem .9rem;
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        background: var(--bg-secondary);
+    }
     .discipline-main {
         min-width: 0;
     }
@@ -336,27 +348,6 @@
             bar.style.width = width + '%';
         });
 
-        // Mostrar disciplinar por tipo via checkboxes (persiste em localStorage)
-        const bodyEl = document.body;
-        const filters = [
-            [eletivas, 'samg_show_eletivas'],
-            [optativas, 'samg_show_optativas'],
-            [demais, 'samg_show_demais'],
-        ];
-        filters.forEach(function ([checkbox, storageKey]) {
-            if (!checkbox) return;
-            checkbox.addEventListener('change', function () {
-                if (checkbox.checked) bodyEl.classList.add(storageKey); else bodyEl.classList.remove(storageKey);
-                try { localStorage.setItem(storageKey, checkbox.checked ? '1' : '0'); } catch (e) {}
-            });
-            try {
-                if (localStorage.getItem(storageKey) === '1') {
-                    bodyEl.classList.add(storageKey);
-                    checkbox.checked = true;
-                }
-            } catch (e) {}
-        });
-
         // Períodos colapsáveis: botões que expandem/colapsam a .period-body
         document.querySelectorAll('.period-toggle').forEach(function(btn){
             btn.addEventListener('click', function(){
@@ -394,16 +385,16 @@
         <div class="filter-chips">
             <span class="filter-chip-label">Filtros rápidos</span>
 
-            <input class="btn-check" type="checkbox" id="apenas_pendentes" name="apenas_pendentes" value="1" {% if apenas_pendentes %}checked{% endif %}>
+            <input class="btn-check" type="checkbox" id="apenas_pendentes" name="apenas_pendentes" value="1" form="filtros-form" {% if apenas_pendentes %}checked{% endif %}>
             <label class="btn btn-outline-light filter-chip" for="apenas_pendentes">Pendentes ({{ filter_counts.pendentes|default:0 }})</label>
 
-            <input class="btn-check" type="checkbox" id="mostrar_eletivas" name="mostrar_eletivas" value="1" {% if mostrar_eletivas %}checked{% endif %}>
+            <input class="btn-check" type="checkbox" id="mostrar_eletivas" name="mostrar_eletivas" value="1" form="filtros-form" {% if mostrar_eletivas %}checked{% endif %}>
             <label class="btn btn-outline-light filter-chip" for="mostrar_eletivas">Eletivas ({{ filter_counts.eletivas|default:0 }})</label>
 
-            <input class="btn-check" type="checkbox" id="mostrar_optativas" name="mostrar_optativas" value="1" {% if mostrar_optativas %}checked{% endif %}>
+            <input class="btn-check" type="checkbox" id="mostrar_optativas" name="mostrar_optativas" value="1" form="filtros-form" {% if mostrar_optativas %}checked{% endif %}>
             <label class="btn btn-outline-light filter-chip" for="mostrar_optativas">Optativas ({{ filter_counts.optativas|default:0 }})</label>
 
-            <input class="btn-check" type="checkbox" id="mostrar_demais" name="mostrar_demais" value="1" {% if mostrar_demais %}checked{% endif %}>
+            <input class="btn-check" type="checkbox" id="mostrar_demais" name="mostrar_demais" value="1" form="filtros-form" {% if mostrar_demais %}checked{% endif %}>
             <label class="btn btn-outline-light filter-chip" for="mostrar_demais">Outras ({{ filter_counts.demais|default:0 }})</label>
         </div>
         <div class="hero-disclaimer" role="note">
@@ -495,16 +486,21 @@
         <div class="row g-4">
             {% for periodo in filteredCurriculoGrade %}
             <div class="col-12 col-xl-6">
-                <div class="period-card">
+                <div class="period-card {% if apenas_pendentes or mostrar_eletivas or mostrar_optativas or mostrar_demais %}expanded{% endif %}">
                     <div class="period-header">
                         <div>
                             <h2>{{ periodo.periodo_label }}</h2>
+                            {% if apenas_pendentes %}
+                            <small>{{ periodo.pendentes }} disciplina{% if periodo.pendentes != 1 %}s{% endif %} pendente{% if periodo.pendentes != 1 %}s{% endif %} ({{ periodo.concluidas }}/{{ periodo.total_tipos }} concluídas no período)</small>
+                            <div class="small mt-1">{{ periodo.carga_horaria_pendente }}h pendentes</div>
+                            {% else %}
                             <small>{{ periodo.concluidas }}/{{ periodo.total }} disciplinas concluídas</small>
                             <div class="small mt-1">{{ periodo.carga_horaria_concluida }}h / {{ periodo.carga_horaria_total }}h</div>
+                            {% endif %}
                         </div>
                         <div style="display:flex;gap:1rem;align-items:center;">
                             <div class="period-percent">{{ periodo.percentual }}%</div>
-                            <button type="button" class="btn btn-sm btn-outline-light period-toggle" aria-expanded="false">Ver</button>
+                            <button type="button" class="btn btn-sm btn-outline-light period-toggle" aria-expanded="{% if apenas_pendentes or mostrar_eletivas or mostrar_optativas or mostrar_demais %}true{% else %}false{% endif %}">{% if apenas_pendentes or mostrar_eletivas or mostrar_optativas or mostrar_demais %}Ocultar{% else %}Ver{% endif %}</button>
                         </div>
                     </div>
                     <div class="period-body">
@@ -512,6 +508,7 @@
                             <div class="progress-track-fill" data-width="{{ periodo.percentual }}"></div>
                         </div>
 
+                        {% if not apenas_pendentes %}
                         <div class="discipline-group">
                             <div class="section-title">Disciplinas concluídas</div>
                             {% if periodo.disciplinas_concluidas %}
@@ -521,9 +518,14 @@
                                         <div class="discipline-main">
                                             <div class="discipline-code">{{ disc.sigla }}</div>
                                             <p class="discipline-name">{{ disc.nome }}</p>
-                                            {% if disc.carga_horaria_label %}
+                                            {% if disc.carga_horaria_label or not disc.obrigatoria %}
                                             <div class="discipline-badges">
+                                                {% if disc.carga_horaria_label %}
                                                 <span class="badge bg-light text-dark border">{{ disc.carga_horaria_label }}</span>
+                                                {% endif %}
+                                                {% if not disc.obrigatoria and disc.tipo_disciplina %}
+                                                <span class="badge badge-soft border">{{ disc.tipo_disciplina }}</span>
+                                                {% endif %}
                                             </div>
                                             {% endif %}
                                             {% if disc.periodo_real %}
@@ -538,9 +540,10 @@
                                 <div class="text-muted">Nenhuma disciplina concluída neste período.</div>
                             {% endif %}
                         </div>
+                        {% endif %}
 
                         <div class="discipline-group">
-                            <div class="section-title">Demais disciplinas do período</div>
+                            <div class="section-title">{% if apenas_pendentes %}Disciplinas pendentes do período{% else %}Demais disciplinas do período{% endif %}</div>
                             {% if periodo.disciplinas_pendentes %}
                                 <div class="discipline-list">
                                     {% for disc in periodo.disciplinas_pendentes %}
@@ -548,9 +551,14 @@
                                         <div class="discipline-main">
                                             <div class="discipline-code">{{ disc.sigla }}</div>
                                             <p class="discipline-name">{{ disc.nome }}</p>
-                                            {% if disc.carga_horaria_label %}
+                                            {% if disc.carga_horaria_label or not disc.obrigatoria %}
                                             <div class="discipline-badges">
+                                                {% if disc.carga_horaria_label %}
                                                 <span class="badge bg-light text-dark border">{{ disc.carga_horaria_label }}</span>
+                                                {% endif %}
+                                                {% if not disc.obrigatoria and disc.tipo_disciplina %}
+                                                <span class="badge badge-soft border">{{ disc.tipo_disciplina }}</span>
+                                                {% endif %}
                                             </div>
                                             {% endif %}
                                             <div class="discipline-meta">
@@ -566,6 +574,12 @@
                             {% endif %}
                         </div>
                     </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-light curriculo-alert">
+                    Nenhuma disciplina encontrada para os filtros selecionados.
                 </div>
             </div>
             {% endfor %}

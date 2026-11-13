@@ -325,16 +325,16 @@
 		</div>
 		<div class="filter-chips">
 			<span class="filter-chip-label">Filtros rápidos</span>
-			<input class="btn-check" type="checkbox" id="apenas_pendentes" name="apenas_pendentes" value="1" {% if apenas_pendentes %}checked{% endif %}>
+			<input class="btn-check" type="checkbox" id="apenas_pendentes" name="apenas_pendentes" value="1" form="filtros-form" {% if apenas_pendentes %}checked{% endif %}>
 			<label class="btn btn-outline-light filter-chip" for="apenas_pendentes">Pendentes</label>
 
-			<input class="btn-check" type="checkbox" id="mostrar_eletivas" name="mostrar_eletivas" value="1" {% if mostrar_eletivas %}checked{% endif %}>
+			<input class="btn-check" type="checkbox" id="mostrar_eletivas" name="mostrar_eletivas" value="1" form="filtros-form" {% if mostrar_eletivas %}checked{% endif %}>
 			<label class="btn btn-outline-light filter-chip" for="mostrar_eletivas">Eletivas</label>
 
-			<input class="btn-check" type="checkbox" id="mostrar_optativas" name="mostrar_optativas" value="1" {% if mostrar_optativas %}checked{% endif %}>
+			<input class="btn-check" type="checkbox" id="mostrar_optativas" name="mostrar_optativas" value="1" form="filtros-form" {% if mostrar_optativas %}checked{% endif %}>
 			<label class="btn btn-outline-light filter-chip" for="mostrar_optativas">Optativas</label>
 
-			<input class="btn-check" type="checkbox" id="mostrar_demais" name="mostrar_demais" value="1" {% if mostrar_demais %}checked{% endif %}>
+			<input class="btn-check" type="checkbox" id="mostrar_demais" name="mostrar_demais" value="1" form="filtros-form" {% if mostrar_demais %}checked{% endif %}>
 			<label class="btn btn-outline-light filter-chip" for="mostrar_demais">Outras</label>
 		</div>
 		<div class="hero-disclaimer" role="note">

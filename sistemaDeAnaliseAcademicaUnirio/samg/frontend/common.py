@@ -356,7 +356,7 @@ def filtrarResultadoComparacao(
         elif item.get('demais') and mostrar_demais:
             comparacao_filtrada.append(item)
 
-    if apenas_obrigatorias:
+    if apenas_obrigatorias and not (mostrar_eletivas or mostrar_optativas or mostrar_demais):
         comparacao_filtrada = [item for item in comparacao_filtrada if item.get('obrigatoria')]
     if apenas_pendentes:
         comparacao_filtrada = [item for item in comparacao_filtrada if not item.get('concluida')]

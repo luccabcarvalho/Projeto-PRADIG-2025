@@ -22,7 +22,21 @@ def prazos_de_integralizacao(request):
     # --- Filtros ---
     if not request.GET:
         return redirect(f"{reverse('prazos_de_integralizacao')}?ativos=ativos")
-    
+
+    filtro_prazo = request.GET.get('prazo_a_partir', '')
+    historico_regular = df_historico[df_historico['PERIODO'].astype(str).str[0].isin(['1', '2']) & df_historico['ANO'].astype(str).str.isnumeric()]
+    historico_regular_int = historico_regular['ANO'].astype(int) * 10 + historico_regular['PERIODO'].astype(str).str[0].astype(int)
+    prazos_unicos = sorted(historico_regular_int.unique())
+    prazos_options = [
+        {'value': f'{p // 10}/{p % 10}', 'label': f'{p // 10}/{p % 10}°. semestre', 'selected': f'{p // 10}/{p % 10}' == filtro_prazo}
+        for p in prazos_unicos
+    ]
+    if filtro_prazo in [opcao['value'] for opcao in prazos_options]:
+        prazo_int = int(filtro_prazo.replace('/', ''))
+        ultimo_periodo = historico_regular_int.groupby(historico_regular['MATR ALUNO']).max()
+        matr_no_prazo = ultimo_periodo[ultimo_periodo >= prazo_int].index
+        df_historico = df_historico[df_historico['MATR ALUNO'].isin(matr_no_prazo)]
+
     filtro_ativos = request.GET.get('ativos', 'todos')
     if filtro_ativos == 'ativos':
         alunos_ativos = df_alunos[df_alunos['FORMA EVASAO'] == 'Sem evasão']['ID PESSOA'].unique()
@@ -71,7 +85,7 @@ def prazos_de_integralizacao(request):
         ('Prazo Máximo', 2, '#9fc5e8'),
         ('Exigir plano de integralização', 2, '#f6b26b'),
         ('Prorrogação Máxima', 2, '#f9cb9c'),
-        ('Situação Irregular', 2, '#e06666'),
+        ('Situação Irregular', 4, '#e06666'),
         ('Mobilidade', 1, '#93c47d'),
         ('Períodos Excepcionais', 6, '#ffe599'),
         ('Atividades Calendário Emergencial', 2, '#ffd966'),
@@ -354,6 +368,8 @@ def prazos_de_integralizacao(request):
         textfont=dict(size=15, color='black'),
     )
 
+    linhas_visiveis = 20
+
     fig.update_layout(
         font=dict(size=18),
         xaxis=dict(
@@ -368,10 +384,10 @@ def prazos_de_integralizacao(request):
         yaxis=dict(
             automargin=True,
             tickfont=dict(size=16),
-            range=[0, 10], 
+            range=[-0.5, linhas_visiveis - 0.5],
         ),
         autosize=False,
-        width=2200,
+        width=2300,
         height=850,
         margin=dict(l=10, r=10, t=60, b=10),
         dragmode="pan"
@@ -385,4 +401,5 @@ def prazos_de_integralizacao(request):
         'plot_div': plot_div,
         'filtros_options': filtros_options,
         'periodos_options': periodos_options,
+        'prazos_options': prazos_options,
     })

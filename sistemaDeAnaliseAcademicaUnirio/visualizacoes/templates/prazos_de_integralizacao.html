@@ -11,6 +11,11 @@
             allowClear: true,
             width: '100%'
         });
+        $('#prazo_a_partir').select2({
+            placeholder: "Prazo a partir de",
+            allowClear: true,
+            width: '100%'
+        });
         $('#filtros-form select, #filtros-form input[type="checkbox"]').on('change', function() {
             $('#filtros-form').submit();
         });
@@ -126,7 +131,7 @@
 
         <form method="get" id="filtros-form">
             <div class="filtros-bar">
-                <div style="display:flex; align-items:center; gap:1.2em; flex:0 1 auto; min-width:0;">
+                <div style="display:flex; align-items:center; flex-wrap:wrap; gap:1.2em; flex:0 1 auto; min-width:0;">
                     {% for filtro in filtros_options %}
                         <div class="filtro-item inline">
                             <input type="checkbox" name="{{ filtro.name }}" value="ativos" id="filtro-{{ filtro.name }}" {% if filtro.selected %}checked{% endif %}>
@@ -139,6 +144,15 @@
                             <option value="">Todos</option>
                             {% for periodo in periodos_options %}
                                 <option value="{{ periodo.value }}" {% if periodo.selected %}selected{% endif %}>{{ periodo.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="filtro-item">
+                        <label for="prazo_a_partir">Prazo a partir de:</label>
+                        <select name="prazo_a_partir" id="prazo_a_partir">
+                            <option value="">Todos</option>
+                            {% for prazo in prazos_options %}
+                                <option value="{{ prazo.value }}" {% if prazo.selected %}selected{% endif %}>{{ prazo.label }}</option>
                             {% endfor %}
                         </select>
                     </div>

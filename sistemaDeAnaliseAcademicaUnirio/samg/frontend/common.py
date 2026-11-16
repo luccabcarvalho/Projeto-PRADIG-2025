@@ -270,23 +270,30 @@ def carregaEquivalencias():
         return None
     
     try:
-        # Carrega com separador ";" e encoding correto para acentos
-        df = pd.read_csv(equivalencias_path, sep=';', encoding='utf-8-sig')
+        df = None
+        # tentativa com utf-8-sig e separador ";"
+        try:
+            df = pd.read_csv(equivalencias_path, sep=';', engine='python', encoding='utf-8-sig')
+        except Exception:
+            # tenta com latin-1 
+            try:
+                df = pd.read_csv(equivalencias_path, sep=';', engine='python', encoding='latin-1')
+            except Exception:
+                return None
+
         
-        # Normaliza nomes de colunas se necessário
         df.columns = df.columns.str.strip()
         
-        # Remove linhas onde NOME_DISC_EQUIV está vazio (sem equivalência)
+        # retirando linhas onde NOME_DISC_EQUIV está vazio (sem equivalência)
         df = df.dropna(subset=['NOME_DISC_EQUIV'])
         df = df[df['NOME_DISC_EQUIV'].astype(str).str.strip() != '']
         
-        # Extrai os códigos das disciplinas
-        # NOME_DISCIPLINA e NOME_DISC_EQUIV têm format: "TINU0XXX - Nome da Disciplina"
+        # extrai os códigos das disciplinas
         df['COD_NOVO'] = df['NOME_DISCIPLINA'].astype(str).str.extract(r'^([A-Z]+\d{4})', expand=False)
         df['COD_ANTIGO'] = df['NOME_DISC_EQUIV'].astype(str).str.extract(r'^([A-Z]+\d{4})', expand=False)
         df['NUM_VERSAO'] = df['NUM_VERSAO'].astype(str).str.strip()
         
-        # Remove linhas onde não foi possível extrair os códigos
+        # remove linhas sem codigo
         df = df.dropna(subset=['COD_NOVO', 'COD_ANTIGO'])
         
         return df[['COD_ANTIGO', 'COD_NOVO', 'NUM_VERSAO']].copy()
@@ -495,8 +502,8 @@ def compareCurriculos(df_curriculo_atual, df_curriculo_novo, historico_concluido
     carga_horaria_reaproveitavel = sum(float(item.get('carga_horaria_atual', 0) or 0) for item in comparacao if item['reaproveitada'])
     carga_horaria_aproveitada_pelo_aluno = sum(float(item.get('carga_horaria_atual', 0) or 0) for item in comparacao if item['reaproveitada'] and item['concluida'])
     reaproveitadas = equivalencias_possiveis_grade
-    aproveitamento = round((carga_horaria_reaproveitavel / carga_horaria_total_atual) * 100, 1) if carga_horaria_total_atual else 0
-    aproveitamento_pelo_aluno = round((carga_horaria_aproveitada_pelo_aluno / carga_horaria_reaproveitavel) * 100, 1) if carga_horaria_reaproveitavel else 0
+    aproveitamento_pelo_aluno = round((aproveitadas_pelo_aluno / equivalencias_possiveis_grade) * 100, 1) if equivalencias_possiveis_grade else 0.0
+    aproveitamento = aproveitamento_pelo_aluno
 
     return {
         'comparacao': comparacao,

@@ -6,6 +6,7 @@ from samg.frontend.common import (
     buildHistoricoConcluido,
     compareCurriculos,
     filtrarResultadoComparacao,
+    normalizeText,
     carregaBD,
     carregaCurriculo,
     carregaEquivalencias,
@@ -195,22 +196,49 @@ def migracao(request):
         'aproveitamento_pelo_aluno': resumo_total.get('aproveitamento_pelo_aluno', 0),
     }
 
+    comparacao_tipos = filtrarResultadoComparacao(
+        resultado_comparacao,
+        apenas_obrigatorias=True,
+        apenas_pendentes=False,
+        mostrar_eletivas=mostrar_eletivas,
+        mostrar_optativas=mostrar_optativas,
+        mostrar_demais=mostrar_demais,
+    )['comparacao']
+
     total_filtrado = len(comparacao_filtrada['comparacao'])
     reaproveitadas_filtradas = len([
-        item for item in comparacao_filtrada['comparacao'] if item.get('reaproveitada')
+        item for item in comparacao_tipos if item.get('reaproveitada')
     ])
     aproveitadas_pelo_aluno_filtrado = len([
-        item for item in comparacao_filtrada['comparacao'] if item.get('reaproveitada') and item.get('concluida')
+        item for item in comparacao_tipos if item.get('reaproveitada') and item.get('concluida')
     ])
+    aproveitamento_filtrado = (
+        round((aproveitadas_pelo_aluno_filtrado / reaproveitadas_filtradas) * 100, 1)
+        if reaproveitadas_filtradas
+        else 0.0
+    )
+
+    if 'TIPO DISCIPLINA' in df_curriculo_novo.columns:
+        tipos_novo = df_curriculo_novo['TIPO DISCIPLINA'].apply(normalizeText)
+        mask_novo = tipos_novo == 'obrigatoria'
+        if mostrar_eletivas:
+            mask_novo = mask_novo | (tipos_novo == 'eletiva')
+        if mostrar_optativas:
+            mask_novo = mask_novo | (tipos_novo == 'optativa')
+        if mostrar_demais:
+            mask_novo = mask_novo | (~tipos_novo.isin(['obrigatoria', 'eletiva', 'optativa']))
+        total_novo_filtrado = len(df_curriculo_novo[mask_novo].drop_duplicates(subset=['NOME NORMALIZADO']))
+    else:
+        total_novo_filtrado = resultado_comparacao['resumo']['total_novo']
 
     resumo_filtrado = {
         'total_atual': total_filtrado,
-        'total_novo': resultado_comparacao['resumo']['total_novo'],
-        'reaproveitadas': resumo_total['reaproveitadas'],
-        'aproveitamento': resumo_total['aproveitamento'],
-        'equivalencias_possiveis_grade': resumo_total['reaproveitadas'],
-        'aproveitadas_pelo_aluno': resumo_total['aproveitadas_pelo_aluno'],
-        'aproveitamento_pelo_aluno': resumo_total['aproveitamento_pelo_aluno'],
+        'total_novo': total_novo_filtrado,
+        'reaproveitadas': reaproveitadas_filtradas,
+        'aproveitamento': aproveitamento_filtrado,
+        'equivalencias_possiveis_grade': reaproveitadas_filtradas,
+        'aproveitadas_pelo_aluno': aproveitadas_pelo_aluno_filtrado,
+        'aproveitamento_pelo_aluno': aproveitamento_filtrado,
         'aproveitadas_pelo_aluno_filtrado': aproveitadas_pelo_aluno_filtrado,
     }
 
